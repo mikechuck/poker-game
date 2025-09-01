@@ -10,6 +10,7 @@
 # Build artifacts
 bin/
 build/
+exports/
 
 # Temporary files
 *.tscn.converted
