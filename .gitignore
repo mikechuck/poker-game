@@ -1,0 +1,33 @@
+# Godot generated files and folders
+.godot/
+/android/
+*.import
+
+# Editor specific files
+.vs/
+.vscode/
+
+# Build artifacts
+bin/
+build/
+
+# Temporary files
+*.tscn.converted
+*.scn.converted
+*.fnt.converted
+*.gltf.converted
+*.glb.converted
+*.obj.converted
+*.dae.converted
+*.blend.converted
+*.wav.converted
+*.ogg.converted
+*.mp3.converted
+*.png.converted
+*.jpg.converted
+*.jpeg.converted
+*.bmp.converted
+*.tga.converted
+*.dds.converted
+*.hdr.converted
+*.exr.converted

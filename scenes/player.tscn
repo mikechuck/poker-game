@@ -1,0 +1,20 @@
+[gd_scene load_steps=3 format=3 uid="uid://x8p6qfmpkras"]
+
+[ext_resource type="Script" path="res://scripts/player.gd" id="1_4kbsb"]
+
+[sub_resource type="GDScript" id="GDScript_xygjn"]
+
+[node name="Player" type="CharacterBody2D"]
+script = ExtResource("1_4kbsb")
+
+[node name="PlayerCard" type="Node2D" parent="."]
+position = Vector2(15, 15)
+script = SubResource("GDScript_xygjn")
+
+[node name="PlayerName" type="RichTextLabel" parent="PlayerCard"]
+clip_contents = false
+offset_right = 88.0
+offset_bottom = 40.0
+text = "Player 1"
+fit_content = true
+scroll_active = false

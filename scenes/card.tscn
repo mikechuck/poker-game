@@ -1,0 +1,11 @@
+[gd_scene load_steps=3 format=3 uid="uid://cvk5kxlunba5y"]
+
+[ext_resource type="Script" path="res://scripts/card.gd" id="1_aenit"]
+[ext_resource type="Texture2D" uid="uid://djr7pj3s03n1b" path="res://assets/cards/dark/A-P.png" id="2_pc7uf"]
+
+[node name="Card" type="Node2D"]
+script = ExtResource("1_aenit")
+
+[node name="A-p" type="Sprite2D" parent="."]
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("2_pc7uf")
