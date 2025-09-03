@@ -16,11 +16,16 @@ var screen_origin
 # Server fields
 var host_player = null
 var connected_players = {}
+var player_seats = {}
+
 
 # Client fields
 var player = null
 
 func _ready() -> void:
+	screen_origin = get_viewport_rect().size / 2
+	set_player_seats()
+	
 	var args = OS.get_cmdline_args()
 	if (args.find("server_mode") >= 0):
 		is_server = true
@@ -28,7 +33,6 @@ func _ready() -> void:
 	else:
 		is_server = false
 		connect_to_server()
-	screen_origin = get_viewport_rect().size / 2
 	
 # Server networking methods
 
@@ -67,6 +71,21 @@ func _on_peer_disconnected(id):
 	
 # End server networking methods
 
+# Start server RPCs
+
+@rpc("any_peer")
+func client_request_seat(seat_number):
+	print("client is requesting seat number %s" %[seat_number])
+	if (player_seats.get(seat_number).sitting_player == null):
+		print("Seat is availble")
+		var player = connected_players.get(multiplayer.get_remote_sender_id())
+		player_seats[seat_number] = player
+		update_player_seats_list.rpc(player_seats)
+	else:
+		print("Seat is not available")
+
+# End server RPCs
+
 # Player networking methods
 
 func connect_to_server():
@@ -84,6 +103,8 @@ func connect_to_server():
 func _on_connected():
 	print("Successfully connected to server")
 	#rpc_id(1, "request_spawn_player")
+	client_request_seat.rpc_id(1, 1)
+	print("Requesting seat number 1")
 
 func _on_connection_failed():
 	print("Connection to server failed.")
@@ -91,9 +112,9 @@ func _on_connection_failed():
 func _on_disconnected():
 	print("Disconnected from server.")
 	
-func spawn_player(player):
+func spawn_player(seat_details: PlayerSeat):
 	var player_instance = player_scene.instantiate()
-	player_instance.position = Vector2(screen_origin.x, screen_origin.y)
+	player_instance.position = seat_details.pos
 	add_child(player_instance)
 	
 # Client RPCs
@@ -104,11 +125,16 @@ func assign_player_id(id):
 	player.id = id
 	print("My player id is: %s" % [player.id])
 	
-@rpc("any_peer")
+@rpc("call_remote")
 func update_connected_players_list(server_connected_players_list):
 	connected_players = server_connected_players_list
-	for player in connected_players:
-		spawn_player(player)
+		
+@rpc("call_remote")
+func update_player_seats_list(player_seats_list):
+	player_seats = player_seats_list
+	for seat in player_seats:
+		spawn_player(seat)
+	
 	
 # End Client RPCs
 
@@ -118,8 +144,25 @@ func update_connected_players_list(server_connected_players_list):
 func _process(delta: float) -> void:
 	pass
 	
+func set_player_seats():
+	var single_angle = PI / 4
+	var table_radius = 225
+	for i in 8:
+		var xPos = (table_radius + 60) * cos(i * single_angle) + screen_origin.x
+		var yPos = (table_radius + 60) * sin(i * single_angle) + screen_origin.y
+		var pos = Vector2(xPos, yPos)
+		var player_seat = PlayerSeat.new()
+		player_seat.pos = pos
+		player_seat.sitting_player = null
+		player_seats[i] = player_seat
+	
 class ConnectedPlayer:
 	var id = 0
 	var index = 0
 	var is_host = false
 	var is_ready = false
+	
+class PlayerSeat:
+	var pos
+	var sitting_player
+	

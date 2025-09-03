@@ -1,38 +1,35 @@
-extends Line2D
+extends Node2D
 
 var screen_origin
-
-var height
-var segments
+var table_radius = 225
+var single_angle = PI / 4; # 8 players, each at pi / 4 on the table radius
 
 func _draw() -> void:
 	screen_origin = get_viewport_rect().size / 2
 	
-	# Clear any existing points
-	clear_points()
-
-	var radius_x = width / 2.0
-	var radius_y = height / 2.0
-	# Use the 'Closed' property to connect the start and end points
-	self.closed = true
-
-	# Loop through the desired number of segments
-	for i in range(segments):
-		var angle = deg_to_rad(360.0 * i / segments)
-		var x = radius_x * cos(angle)
-		var y = radius_y * sin(angle)
-		add_point(Vector2(x, y))
-	
 	# draw the table
-	#var center = Vector2(screen_origin.x, screen_origin.y)
-	#var radius = 225
-	#var color = Color.WEB_GREEN
-	#draw_circle(center, radius, color)
+	var center = Vector2(screen_origin.x, screen_origin.y)
+	var color = Color.WEB_GREEN
+	draw_circle(center, table_radius, color)
 	
 	# Draw the table outline
-	#var colorOutline = Color.BLACK
-	#var widthOutline = 35  # The thickness of the outline
-	#draw_circle(center, radius, colorOutline, false, widthOutline)
+	var colorOutline = Color.BLACK
+	var widthOutline = 10  # The thickness of the outline
+	draw_circle(center, table_radius, colorOutline, false, widthOutline)
+	
+	var playerColor = Color(1.0, 1.0, 1.0, 0.5) 
+	var playerWidth = 2
+	for i in 8:
+		var xPos = (table_radius + 60) * cos(i * single_angle) + screen_origin.x
+		var yPos = (table_radius + 60) * sin(i * single_angle) + screen_origin.y
+		var pos = Vector2(xPos, yPos)
+		draw_circle(pos, 30, playerColor)
+		var label = Label.new()
+		label.position.x = pos.x - 6
+		label.position.y = pos.y - 15
+		label.text = str(i + 1)
+		label.add_theme_font_size_override("font_size", 22)
+		add_child(label)
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
