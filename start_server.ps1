@@ -1,5 +1,1 @@
-./exports/server/poker_server.exe --headless server_mode
-
-Read-Host -Prompt "Press enter to shutdown the server"
-
-Get-Process -Name poker_server | Stop-Process -Force
+Godot_v4.4.1-stable_win64_console.exe --path "./" server_mode --headless

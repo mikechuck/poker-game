@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://bv78nq7paqs7f"]
 
-[ext_resource type="Script" path="res://scripts/table.gd" id="1_cfscn"]
-[ext_resource type="Script" path="res://game_manager.gd" id="1_h2fnp"]
+[ext_resource type="Script" uid="uid://b7pkboiy8lcrw" path="res://scripts/table.gd" id="1_cfscn"]
+[ext_resource type="Script" uid="uid://t8a0fwy0ry0u" path="res://scripts/game_manager.gd" id="1_h2fnp"]
 
 [node name="main" type="Node2D"]
 
