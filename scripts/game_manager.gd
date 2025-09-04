@@ -14,10 +14,9 @@ var screen_origin
 # Game logic fields
 
 # Server fields
-var host_player = null
-var connected_players = {}
-var player_seats = {}
-
+var host_player: ConnectedPlayer = null
+var connected_players: Dictionary[int, ConnectedPlayer] = {}
+var player_seats: Dictionary[int, PlayerSeat] = {}
 
 # Client fields
 var player = null
@@ -46,6 +45,7 @@ func start_server():
 	print("Started server at ws://localhost:%s ..." % [server_port])
 	
 func _on_peer_connected(id):
+	print("Player connected: %s" % [id])
 	var connected_player = ConnectedPlayer.new()
 	connected_player.id = id
 	connected_players[id] = connected_player
@@ -55,18 +55,20 @@ func _on_peer_connected(id):
 		host_player = connected_player
 		connected_player.is_host = true
 		print("Player %s is the game host" % [id])
-	update_connected_players_list.rpc(connected_players)
-	print("Player connected: %s" % [id])
+	var dict_connect_players = {}
+	for player_id in connected_players.keys():
+		dict_connect_players[player_id] = connected_players[player_id].to_dict()
+	update_connected_players_list.rpc(dict_connect_players)
 	print("Number of players connected: %s" % [connected_players.size()])
 	
 func _on_peer_disconnected(id):
+	print("Player disconnected: %s" % [id])
 	var disconnecting_player = connected_players.get(id)
 	connected_players.erase(id)
-	if disconnecting_player.id == host_player.id:
-		var new_host_id = connected_players.keys()
-		host_player = connected_players[new_host_id]
+	if disconnecting_player.is_host && connected_players.values().size() > 0:
+		var new_host_id = connected_players.keys()[0].id
+		host_player = connected_players.get(new_host_id)
 		print("Host left, new host is player %s" % [new_host_id])
-	print("Player disconnected: %s" % [id])
 	print("Number of players connected: %s" % [connected_players.size()])
 	
 # End server networking methods
@@ -74,13 +76,24 @@ func _on_peer_disconnected(id):
 # Start server RPCs
 
 @rpc("any_peer")
-func client_request_seat(seat_number):
+func client_request_seat(seat_number: int):
 	print("client is requesting seat number %s" %[seat_number])
-	if (player_seats.get(seat_number).sitting_player == null):
-		print("Seat is availble")
-		var player = connected_players.get(multiplayer.get_remote_sender_id())
-		player_seats[seat_number] = player
-		update_player_seats_list.rpc(player_seats)
+	var client_id = multiplayer.get_remote_sender_id()
+	var desired_seat = player_seats.get(seat_number)
+	if (desired_seat.player_id == 0):
+		# First remove them from their current seat then put them in the new seat
+		for seat in player_seats.values():
+			if (seat.player_id == client_id):
+				seat.player_id = 0
+		desired_seat.player_id = client_id
+		player_seats[seat_number] = desired_seat
+		print("Sending player seats to all clients")
+		var player_seats_dict = {}
+		for player_id in player_seats:
+			player_seats_dict[player_id] = player_seats[player_id].to_dict()
+		update_player_seats_list.rpc(player_seats_dict)
+		rpc("update_player_seats_list")
+		
 	else:
 		print("Seat is not available")
 
@@ -89,7 +102,7 @@ func client_request_seat(seat_number):
 # Player networking methods
 
 func connect_to_server():
-	print("Starting server at ws://localhost:%s ..." % [server_port])
+	print("Connecting to server at ws://localhost:%s ..." % [server_port])
 	var peer = WebSocketMultiplayerPeer.new()
 	multiplayer.multiplayer_peer = null
 	peer.create_client("ws://localhost:%s" % [server_port])
@@ -102,7 +115,6 @@ func connect_to_server():
 	
 func _on_connected():
 	print("Successfully connected to server")
-	#rpc_id(1, "request_spawn_player")
 	client_request_seat.rpc_id(1, 1)
 	print("Requesting seat number 1")
 
@@ -126,20 +138,39 @@ func assign_player_id(id):
 	print("My player id is: %s" % [player.id])
 	
 @rpc("call_remote")
-func update_connected_players_list(server_connected_players_list):
-	connected_players = server_connected_players_list
-		
+func update_connected_players_list(new_connected_players_list):
+	connected_players = {}
+	for id in new_connected_players_list:
+		connected_players[id] = ConnectedPlayer.from_dict(new_connected_players_list[id])
+
 @rpc("call_remote")
-func update_player_seats_list(player_seats_list):
-	player_seats = player_seats_list
-	for seat in player_seats:
-		spawn_player(seat)
-	
+func update_player_seats_list(new_player_seats):
+	player_seats = {}
+	for id in new_player_seats.keys():
+		player_seats[id] = PlayerSeat.from_dict(new_player_seats[id])
+	print("got player seats in client, length: %s" % [player_seats])
+	#player_seats = parse_player_seats_from_json(player_seats)
+	for seat_id in player_seats.keys():
+		var seat = player_seats[seat_id]
+		if (seat.player_id != 0):
+			spawn_player(seat)
+			print("Spawning player %s at seat %s" % [seat.player_id, seat_id])
 	
 # End Client RPCs
 
 # End player networking methods
 
+# Helper functions
+func parse_player_seats_from_json(json_string: String) -> Dictionary[int, PlayerSeat]:
+	var new_player_seats: Dictionary[int, PlayerSeat]
+	var dictionary_parser = JSON.new()
+	var error = dictionary_parser.parse(json_string)
+	var dictionary_data = dictionary_parser.get_data()
+	#for key in dictionary_data.keys():
+		
+		#player_seats[key] = instance_from_id(dictionary_data.)
+		
+	return new_player_seats
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
 	pass
@@ -153,16 +184,43 @@ func set_player_seats():
 		var pos = Vector2(xPos, yPos)
 		var player_seat = PlayerSeat.new()
 		player_seat.pos = pos
-		player_seat.sitting_player = null
+		player_seat.player_id = 0
 		player_seats[i] = player_seat
 	
 class ConnectedPlayer:
-	var id = 0
-	var index = 0
-	var is_host = false
-	var is_ready = false
+	var id: int = 0
+	var index: int = 0
+	var is_host: bool = false
+	var is_ready: bool = false
+	
+	func to_dict() -> Dictionary:
+		return {
+			"id": id,
+			"index": index,
+			"is_host": is_host,
+			"is_ready": is_ready
+		}
+		
+	static func from_dict(dict: Dictionary) -> ConnectedPlayer:
+		var instance = ConnectedPlayer.new()
+		instance.id = dict.get("id")
+		instance.index = dict.get("index")
+		instance.is_host = dict.get("is_host")
+		instance.is_ready = dict.get("is_ready")
+		return instance
 	
 class PlayerSeat:
-	var pos
-	var sitting_player
+	var pos: Vector2
+	var player_id: int = 0
 	
+	func to_dict() -> Dictionary:
+		return {
+			"pos": pos,
+			"player_id": player_id
+		}
+	
+	static func from_dict(dict) -> PlayerSeat:
+		var instance = PlayerSeat.new()
+		instance.pos = dict.get("pos")
+		instance.player_id = dict.get("player_id")
+		return instance

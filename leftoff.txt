@@ -1,1 +1,9 @@
-Run the game and see the error, hard type all of the RPCs so eveyone's on the same page
+leftoff: when player spawn, location is wrong. Could be Player scene or location. 
+Try spawning just a circle to see if that fixes it, then it's the Player scene that needs to be fixed
+
+Todo:
+	- remove player from seat on disconnect
+	- allow player to click on seat number to swap
+	- start "ready" button
+	- when all players are in "ready" state", tell all client to disable seat selection and ready button
+	- then, start card dealing

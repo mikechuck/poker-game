@@ -18,7 +18,6 @@ func _draw() -> void:
 	draw_circle(center, table_radius, colorOutline, false, widthOutline)
 	
 	var playerColor = Color(1.0, 1.0, 1.0, 0.5) 
-	var playerWidth = 2
 	for i in 8:
 		var xPos = (table_radius + 60) * cos(i * single_angle) + screen_origin.x
 		var yPos = (table_radius + 60) * sin(i * single_angle) + screen_origin.y
