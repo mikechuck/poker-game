@@ -8,12 +8,12 @@
 script = ExtResource("1_4kbsb")
 
 [node name="PlayerCard" type="Node2D" parent="."]
-position = Vector2(15, 15)
+position = Vector2(-2, -12)
 script = SubResource("GDScript_xygjn")
 
 [node name="PlayerName" type="RichTextLabel" parent="PlayerCard"]
 clip_contents = false
-offset_right = 88.0
+offset_right = 212.0
 offset_bottom = 40.0
 text = "Player 1"
 fit_content = true
