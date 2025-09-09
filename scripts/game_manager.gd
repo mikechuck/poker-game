@@ -21,7 +21,7 @@ var connected_players: Dictionary[int, ConnectedPlayer] = {}
 var player_seats: Dictionary[int, PlayerSeat] = {}
 
 ### Client fields
-var player = null
+var player_data = null
 
 ### Start built in methods
 
@@ -43,19 +43,13 @@ func _process(delta: float) -> void:
 	pass
 
 func _draw() -> void:
-	# Redraw the players in their given seats
+	# Redraw empty seats
 	var seat_color = Color(1.0, 1.0, 1.0, 0.5)
 	var player_color = Color(1.0, 0.0, 0.0)
 	for seat_index in player_seats.keys():
 		var seat = player_seats[seat_index]
-		print("Seat index: %s | Seat player id: %s" % [seat_index, seat.player_id])
 		var new_seat_pos =  Vector2(seat.pos.x + screen_origin.x, seat.pos.y + screen_origin.y)
-		if (seat.player_id != 0):
-			draw_circle(new_seat_pos, 30, player_color)
-		else:
-			#var xPos = (table_radius + 60) * cos(seat.id * single_angle) + screen_origin.x
-			#var yPos = (table_radius + 60) * sin(seat.id * single_angle) + screen_origin.y
-			#var pos = Vector2(xPos, yPos)
+		if (seat.player_id == 0):
 			draw_circle(new_seat_pos, 30, seat_color)
 			var label = Label.new()
 			label.position.x = new_seat_pos.x - 6
@@ -91,6 +85,7 @@ func _on_peer_connected(id):
 	for player_id in connected_players.keys():
 		dict_connect_players[player_id] = connected_players[player_id].to_dict()
 	update_connected_players_list.rpc(dict_connect_players)
+	assign_player_data.rpc(id, connected_player)
 	print("Number of players connected: %s" % [connected_players.size()])
 	
 func _on_peer_disconnected(id):
@@ -185,10 +180,9 @@ func redraw_players():
 ### Client RPCs
 
 @rpc("reliable")
-func assign_player_id(id):
-	player = ConnectedPlayer.new()
-	player.id = id
-	print("My player id is: %s" % [player.id])
+func assign_player_data(player):
+	player_data = player
+	print("My player id is: %s" % [player_data.id])
 	
 @rpc("call_remote")
 func update_connected_players_list(new_connected_players_list):
