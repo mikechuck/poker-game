@@ -22,6 +22,7 @@ var player_seats: Dictionary[int, PlayerSeat] = {}
 
 ### Client fields
 var player_data = null
+var player_ui = null
 
 ### Start built in methods
 
@@ -34,6 +35,7 @@ func _ready() -> void:
 		set_player_seats()
 	else:
 		is_server = false
+		player_ui = $PlayerUI
 		screen_origin = get_viewport_rect().size / 2
 		connect_to_server()
 		queue_redraw()
@@ -85,7 +87,8 @@ func _on_peer_connected(id):
 	for player_id in connected_players.keys():
 		dict_connect_players[player_id] = connected_players[player_id].to_dict()
 	update_connected_players_list.rpc(dict_connect_players)
-	assign_player_data.rpc(id, connected_player)
+	#assign_player_data.rpc(id, connected_player)
+	rpc_id(id, "assign_player_data", connected_player.to_dict())
 	print("Number of players connected: %s" % [connected_players.size()])
 	
 func _on_peer_disconnected(id):
@@ -179,9 +182,9 @@ func redraw_players():
 	
 ### Client RPCs
 
-@rpc("reliable")
+@rpc("reliable", "authority")
 func assign_player_data(player):
-	player_data = player
+	player_data = ConnectedPlayer.from_dict(player)
 	print("My player id is: %s" % [player_data.id])
 	
 @rpc("call_remote")
@@ -192,7 +195,7 @@ func update_connected_players_list(new_connected_players_list):
 
 @rpc("call_remote")
 func update_player_seats_list(new_player_seats):
-	print("Got new player seat list")
+	print("Player %s got new seat list from server, queueing redraw" % [player_data.id])
 	clear_drawn_player_nodes()
 	player_seats = deserialize_player_seats(new_player_seats)
 	redraw_players()

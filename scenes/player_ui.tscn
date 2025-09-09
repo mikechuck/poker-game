@@ -1,3 +1,20 @@
-[gd_scene format=3 uid="uid://dof81yg1jefa"]
+[gd_scene load_steps=2 format=3 uid="uid://dof81yg1jefa"]
+
+[ext_resource type="Script" uid="uid://b1jfi6ws60cfm" path="res://scripts/player_ui.gd" id="1_jkj6h"]
 
 [node name="PlayerUI" type="Node2D"]
+script = ExtResource("1_jkj6h")
+
+[node name="PlayerName" type="Node2D" parent="."]
+
+[node name="Label" type="RichTextLabel" parent="PlayerName"]
+clip_contents = false
+offset_right = 54.0
+offset_bottom = 25.0
+text = "Player
+"
+
+[node name="Value" type="RichTextLabel" parent="PlayerName"]
+offset_left = 57.0
+offset_right = 239.0
+offset_bottom = 25.0
