@@ -6,10 +6,12 @@
 script = ExtResource("1_jkj6h")
 
 [node name="PlayerName" type="Node2D" parent="."]
+position = Vector2(5, 0)
 
 [node name="Label" type="RichTextLabel" parent="PlayerName"]
 clip_contents = false
-offset_right = 54.0
+offset_left = 1.0
+offset_right = 55.0
 offset_bottom = 25.0
 text = "Player
 "

@@ -1,8 +1,7 @@
-[gd_scene load_steps=4 format=3 uid="uid://bv78nq7paqs7f"]
+[gd_scene load_steps=3 format=3 uid="uid://bv78nq7paqs7f"]
 
 [ext_resource type="Script" uid="uid://b7pkboiy8lcrw" path="res://scripts/table.gd" id="1_cfscn"]
 [ext_resource type="Script" uid="uid://t8a0fwy0ry0u" path="res://scripts/game_manager.gd" id="1_h2fnp"]
-[ext_resource type="PackedScene" uid="uid://dof81yg1jefa" path="res://scenes/player_ui.tscn" id="3_sugp2"]
 
 [node name="main" type="Node2D"]
 
@@ -11,5 +10,3 @@ script = ExtResource("1_cfscn")
 
 [node name="GameManager" type="Node2D" parent="."]
 script = ExtResource("1_h2fnp")
-
-[node name="PlayerUI" parent="." instance=ExtResource("3_sugp2")]

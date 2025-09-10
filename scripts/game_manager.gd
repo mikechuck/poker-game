@@ -7,6 +7,10 @@ const server_port = 8083
 
 ### Scenes
 @export var player_scene: PackedScene = preload("res://scenes/player.tscn")
+@export var player_ui_scene: PackedScene = preload("res://scenes/player_ui.tscn")
+
+### Instantiated scenes
+var player_ui_instance = null
 
 ### UI Fields
 var screen_origin
@@ -22,7 +26,6 @@ var player_seats: Dictionary[int, PlayerSeat] = {}
 
 ### Client fields
 var player_data = null
-var player_ui = null
 
 ### Start built in methods
 
@@ -35,13 +38,15 @@ func _ready() -> void:
 		set_player_seats()
 	else:
 		is_server = false
-		player_ui = $PlayerUI
+		player_ui_instance = player_ui_scene.instantiate()
+		add_child(player_ui_instance)
 		screen_origin = get_viewport_rect().size / 2
 		connect_to_server()
 		queue_redraw()
 		
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
+	queue_redraw()
 	pass
 
 func _draw() -> void:
@@ -74,7 +79,6 @@ func start_server():
 	print("Started server at ws://localhost:%s ..." % [server_port])
 	
 func _on_peer_connected(id):
-	print("Player connected: %s" % [id])
 	var connected_player = ConnectedPlayer.new()
 	connected_player.id = id
 	connected_players[id] = connected_player
@@ -82,23 +86,21 @@ func _on_peer_connected(id):
 	if (host_player == null):
 		host_player = connected_player
 		connected_player.is_host = true
-		print("Player %s is the game host" % [id])
 	var dict_connect_players = {}
 	for player_id in connected_players.keys():
 		dict_connect_players[player_id] = connected_players[player_id].to_dict()
 	update_connected_players_list.rpc(dict_connect_players)
 	#assign_player_data.rpc(id, connected_player)
-	rpc_id(id, "assign_player_data", connected_player.to_dict())
+	
+	
 	print("Number of players connected: %s" % [connected_players.size()])
 	
 func _on_peer_disconnected(id):
-	print("Player disconnected: %s" % [id])
 	var disconnecting_player = connected_players.get(id)
 	connected_players.erase(id)
 	if disconnecting_player.is_host && connected_players.values().size() > 0:
 		var new_host_id = connected_players.keys()[0]
 		host_player = connected_players.get(new_host_id)
-		print("Host left, new host is player %s" % [new_host_id])
 	# Clear the player from the seat
 	for seat in player_seats.values():
 		if seat.player_id == id:
@@ -111,14 +113,19 @@ func _on_peer_disconnected(id):
 ### Start server RPCs
 
 @rpc("any_peer")
+func client_request_player_data():
+	var connected_player = connected_players.get(multiplayer.get_remote_sender_id())
+	print("Sending assign_player_data request rpc to client %s" % [connected_player.id])
+	assign_player_data.rpc_id(connected_player.id, connected_player.to_dict())
+	
+
+@rpc("any_peer")
 func client_request_seat(seat_number: int):
-	print("Client is requesting seat number %s" %[seat_number])
 	var client_id = multiplayer.get_remote_sender_id()
 	var desired_seat = player_seats.get(seat_number)
 	if (desired_seat.player_id != 0):
 		seat_number = (seat_number + 1) % 8
 		desired_seat = player_seats.get(seat_number)
-		print("Seat is not available, assigning seat %s" % [seat_number])
 	# First remove them from their current seat then put them in the new seat
 	for seat in player_seats.values():
 		if (seat.player_id == client_id):
@@ -146,8 +153,7 @@ func connect_to_server():
 	
 func _on_connected():
 	print("Successfully connected to server")
-	client_request_seat.rpc_id(1, 0)
-	print("Requesting seat number 1")
+	client_request_player_data.rpc_id(0)
 
 func _on_connection_failed():
 	print("Connection to server failed.")
@@ -165,7 +171,6 @@ func spawn_player(seat_details: PlayerSeat):
 func clear_drawn_player_nodes():
 	for seat in player_seats.values():
 		if seat.player_node != null:
-			print("Removing node for player %s" % [seat.player_id])
 			remove_child(seat.player_node)
 			queue_free()
 
@@ -173,7 +178,7 @@ func redraw_players():
 	for seat_index in player_seats.keys():
 		var seat = player_seats[seat_index]
 		if seat.player_id != 0:
-			print("Spawning player %s at seat %s" % [seat.player_id, seat_index])
+			print("%s | Spawning player %s at seat %s" % [player_data.id, seat.player_id, seat_index])
 			var player_instance = player_scene.instantiate()
 			player_instance.position = seat.pos + screen_origin
 			player_instance.player_id = seat.player_id
@@ -185,7 +190,9 @@ func redraw_players():
 @rpc("reliable", "authority")
 func assign_player_data(player):
 	player_data = ConnectedPlayer.from_dict(player)
+	player_ui_instance.set_player_data(player_data)
 	print("My player id is: %s" % [player_data.id])
+	client_request_seat.rpc_id(1, 0)
 	
 @rpc("call_remote")
 func update_connected_players_list(new_connected_players_list):
@@ -195,11 +202,14 @@ func update_connected_players_list(new_connected_players_list):
 
 @rpc("call_remote")
 func update_player_seats_list(new_player_seats):
-	print("Player %s got new seat list from server, queueing redraw" % [player_data.id])
-	clear_drawn_player_nodes()
-	player_seats = deserialize_player_seats(new_player_seats)
-	redraw_players()
-	queue_redraw()
+	# Player has not finished setup process while another player connected,
+	# can't do anything with this data yet in that case
+	if (player_data != null):
+		print("%s | Got new seat list from server, queueing redraw" % [player_data.id])
+		clear_drawn_player_nodes()
+		player_seats = deserialize_player_seats(new_player_seats)
+		redraw_players()
+		queue_redraw()
 	
 ### End Client RPCs
 
