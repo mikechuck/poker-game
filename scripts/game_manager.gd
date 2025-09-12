@@ -46,7 +46,6 @@ func _ready() -> void:
 		
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
-	queue_redraw()
 	pass
 
 func _draw() -> void:
@@ -67,7 +66,9 @@ func _draw() -> void:
 	
 ### End built in methods
 
-### Server networking methods
+###################################### Server #############################################
+
+### Start Server networking methods
 
 func start_server():
 	var peer = WebSocketMultiplayerPeer.new()
@@ -91,8 +92,6 @@ func _on_peer_connected(id):
 		dict_connect_players[player_id] = connected_players[player_id].to_dict()
 	update_connected_players_list.rpc(dict_connect_players)
 	#assign_player_data.rpc(id, connected_player)
-	
-	
 	print("Number of players connected: %s" % [connected_players.size()])
 	
 func _on_peer_disconnected(id):
@@ -112,32 +111,29 @@ func _on_peer_disconnected(id):
 
 ### Start server RPCs
 
-@rpc("any_peer")
+@rpc("reliable", "any_peer")
 func client_request_player_data():
 	var connected_player = connected_players.get(multiplayer.get_remote_sender_id())
-	print("Sending assign_player_data request rpc to client %s" % [connected_player.id])
 	assign_player_data.rpc_id(connected_player.id, connected_player.to_dict())
-	
 
-@rpc("any_peer")
+@rpc("reliable", "any_peer")
 func client_request_seat(seat_number: int):
 	var client_id = multiplayer.get_remote_sender_id()
-	var desired_seat = player_seats.get(seat_number)
-	if (desired_seat.player_id != 0):
-		seat_number = (seat_number + 1) % 8
-		desired_seat = player_seats.get(seat_number)
+	# Check to see if seat is already filled
+	seat_number = get_next_free_seat(seat_number)
 	# First remove them from their current seat then put them in the new seat
+	var desired_seat = player_seats.get(seat_number)
 	for seat in player_seats.values():
 		if (seat.player_id == client_id):
 			seat.player_id = 0
 	desired_seat.player_id = client_id
 	player_seats[seat_number] = desired_seat
-	print("Sending player seats to all clients")
+	print("Assigned player %s to seat number %s" % [client_id, seat_number])
 	update_player_seats_list.rpc(serialize_player_seats())
 
 ### End server RPCs
 
-### Player networking methods
+###################################### Client #############################################
 
 func connect_to_server():
 	print("Connecting to server at ws://localhost:%s ..." % [server_port])
@@ -153,7 +149,7 @@ func connect_to_server():
 	
 func _on_connected():
 	print("Successfully connected to server")
-	client_request_player_data.rpc_id(0)
+	client_request_player_data.rpc_id(1)
 
 func _on_connection_failed():
 	print("Connection to server failed.")
@@ -161,12 +157,13 @@ func _on_connection_failed():
 func _on_disconnected():
 	print("Disconnected from server.")
 	
-func spawn_player(seat_details: PlayerSeat):
-	var player_instance = player_scene.instantiate()
-	player_instance.position = seat_details.pos + screen_origin
-	player_instance.player_id = seat_details.player_id
-	connected_players[seat_details.player_id].player_node = player_instance
-	add_child(player_instance)
+
+#func spawn_player(seat_details: PlayerSeat):
+	#var player_instance = player_scene.instantiate()
+	#player_instance.position = seat_details.pos + screen_origin
+	#player_instance.player_id = seat_details.player_id
+	#connected_players[seat_details.player_id].player_node = player_instance
+	#add_child(player_instance)
 
 func clear_drawn_player_nodes():
 	for seat in player_seats.values():
@@ -180,7 +177,7 @@ func redraw_players():
 		if seat.player_id != 0:
 			print("%s | Spawning player %s at seat %s" % [player_data.id, seat.player_id, seat_index])
 			var player_instance = player_scene.instantiate()
-			player_instance.position = seat.pos + screen_origin
+			player_instance.position = seat.pos + screen_origin 
 			player_instance.player_id = seat.player_id
 			seat.player_node = player_instance
 			add_child(player_instance)
@@ -194,38 +191,35 @@ func assign_player_data(player):
 	print("My player id is: %s" % [player_data.id])
 	client_request_seat.rpc_id(1, 0)
 	
-@rpc("call_remote")
+@rpc("reliable", "call_remote")
 func update_connected_players_list(new_connected_players_list):
 	connected_players = {}
 	for id in new_connected_players_list:
 		connected_players[id] = ConnectedPlayer.from_dict(new_connected_players_list[id])
 
-@rpc("call_remote")
+@rpc("reliable", "call_remote")
 func update_player_seats_list(new_player_seats):
 	# Player has not finished setup process while another player connected,
 	# can't do anything with this data yet in that case
 	if (player_data != null):
 		print("%s | Got new seat list from server, queueing redraw" % [player_data.id])
-		clear_drawn_player_nodes()
+		#clear_drawn_player_nodes()
 		player_seats = deserialize_player_seats(new_player_seats)
 		redraw_players()
 		queue_redraw()
 	
-### End Client RPCs
+		
+###################################### Helper #############################################
 
-### End player networking methods
-	
 func set_player_seats():
 	for i in 8:
-		var xPos = (table_radius + 60) * cos(i * single_angle) + screen_origin.x
-		var yPos = (table_radius + 60) * sin(i * single_angle) + screen_origin.y
+		var xPos = (table_radius) * cos(i * single_angle) + screen_origin.x
+		var yPos = (table_radius) * sin(i * single_angle) + screen_origin.y
 		var pos = Vector2(xPos, yPos)
 		var player_seat = PlayerSeat.new()
 		player_seat.pos = pos
 		player_seat.player_id = 0
 		player_seats[i] = player_seat
-		
-### Start helper functions
 
 # Converts a dict of custom objects to dict of generic objects
 func serialize_player_seats() -> Dictionary:
@@ -240,9 +234,16 @@ func deserialize_player_seats(new_player_seats) -> Dictionary[int, PlayerSeat]:
 		deserialized_player_seats[id] = PlayerSeat.from_dict(new_player_seats[id])
 	return deserialized_player_seats
 	
-### End helper functions
-		
-### Start custom data types 
+func get_next_free_seat(seat_number):
+	var desired_seat = player_seats.get(seat_number)
+	if (desired_seat.player_id != 0):
+		seat_number = (seat_number + 1) % 8
+		print("Seat already filled by %s, changed seat number to %s" % [desired_seat.player_id, seat_number])
+		desired_seat = player_seats.get(seat_number)
+		seat_number = get_next_free_seat(seat_number)
+	return seat_number
+	
+###################################### Data Types #############################################
 	
 class ConnectedPlayer:
 	var id: int = 0
@@ -281,5 +282,3 @@ class PlayerSeat:
 		instance.player_id = dict.get("player_id")
 		instance.player_node = dict.get("player_node")
 		return instance
-
-### End custom data types

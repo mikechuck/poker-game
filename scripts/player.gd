@@ -15,6 +15,6 @@ func _draw() -> void:
 	style_box.corner_radius_top_right = 20
 	style_box.corner_radius_bottom_left = 20
 	style_box.corner_radius_bottom_right = 20
-	var rect = Rect2(player_card.position.x - 20, player_card.position.y - 10, 200, 50)
+	var rect = Rect2(player_card.position.x, player_card.position.y - 10, 200, 50)
 	
 	draw_style_box(style_box, rect)
