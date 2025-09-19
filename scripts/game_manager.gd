@@ -7,7 +7,7 @@ const server_port = 8083
 
 ### Scenes
 @export var player_scene: PackedScene = preload("res://scenes/player.tscn")
-@export var player_ui_scene: PackedScene = preload("res://scenes/player_ui.tscn")
+@export var player_ui_scene: PackedScene = preload("res://scenes/UI/player_ui.tscn")
 
 ### Instantiated scenes
 var player_ui_instance = null
@@ -87,11 +87,6 @@ func _on_peer_connected(id):
 	if (host_player == null):
 		host_player = connected_player
 		connected_player.is_host = true
-	var dict_connect_players = {}
-	for player_id in connected_players.keys():
-		dict_connect_players[player_id] = connected_players[player_id].to_dict()
-	update_connected_players_list.rpc(dict_connect_players)
-	#assign_player_data.rpc(id, connected_player)
 	print("Number of players connected: %s" % [connected_players.size()])
 	
 func _on_peer_disconnected(id):
@@ -104,6 +99,7 @@ func _on_peer_disconnected(id):
 	for seat in player_seats.values():
 		if seat.player_id == id:
 			seat.player_id = 0
+	update_connected_players_list.rpc(serialize_connected_players())
 	update_player_seats_list.rpc(serialize_player_seats())
 	print("Number of players connected: %s" % [connected_players.size()])
 	
@@ -114,6 +110,8 @@ func _on_peer_disconnected(id):
 @rpc("reliable", "any_peer")
 func client_request_player_data():
 	var connected_player = connected_players.get(multiplayer.get_remote_sender_id())
+	update_connected_players_list.rpc(serialize_connected_players())
+	update_player_seats_list.rpc(serialize_player_seats())
 	assign_player_data.rpc_id(connected_player.id, connected_player.to_dict())
 
 @rpc("reliable", "any_peer")
@@ -193,23 +191,22 @@ func assign_player_data(player):
 	
 @rpc("reliable", "call_remote")
 func update_connected_players_list(new_connected_players_list):
-	connected_players = {}
-	for id in new_connected_players_list:
-		connected_players[id] = ConnectedPlayer.from_dict(new_connected_players_list[id])
+	# Player has not finished setup process while another player connected,
+	# can't do anything with this data yet in that case
+	if (player_data != null):
+		connected_players = deserialize_connected_players(new_connected_players_list)
 
 @rpc("reliable", "call_remote")
 func update_player_seats_list(new_player_seats):
 	# Player has not finished setup process while another player connected,
 	# can't do anything with this data yet in that case
 	if (player_data != null):
-		print("%s | Got new seat list from server, queueing redraw" % [player_data.id])
-		#clear_drawn_player_nodes()
 		player_seats = deserialize_player_seats(new_player_seats)
 		redraw_players()
 		queue_redraw()
 	
 		
-###################################### Helper #############################################
+###################################### Helper Functions #############################################
 
 func set_player_seats():
 	for i in 8:
@@ -233,6 +230,18 @@ func deserialize_player_seats(new_player_seats) -> Dictionary[int, PlayerSeat]:
 	for id in new_player_seats.keys():
 		deserialized_player_seats[id] = PlayerSeat.from_dict(new_player_seats[id])
 	return deserialized_player_seats
+	
+func serialize_connected_players() -> Dictionary:
+	var connected_players_dict = {}
+	for player_id in connected_players:
+		connected_players_dict[player_id] = connected_players[player_id].to_dict()
+	return connected_players_dict
+	
+func deserialize_connected_players(new_connected_players) -> Dictionary[int, ConnectedPlayer]:
+	var deserialized_connected_players: Dictionary[int, ConnectedPlayer] = {}
+	for id in new_connected_players.keys():
+		deserialized_connected_players[id] = ConnectedPlayer.from_dict(new_connected_players[id])
+	return deserialized_connected_players
 	
 func get_next_free_seat(seat_number):
 	var desired_seat = player_seats.get(seat_number)
