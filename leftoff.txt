@@ -1,9 +1,9 @@
-leftoff: when player spawn, location is wrong. Could be Player scene or location. 
-Try spawning just a circle to see if that fixes it, then it's the Player scene that needs to be fixed
+leftoff: table.update_player_seats() (notes are there for next steps)
 
 Todo:
 	- remove player from seat on disconnect
-	- allow player to click on seat number to swap
+	- show list of connected players in room
+	- allow player to click on seat number to swa
 	- start "ready" button
-	- when all players are in "ready" state", tell all client to disable seat selection and ready button
+	- when all players are in "ready" state", host can select "start" button which tells all client to disable seat selection and ready button
 	- then, start card dealing
