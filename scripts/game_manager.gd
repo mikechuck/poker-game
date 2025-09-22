@@ -44,25 +44,11 @@ func _ready() -> void:
 		connect_to_server()
 		queue_redraw()
 		
-# Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
 	pass
 
 func _draw() -> void:
-	# Redraw empty seats
-	var seat_color = Color(1.0, 1.0, 1.0, 0.5)
-	var player_color = Color(1.0, 0.0, 0.0)
-	for seat_index in player_seats.keys():
-		var seat = player_seats[seat_index]
-		var new_seat_pos =  Vector2(seat.pos.x + screen_origin.x, seat.pos.y + screen_origin.y)
-		if (seat.player_id == 0):
-			draw_circle(new_seat_pos, 30, seat_color)
-			var label = Label.new()
-			label.position.x = new_seat_pos.x - 6
-			label.position.y = new_seat_pos.y - 15
-			label.text = str(seat_index + 1)
-			label.add_theme_font_size_override("font_size", 22)
-			add_child(label)
+	pass
 	
 ### End built in methods
 
@@ -154,14 +140,6 @@ func _on_connection_failed():
 	
 func _on_disconnected():
 	print("Disconnected from server.")
-	
-
-#func spawn_player(seat_details: PlayerSeat):
-	#var player_instance = player_scene.instantiate()
-	#player_instance.position = seat_details.pos + screen_origin
-	#player_instance.player_id = seat_details.player_id
-	#connected_players[seat_details.player_id].player_node = player_instance
-	#add_child(player_instance)
 
 func clear_drawn_player_nodes():
 	for seat in player_seats.values():
@@ -203,7 +181,8 @@ func update_player_seats_list(new_player_seats):
 	if (player_data != null):
 		player_seats = deserialize_player_seats(new_player_seats)
 		redraw_players()
-		queue_redraw()
+		var tableInstance = get_parent().get_node("Table")
+		tableInstance.update_player_seats(player_seats)
 	
 		
 ###################################### Helper Functions #############################################
@@ -251,43 +230,3 @@ func get_next_free_seat(seat_number):
 		desired_seat = player_seats.get(seat_number)
 		seat_number = get_next_free_seat(seat_number)
 	return seat_number
-	
-###################################### Data Types #############################################
-	
-class ConnectedPlayer:
-	var id: int = 0
-	var is_host: bool = false
-	var is_ready: bool = false
-	
-	func to_dict() -> Dictionary:
-		return {
-			"id": id,
-			"is_host": is_host,
-			"is_ready": is_ready
-		}
-		
-	static func from_dict(dict: Dictionary) -> ConnectedPlayer:
-		var instance = ConnectedPlayer.new()
-		instance.id = dict.get("id")
-		instance.is_host = dict.get("is_host")
-		instance.is_ready = dict.get("is_ready")
-		return instance
-	
-class PlayerSeat:
-	var pos: Vector2
-	var player_id: int = 0
-	var player_node: Node2D
-	
-	func to_dict() -> Dictionary:
-		return {
-			"pos": pos,
-			"player_id": player_id,
-			"player_node": player_node
-		}
-	
-	static func from_dict(dict) -> PlayerSeat:
-		var instance = PlayerSeat.new()
-		instance.pos = dict.get("pos")
-		instance.player_id = dict.get("player_id")
-		instance.player_node = dict.get("player_node")
-		return instance
