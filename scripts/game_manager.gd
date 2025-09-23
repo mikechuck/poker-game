@@ -150,13 +150,13 @@ func clear_drawn_player_nodes():
 func redraw_players():
 	for seat_index in player_seats.keys():
 		var seat = player_seats[seat_index]
-		if seat.player_id != 0:
-			print("%s | Spawning player %s at seat %s" % [player_data.id, seat.player_id, seat_index])
-			var player_instance = player_scene.instantiate()
-			player_instance.position = seat.pos + screen_origin 
-			player_instance.player_id = seat.player_id
-			seat.player_node = player_instance
-			add_child(player_instance)
+		#if seat.player_id != 0:
+			#print("%s | Spawning player %s at seat %s" % [player_data.id, seat.player_id, seat_index])
+			#var player_instance = player_scene.instantiate()
+			#player_instance.position = seat.pos + screen_origin 
+			#player_instance.player_id = seat.player_id
+			#seat.player_node = player_instance
+			#add_child(player_instance)
 	
 ### Client RPCs
 
@@ -165,7 +165,7 @@ func assign_player_data(player):
 	player_data = ConnectedPlayer.from_dict(player)
 	player_ui_instance.set_player_data(player_data)
 	print("My player id is: %s" % [player_data.id])
-	client_request_seat.rpc_id(1, 0)
+	client_request_seat.rpc_id(1, 1)
 	
 @rpc("reliable", "call_remote")
 func update_connected_players_list(new_connected_players_list):
@@ -188,12 +188,8 @@ func update_player_seats_list(new_player_seats):
 ###################################### Helper Functions #############################################
 
 func set_player_seats():
-	for i in 8:
-		var xPos = (table_radius) * cos(i * single_angle) + screen_origin.x
-		var yPos = (table_radius) * sin(i * single_angle) + screen_origin.y
-		var pos = Vector2(xPos, yPos)
+	for i in range(1, 8):
 		var player_seat = PlayerSeat.new()
-		player_seat.pos = pos
 		player_seat.player_id = 0
 		player_seats[i] = player_seat
 

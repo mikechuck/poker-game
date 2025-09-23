@@ -5,9 +5,7 @@ extends Node2D
 var player_data = null
 
 func _ready() -> void:
-	var seat_select_button_instance = seat_select_button.instantiate()
-	add_child(seat_select_button_instance)
-	seat_select_button_instance.set_seat_number(1)
+	pass
 	
 func set_player_data(new_player_data):
 	player_data = new_player_data

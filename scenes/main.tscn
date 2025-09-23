@@ -16,36 +16,44 @@ scale = Vector2(0.4, 0.4)
 texture = ExtResource("2_sugp2")
 
 [node name="SeatButton1" parent="Table/PokerTable" instance=ExtResource("3_jyhfs")]
-position = Vector2(-400, -600)
+position = Vector2(-500, -600)
 scale = Vector2(2.5, 2.5)
+seat_number = 1
 
 [node name="SeatButton2" parent="Table/PokerTable" instance=ExtResource("3_jyhfs")]
-position = Vector2(150, -600)
+position = Vector2(200, -600)
 scale = Vector2(2.5, 2.5)
+seat_number = 2
 
 [node name="SeatButton3" parent="Table/PokerTable" instance=ExtResource("3_jyhfs")]
-position = Vector2(925, 175)
-scale = Vector2(2.5, 2.5)
-
-[node name="SeatButton4" parent="Table/PokerTable" instance=ExtResource("3_jyhfs")]
 position = Vector2(925, -325)
 scale = Vector2(2.5, 2.5)
+seat_number = 3
+
+[node name="SeatButton4" parent="Table/PokerTable" instance=ExtResource("3_jyhfs")]
+position = Vector2(925, 175)
+scale = Vector2(2.5, 2.5)
+seat_number = 4
 
 [node name="SeatButton5" parent="Table/PokerTable" instance=ExtResource("3_jyhfs")]
-position = Vector2(-400, 475)
+position = Vector2(200, 475)
 scale = Vector2(2.5, 2.5)
+seat_number = 5
 
 [node name="SeatButton6" parent="Table/PokerTable" instance=ExtResource("3_jyhfs")]
-position = Vector2(150, 475)
+position = Vector2(-500, 475)
 scale = Vector2(2.5, 2.5)
-
-[node name="SeatButton7" parent="Table/PokerTable" instance=ExtResource("3_jyhfs")]
-position = Vector2(-1150, -325)
-scale = Vector2(2.5, 2.5)
+seat_number = 6
 
 [node name="SeatButton8" parent="Table/PokerTable" instance=ExtResource("3_jyhfs")]
-position = Vector2(-1150, 175)
+position = Vector2(-1175, -325)
 scale = Vector2(2.5, 2.5)
+seat_number = 8
+
+[node name="SeatButton7" parent="Table/PokerTable" instance=ExtResource("3_jyhfs")]
+position = Vector2(-1175, 175)
+scale = Vector2(2.5, 2.5)
+seat_number = 7
 
 [node name="GameManager" type="Node2D" parent="."]
 script = ExtResource("1_h2fnp")

@@ -1,11 +1,11 @@
 extends Node2D
 
-var seat_number = 0
+@export var seat_number = 0
 var button_node
 
 func _ready():
-	#button_node = $SeatButton/SelectSeatButton
+	add_to_group("seats")
 	pass
 
-func set_seat_number(number):
-	seat_number = number
+func set_seat_visible(is_visible: bool):
+	$SeatButton.visible = is_visible
