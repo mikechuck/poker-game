@@ -6,7 +6,7 @@ extends Node2D
 var player_id = 0
 
 func _ready() -> void:
-	player_name_label.text = "Player %s" % [player_id]
+	player_name_label.text = player_id
 
 func _draw() -> void:
 	var style_box = StyleBoxFlat.new()
@@ -15,6 +15,6 @@ func _draw() -> void:
 	style_box.corner_radius_top_right = 20
 	style_box.corner_radius_bottom_left = 20
 	style_box.corner_radius_bottom_right = 20
-	var rect = Rect2(player_card.position.x, player_card.position.y - 10, 200, 50)
+	var rect = Rect2(player_card.position.x, player_card.position.y - 10, 300, 100)
 	
 	draw_style_box(style_box, rect)

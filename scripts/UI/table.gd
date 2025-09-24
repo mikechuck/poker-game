@@ -19,14 +19,17 @@ func _draw() -> void:
 	screen_origin = get_viewport_rect().size / 2
 
 func update_player_seats(player_seat_data: Dictionary[int, PlayerSeat]):
+	var poker_table = $PokerTable
+	print(poker_table.scale)
 	player_seats = player_seat_data
 	for seat_id in player_seat_data.keys():
 		var seat_data = player_seat_data[seat_id]
 		var seat_node = seat_nodes[seat_id]
-		print("seat position:", seat_node)
+		print("seat node position: ", seat_node.position + (screen_origin * 2))
 		if seat_data.player_id != 0:
 			var player_instance = player_scene.instantiate()
-			player_instance.position = seat_node.position
+			player_instance.position = (poker_table.scale * seat_node.position) + screen_origin
+			print("screen_origin:", screen_origin)
 			player_instance.player_id = seat_data.player_id
 			seat_data.player_node = player_instance
 			add_child(player_instance)

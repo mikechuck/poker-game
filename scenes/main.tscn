@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://b7pkboiy8lcrw" path="res://scripts/UI/table.gd" id="1_cfscn"]
 [ext_resource type="Script" uid="uid://t8a0fwy0ry0u" path="res://scripts/game_manager.gd" id="1_h2fnp"]
-[ext_resource type="Texture2D" uid="uid://cwksao8mmy0s6" path="res://assets/PokerTable.png" id="2_sugp2"]
+[ext_resource type="Texture2D" uid="uid://dokhuselowgtk" path="res://assets/PokerTable.png" id="2_sugp2"]
 [ext_resource type="PackedScene" uid="uid://iksy47spcvoa" path="res://scenes/UI/seat_button.tscn" id="3_jyhfs"]
 
 [node name="main" type="Node2D"]
