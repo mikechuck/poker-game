@@ -10,22 +10,7 @@ script = ExtResource("1_33enm")
 offset_right = 100.0
 offset_bottom = 50.0
 mouse_default_cursor_shape = 2
+text = "Select Seat"
 script = ExtResource("2_4n56r")
-
-[node name="RichTextLabel" type="RichTextLabel" parent="SelectSeatButton"]
-layout_mode = 1
-anchors_preset = 14
-anchor_top = 0.5
-anchor_right = 1.0
-anchor_bottom = 0.5
-offset_top = -11.5
-offset_bottom = 11.5
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-bbcode_enabled = true
-text = "[center] Select Seat [/center]
-"
-fit_content = true
 
 [connection signal="pressed" from="SelectSeatButton" to="SelectSeatButton" method="_on_pressed"]

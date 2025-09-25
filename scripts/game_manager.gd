@@ -38,9 +38,10 @@ func _ready() -> void:
 		set_player_seats()
 	else:
 		is_server = false
-		player_ui_instance = player_ui_scene.instantiate()
-		add_child(player_ui_instance)
 		screen_origin = get_viewport_rect().size / 2
+		player_ui_instance = player_ui_scene.instantiate()
+		player_ui_instance.position = Vector2.ZERO - screen_origin
+		add_child(player_ui_instance)
 		connect_to_server()
 		queue_redraw()
 		
@@ -85,6 +86,7 @@ func _on_peer_disconnected(id):
 	for seat in player_seats.values():
 		if seat.player_id == id:
 			seat.player_id = 0
+			seat.player_node = null
 	update_connected_players_list.rpc(serialize_connected_players())
 	update_player_seats_list.rpc(serialize_player_seats())
 	print("Number of players connected: %s" % [connected_players.size()])
@@ -140,23 +142,6 @@ func _on_connection_failed():
 	
 func _on_disconnected():
 	print("Disconnected from server.")
-
-func clear_drawn_player_nodes():
-	for seat in player_seats.values():
-		if seat.player_node != null:
-			remove_child(seat.player_node)
-			queue_free()
-
-func redraw_players():
-	for seat_index in player_seats.keys():
-		var seat = player_seats[seat_index]
-		#if seat.player_id != 0:
-			#print("%s | Spawning player %s at seat %s" % [player_data.id, seat.player_id, seat_index])
-			#var player_instance = player_scene.instantiate()
-			#player_instance.position = seat.pos + screen_origin 
-			#player_instance.player_id = seat.player_id
-			#seat.player_node = player_instance
-			#add_child(player_instance)
 	
 ### Client RPCs
 
@@ -164,7 +149,6 @@ func redraw_players():
 func assign_player_data(player):
 	player_data = ConnectedPlayer.from_dict(player)
 	player_ui_instance.set_player_data(player_data)
-	print("My player id is: %s" % [player_data.id])
 	client_request_seat.rpc_id(1, 1)
 	
 @rpc("reliable", "call_remote")
@@ -180,7 +164,6 @@ func update_player_seats_list(new_player_seats):
 	# can't do anything with this data yet in that case
 	if (player_data != null):
 		player_seats = deserialize_player_seats(new_player_seats)
-		redraw_players()
 		var tableInstance = get_parent().get_node("Table")
 		tableInstance.update_player_seats(player_seats)
 	
@@ -188,7 +171,7 @@ func update_player_seats_list(new_player_seats):
 ###################################### Helper Functions #############################################
 
 func set_player_seats():
-	for i in range(1, 8):
+	for i in range(1, 9):
 		var player_seat = PlayerSeat.new()
 		player_seat.player_id = 0
 		player_seats[i] = player_seat
@@ -222,7 +205,6 @@ func get_next_free_seat(seat_number):
 	var desired_seat = player_seats.get(seat_number)
 	if (desired_seat.player_id != 0):
 		seat_number = (seat_number + 1) % 8
-		print("Seat already filled by %s, changed seat number to %s" % [desired_seat.player_id, seat_number])
 		desired_seat = player_seats.get(seat_number)
 		seat_number = get_next_free_seat(seat_number)
 	return seat_number

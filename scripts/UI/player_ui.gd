@@ -1,7 +1,5 @@
 extends Node2D
 
-@export var seat_select_button: PackedScene = preload("res://scenes/UI/seat_button.tscn")
-
 var player_data = null
 
 func _ready() -> void:

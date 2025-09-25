@@ -18,27 +18,28 @@ func _ready() -> void:
 func _draw() -> void:
 	screen_origin = get_viewport_rect().size / 2
 
-func update_player_seats(player_seat_data: Dictionary[int, PlayerSeat]):
+func update_player_seats(new_player_seats: Dictionary[int, PlayerSeat]):
 	var poker_table = $PokerTable
-	print(poker_table.scale)
-	player_seats = player_seat_data
-	for seat_id in player_seat_data.keys():
-		var seat_data = player_seat_data[seat_id]
+	
+	# Clear player seats first
+	for seat_id in player_seats.keys():
+		if (player_seats[seat_id].player_node != null):
+			remove_child(player_seats[seat_id].player_node)
+			player_seats[seat_id].player_node = null
+		seat_nodes[seat_id].visible = true
+	
+	# Then spawn any players and hide seat buttons
+	for seat_id in new_player_seats.keys():
+		var seat_data = new_player_seats[seat_id]
 		var seat_node = seat_nodes[seat_id]
-		print("seat node position: ", seat_node.position + (screen_origin * 2))
 		if seat_data.player_id != 0:
 			var player_instance = player_scene.instantiate()
-			player_instance.position = (poker_table.scale * seat_node.position) + screen_origin
-			print("screen_origin:", screen_origin)
+			# Need to transform seat position coords from local scale to global scale (0.4 -> 1)
+			player_instance.position = (poker_table.scale * seat_node.position)
 			player_instance.player_id = seat_data.player_id
 			seat_data.player_node = player_instance
 			add_child(player_instance)
 			seat_nodes[seat_id].visible = false
-		else:
-			seat_nodes[seat_id].visible = true
-	# Got new seat data, loop through seat nodes and enable/disable based on if player is there
-	# Move player spawning logic to this script
-	# Add some more data to the Player scene UI so 
-	# Connect the seat button to "request seat" rpc call to server
-	# Add a "connected players" list in the top corner to show everyone in the room
-	
+			
+	# Set new data
+	player_seats = new_player_seats

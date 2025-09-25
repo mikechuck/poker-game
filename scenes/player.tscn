@@ -1,7 +1,8 @@
-[gd_scene load_steps=4 format=3 uid="uid://x8p6qfmpkras"]
+[gd_scene load_steps=5 format=3 uid="uid://x8p6qfmpkras"]
 
 [ext_resource type="Script" uid="uid://dsw4s5bge27tu" path="res://scripts/player.gd" id="1_4kbsb"]
-[ext_resource type="Texture2D" uid="uid://dqgd6uv50ipj6" path="res://assets/PlayerCard.png" id="2_g2els"]
+[ext_resource type="Texture2D" uid="uid://3dxghjf2mnwd" path="res://assets/PlayerCard/DetailsCard.png" id="2_qhqgy"]
+[ext_resource type="Texture2D" uid="uid://cnts468j2l03y" path="res://assets/PlayerCard/ProfilePicture.png" id="3_dqkch"]
 
 [sub_resource type="GDScript" id="GDScript_xygjn"]
 
@@ -9,19 +10,35 @@
 script = ExtResource("1_4kbsb")
 
 [node name="PlayerCard" type="Node2D" parent="."]
-position = Vector2(-100, -15)
+position = Vector2(-40, -20)
 script = SubResource("GDScript_xygjn")
 
-[node name="PlayerCard2" type="Sprite2D" parent="PlayerCard"]
-position = Vector2(100, 39)
-texture = ExtResource("2_g2els")
+[node name="DetailsCard" type="Sprite2D" parent="PlayerCard"]
+position = Vector2(101, 48)
+texture = ExtResource("2_qhqgy")
 
-[node name="PlayerName" type="RichTextLabel" parent="PlayerCard"]
+[node name="ProfilePicture" type="Sprite2D" parent="PlayerCard"]
+position = Vector2(15, 41)
+texture = ExtResource("3_dqkch")
+
+[node name="Name" type="RichTextLabel" parent="PlayerCard"]
 clip_contents = false
-offset_left = 44.0
-offset_top = 2.0
+offset_left = 71.0
+offset_top = 13.0
 offset_right = 198.0
-offset_bottom = 32.0
-text = "Player 1"
+offset_bottom = 43.0
+bbcode_enabled = true
+text = "[font_size=16][b]Player 1[/b][/font_size]"
+fit_content = true
+scroll_active = false
+
+[node name="CashAmount" type="RichTextLabel" parent="PlayerCard"]
+clip_contents = false
+offset_left = 71.0
+offset_top = 43.0
+offset_right = 198.0
+offset_bottom = 73.0
+bbcode_enabled = true
+text = "[font_size=16]$50[/font_size]"
 fit_content = true
 scroll_active = false

@@ -14,7 +14,6 @@ func to_dict() -> Dictionary:
 
 static func from_dict(dict) -> PlayerSeat:
 	var instance = PlayerSeat.new()
-	instance.pos = dict.get("pos")
 	instance.player_id = dict.get("player_id")
 	instance.player_node = dict.get("player_node")
 	return instance
