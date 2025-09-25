@@ -2,7 +2,13 @@
 
 [ext_resource type="Script" uid="uid://b1jfi6ws60cfm" path="res://scripts/UI/player_ui.gd" id="1_d6j1s"]
 
-[node name="PlayerUI" type="Node2D"]
+[node name="Control" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 script = ExtResource("1_d6j1s")
 
 [node name="PlayerName" type="Node2D" parent="."]
@@ -20,3 +26,194 @@ text = "Player
 offset_left = 57.0
 offset_right = 239.0
 offset_bottom = 25.0
+
+[node name="IsHost" type="Node2D" parent="."]
+position = Vector2(5, 25)
+
+[node name="Label" type="RichTextLabel" parent="IsHost"]
+clip_contents = false
+offset_left = 1.0
+offset_right = 72.0
+offset_bottom = 25.0
+text = "Is host:"
+
+[node name="Value" type="RichTextLabel" parent="IsHost"]
+offset_left = 68.0
+offset_right = 239.0
+offset_bottom = 25.0
+
+[node name="PlayerActionsPreGame" type="Control" parent="."]
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="Ready" type="Control" parent="PlayerActionsPreGame"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -40.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="ReadyButton" type="CheckButton" parent="PlayerActionsPreGame/Ready"]
+layout_mode = 0
+offset_left = -157.0
+offset_top = -50.0
+offset_right = -61.0
+offset_bottom = -19.0
+scale = Vector2(1.5, 1.5)
+mouse_default_cursor_shape = 2
+theme_override_colors/font_color = Color(0.212305, 0.212305, 0.212305, 1)
+theme_override_constants/outline_size = 0
+text = "Ready"
+
+[node name="Start" type="Control" parent="PlayerActionsPreGame"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -40.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="StartButton" type="Button" parent="PlayerActionsPreGame/Start"]
+layout_mode = 0
+offset_left = 25.0
+offset_top = -50.0
+offset_right = 134.0
+mouse_default_cursor_shape = 2
+disabled = true
+text = "Start Game"
+
+[node name="PlayerActionsGame" type="Control" parent="."]
+visible = false
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -100.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="Check" type="Control" parent="PlayerActionsGame"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -40.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="CheckButton" type="Button" parent="PlayerActionsGame/Check"]
+layout_mode = 0
+offset_left = -182.0
+offset_top = -40.0
+offset_right = -73.0
+offset_bottom = 10.0
+mouse_default_cursor_shape = 2
+text = "Check
+"
+
+[node name="Bet" type="Control" parent="PlayerActionsGame"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -40.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="BetButton" type="Button" parent="PlayerActionsGame/Bet"]
+layout_mode = 0
+offset_left = -13.9997
+offset_top = -96.0
+offset_right = 95.0003
+offset_bottom = -46.0
+mouse_default_cursor_shape = 2
+text = "Bet
+"
+
+[node name="BetInput" type="LineEdit" parent="PlayerActionsGame/Bet"]
+layout_mode = 0
+offset_left = -93.9997
+offset_top = -96.0
+offset_right = -24.9997
+offset_bottom = -46.0
+alignment = 1
+
+[node name="Call" type="Control" parent="PlayerActionsGame"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -40.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="CallButton" type="Button" parent="PlayerActionsGame/Call"]
+layout_mode = 0
+offset_left = -54.0
+offset_top = -40.0
+offset_right = 55.0
+offset_bottom = 10.0
+mouse_default_cursor_shape = 2
+text = "Call
+"
+
+[node name="Fold" type="Control" parent="PlayerActionsGame"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -40.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="CallButton" type="Button" parent="PlayerActionsGame/Fold"]
+layout_mode = 0
+offset_left = 74.0
+offset_top = -40.0
+offset_right = 183.0
+offset_bottom = 10.0
+mouse_default_cursor_shape = 2
+text = "Fold
+"
+
+[connection signal="toggled" from="PlayerActionsPreGame/Ready/ReadyButton" to="." method="_on_ready_button_toggled"]
+[connection signal="button_down" from="PlayerActionsPreGame/Start/StartButton" to="." method="_on_start_button__down"]
+[connection signal="button_down" from="PlayerActionsGame/Check/CheckButton" to="." method="_on_start_button__down"]
+[connection signal="button_down" from="PlayerActionsGame/Bet/BetButton" to="." method="_on_start_button__down"]
+[connection signal="button_down" from="PlayerActionsGame/Call/CallButton" to="." method="_on_start_button__down"]
+[connection signal="button_down" from="PlayerActionsGame/Fold/CallButton" to="." method="_on_start_button__down"]

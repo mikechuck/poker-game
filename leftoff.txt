@@ -1,9 +1,12 @@
-leftoff: table.update_player_seats() (notes are there for next steps)
+leftoff: 
+	- started "game start" logic
+	- started adding logic for cash amounts. hook up player card money to actual data
+	- once this data is displayed, then integrate the bet button against it
+	- when we have all game buttons hooked up to game_manager, start ACTUAL game logic (dealing, turn based system, etc)
 
 Todo:
-	- remove player from seat on disconnect
+	- Add "is server" checks to rpc functions
+	- Maybe try to split out client and server code more?
 	- show list of connected players in room
-	- allow player to click on seat number to swa
-	- start "ready" button
 	- when all players are in "ready" state", host can select "start" button which tells all client to disable seat selection and ready button
-	- then, start card dealing
+	- Connect things to the game_started_event signal, deal cards, change UI to in-game ui, etc etc etc

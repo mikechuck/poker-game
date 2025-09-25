@@ -12,12 +12,18 @@ const server_port = 8083
 ### Instantiated scenes
 var player_ui_instance = null
 
+### Signals
+signal connected_players_updated_signal(connected_players)
+signal player_seats_updated_signal(player_seats)
+signal game_started_signal()
+
 ### UI Fields
 var screen_origin
 var single_angle = PI / 4
 var table_radius = 225
 
 ### Game logic fields
+var default_starting_cash = 100
 
 ### Server fields
 var host_player: ConnectedPlayer = null
@@ -39,9 +45,9 @@ func _ready() -> void:
 	else:
 		is_server = false
 		screen_origin = get_viewport_rect().size / 2
-		player_ui_instance = player_ui_scene.instantiate()
-		player_ui_instance.position = Vector2.ZERO - screen_origin
-		add_child(player_ui_instance)
+		#player_ui_instance = player_ui_scene.instantiate()
+		#get_tree().root.add_child(player_ui_instance)
+		player_ui_instance = get_parent().find_child("PlayerUI")
 		connect_to_server()
 		queue_redraw()
 		
@@ -75,13 +81,17 @@ func _on_peer_connected(id):
 		host_player = connected_player
 		connected_player.is_host = true
 	print("Number of players connected: %s" % [connected_players.size()])
+	update_connected_players_list.rpc(serialize_connected_players())
 	
 func _on_peer_disconnected(id):
 	var disconnecting_player = connected_players.get(id)
 	connected_players.erase(id)
-	if disconnecting_player.is_host && connected_players.values().size() > 0:
-		var new_host_id = connected_players.keys()[0]
-		host_player = connected_players.get(new_host_id)
+	if disconnecting_player.is_host:
+		if (connected_players.values().size() > 0):
+			var new_host_id = connected_players.keys()[0]
+			host_player = connected_players.get(new_host_id)
+		else:
+			host_player = null
 	# Clear the player from the seat
 	for seat in player_seats.values():
 		if seat.player_id == id:
@@ -116,7 +126,25 @@ func client_request_seat(seat_number: int):
 	player_seats[seat_number] = desired_seat
 	print("Assigned player %s to seat number %s" % [client_id, seat_number])
 	update_player_seats_list.rpc(serialize_player_seats())
+	
+@rpc("reliable", "any_peer")
+func client_set_ready_status(is_ready: bool):
+	connected_players[multiplayer.get_remote_sender_id()].is_ready = is_ready
+	update_connected_players_list.rpc(serialize_connected_players())
+	
+@rpc("reliable", "any_peer")
+func client_start_game():
+	var requestor_id = multiplayer.get_remote_sender_id()
+	if (host_player.id == requestor_id):
+		start_game()
 
+func start_game() -> void:
+	game_started.rpc() # Tell all the clients the game has started
+	# do other game start things.
+	# - deal cards
+	# - tell blinds to add antes
+	# - allow player one to make a bet
+	
 ### End server RPCs
 
 ###################################### Client #############################################
@@ -157,6 +185,7 @@ func update_connected_players_list(new_connected_players_list):
 	# can't do anything with this data yet in that case
 	if (player_data != null):
 		connected_players = deserialize_connected_players(new_connected_players_list)
+		emit_signal("connected_players_updated_signal", connected_players)
 
 @rpc("reliable", "call_remote")
 func update_player_seats_list(new_player_seats):
@@ -164,9 +193,11 @@ func update_player_seats_list(new_player_seats):
 	# can't do anything with this data yet in that case
 	if (player_data != null):
 		player_seats = deserialize_player_seats(new_player_seats)
-		var tableInstance = get_parent().get_node("Table")
-		tableInstance.update_player_seats(player_seats)
-	
+		emit_signal("player_seats_updated_signal", player_seats)
+		
+@rpc("reliable", "call_remote")
+func game_started():
+	emit_signal("game_started_signal")
 		
 ###################################### Helper Functions #############################################
 

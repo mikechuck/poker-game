@@ -1,8 +1,9 @@
-extends Node2D
+extends Control
 
 @export var player_scene: PackedScene = preload("res://scenes/player.tscn")
 @export var seat_select_button_scene: PackedScene = preload("res://scenes/UI/seat_button.tscn")
 
+var game_manager
 var poker_table_position
 var screen_origin
 var table_radius = 225
@@ -10,6 +11,9 @@ var player_seats: Dictionary[int, PlayerSeat]
 var seat_nodes: Dictionary[int, Node]
 
 func _ready() -> void:
+	game_manager = get_parent().get_node("GameManager")
+	game_manager.player_seats_updated_signal.connect(_on_player_seats_updated)
+	game_manager.game_started_signal.connect(_on_game_start)
 	var seats_in_group = get_tree().get_nodes_in_group("seats")
 	for seat in seats_in_group:
 		var seat_id = seat.seat_number
@@ -18,7 +22,11 @@ func _ready() -> void:
 func _draw() -> void:
 	screen_origin = get_viewport_rect().size / 2
 
-func update_player_seats(new_player_seats: Dictionary[int, PlayerSeat]):
+func _on_game_start():
+	for seat in seat_nodes.values():
+		seat.visible = false
+	
+func _on_player_seats_updated(new_player_seats: Dictionary[int, PlayerSeat]):
 	var poker_table = $PokerTable
 	
 	# Clear player seats first
