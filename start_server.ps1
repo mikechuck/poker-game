@@ -1,1 +1,1 @@
-Godot_v4.4.1-stable_win64_console.exe --path "./" server_mode --headless
+Godot_v4.4-stable_win64_console.exe --path "./" server_mode --headless

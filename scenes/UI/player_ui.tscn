@@ -43,6 +43,7 @@ offset_right = 239.0
 offset_bottom = 25.0
 
 [node name="PlayerActionsPreGame" type="Control" parent="."]
+visible = false
 custom_minimum_size = Vector2(100, 100)
 layout_mode = 1
 anchors_preset = 12
@@ -100,7 +101,6 @@ disabled = true
 text = "Start Game"
 
 [node name="PlayerActionsGame" type="Control" parent="."]
-visible = false
 custom_minimum_size = Vector2(100, 100)
 layout_mode = 1
 anchors_preset = 12

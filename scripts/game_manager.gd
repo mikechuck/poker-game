@@ -24,6 +24,8 @@ var table_radius = 225
 
 ### Game logic fields
 var default_starting_cash = 100
+var game_started: bool = false
+var turn
 
 ### Server fields
 var host_player: ConnectedPlayer = null
@@ -75,6 +77,8 @@ func start_server():
 func _on_peer_connected(id):
 	var connected_player = ConnectedPlayer.new()
 	connected_player.id = id
+	connected_player.starting_cash = default_starting_cash
+	connected_player.current_cash = default_starting_cash
 	connected_players[id] = connected_player
 	# If this was the first player to connect, set it as host player
 	if (host_player == null):
@@ -108,9 +112,9 @@ func _on_peer_disconnected(id):
 @rpc("reliable", "any_peer")
 func client_request_player_data():
 	var connected_player = connected_players.get(multiplayer.get_remote_sender_id())
+	assign_player_data.rpc_id(connected_player.id, connected_player.to_dict())
 	update_connected_players_list.rpc(serialize_connected_players())
 	update_player_seats_list.rpc(serialize_player_seats())
-	assign_player_data.rpc_id(connected_player.id, connected_player.to_dict())
 
 @rpc("reliable", "any_peer")
 func client_request_seat(seat_number: int):
@@ -178,12 +182,14 @@ func assign_player_data(player):
 	player_data = ConnectedPlayer.from_dict(player)
 	player_ui_instance.set_player_data(player_data)
 	client_request_seat.rpc_id(1, 1)
+	emit_signal("connected_players_updated_signal", connected_players)
 	
 @rpc("reliable", "call_remote")
 func update_connected_players_list(new_connected_players_list):
-	# Player has not finished setup process while another player connected,
-	# can't do anything with this data yet in that case
 	if (player_data != null):
+		for connected_player in new_connected_players_list.values():
+			if connected_player.id == multiplayer.get_unique_id():
+				player_data = connected_player
 		connected_players = deserialize_connected_players(new_connected_players_list)
 		emit_signal("connected_players_updated_signal", connected_players)
 
@@ -239,3 +245,9 @@ func get_next_free_seat(seat_number):
 		desired_seat = player_seats.get(seat_number)
 		seat_number = get_next_free_seat(seat_number)
 	return seat_number
+	
+enum GameState {
+	Lobby,
+	GameStarted,
+	GameEnded,
+}

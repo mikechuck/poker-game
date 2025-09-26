@@ -16,6 +16,7 @@ func _ready() -> void:
 	player_actions_game = $PlayerActionsGame
 
 func _on_connected_players_updated(new_connected_players):
+	print("player_data:", player_data)
 	var all_players_ready = true
 	for new_player_data in new_connected_players.values():
 		if !new_player_data.is_ready:

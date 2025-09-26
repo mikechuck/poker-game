@@ -9,10 +9,12 @@ var screen_origin
 var table_radius = 225
 var player_seats: Dictionary[int, PlayerSeat]
 var seat_nodes: Dictionary[int, Node]
+var player_data: ConnectedPlayer
 
 func _ready() -> void:
 	game_manager = get_parent().get_node("GameManager")
 	game_manager.player_seats_updated_signal.connect(_on_player_seats_updated)
+	game_manager.connected_players_updated_signal.connect(_on_connected_players_updated)
 	game_manager.game_started_signal.connect(_on_game_start)
 	var seats_in_group = get_tree().get_nodes_in_group("seats")
 	for seat in seats_in_group:
@@ -25,6 +27,13 @@ func _draw() -> void:
 func _on_game_start():
 	for seat in seat_nodes.values():
 		seat.visible = false
+		
+func _on_connected_players_updated(new_connected_players: Dictionary[int, ConnectedPlayer]):
+	for connected_player in new_connected_players.values():
+		if connected_player.id == game_manager.player_data.id:
+			print("matched player")
+			player_data = connected_player
+			$Player/PlayerCard/CashAmount.text = "$100"
 	
 func _on_player_seats_updated(new_player_seats: Dictionary[int, PlayerSeat]):
 	var poker_table = $PokerTable

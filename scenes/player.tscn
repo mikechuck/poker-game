@@ -1,8 +1,9 @@
-[gd_scene load_steps=5 format=3 uid="uid://x8p6qfmpkras"]
+[gd_scene load_steps=6 format=3 uid="uid://x8p6qfmpkras"]
 
 [ext_resource type="Script" uid="uid://dsw4s5bge27tu" path="res://scripts/player.gd" id="1_4kbsb"]
-[ext_resource type="Texture2D" uid="uid://3dxghjf2mnwd" path="res://assets/PlayerCard/DetailsCard.png" id="2_qhqgy"]
-[ext_resource type="Texture2D" uid="uid://cnts468j2l03y" path="res://assets/PlayerCard/ProfilePicture.png" id="3_dqkch"]
+[ext_resource type="Texture2D" uid="uid://b2ll1mn2xb802" path="res://assets/PlayerCard/TurnIndicator.png" id="2_dqkch"]
+[ext_resource type="Texture2D" uid="uid://ddlkeu1b8yhay" path="res://assets/PlayerCard/DetailsCard.png" id="2_qhqgy"]
+[ext_resource type="Texture2D" uid="uid://3pvy2qjel0j0" path="res://assets/PlayerCard/ProfilePicture.png" id="3_dqkch"]
 
 [sub_resource type="GDScript" id="GDScript_xygjn"]
 
@@ -13,12 +14,18 @@ script = ExtResource("1_4kbsb")
 position = Vector2(-40, -20)
 script = SubResource("GDScript_xygjn")
 
+[node name="TurnIndicator" type="Sprite2D" parent="PlayerCard"]
+visible = false
+position = Vector2(83, 37)
+scale = Vector2(0.99, 0.99)
+texture = ExtResource("2_dqkch")
+
 [node name="DetailsCard" type="Sprite2D" parent="PlayerCard"]
-position = Vector2(101, 48)
+position = Vector2(99, 48)
 texture = ExtResource("2_qhqgy")
 
 [node name="ProfilePicture" type="Sprite2D" parent="PlayerCard"]
-position = Vector2(15, 41)
+position = Vector2(17, 41)
 texture = ExtResource("3_dqkch")
 
 [node name="Name" type="RichTextLabel" parent="PlayerCard"]

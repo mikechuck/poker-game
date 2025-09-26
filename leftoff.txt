@@ -10,3 +10,36 @@ Todo:
 	- show list of connected players in room
 	- when all players are in "ready" state", host can select "start" button which tells all client to disable seat selection and ready button
 	- Connect things to the game_started_event signal, deal cards, change UI to in-game ui, etc etc etc
+
+
+
+
+Game state logic
+
+1. Shuffle
+2. DealHole
+	- deal out player cards, tell each client what they have
+	- keep these in a server state
+3. Ante
+	- blinds decide if they want to play
+	- Blind clients will have new buttons for FOLD + ANTE
+	- Other clients will have "waiting for Antes" ui
+4. BetPostHole
+	- loop through player seats in order and tell them to make a decision (bet, fold, call)
+	- keep looping until betting is done (one full loop without increase in pot)
+5. DealFlop
+	- server deals cards, tell all clients what cards were dealt
+6. BetPostFlop
+	- keep looping until betting is done
+7. DealTurn
+	- server deals card, tell all clients what card was
+8. BetPostTurn
+	- keep looking until betting is done
+9. DealRiver
+	- server deals card, tell all clients what card was
+10. BetPostRiver
+	- keep looping until betting is done
+11. EndStep
+	- calculate winner, tell all clients who won
+	- make sure to kep track of side pots and pot calculations
+	
