@@ -17,9 +17,9 @@ var server_manager
 var client_manager
 
 ### Signals
-signal connected_players_updated_signal(connected_players)
-signal player_seats_updated_signal(player_seats)
-signal game_started_signal()
+signal connected_players_updated_signal(old_connected_playes, new_connected_players)
+signal player_seats_updated_signal(old_player_seats, new_player_seats)
+signal game_state_change_signal(old_game_state, new_game_state)
 
 ### UI Fields
 var screen_origin
@@ -31,7 +31,7 @@ var host_player: ConnectedPlayer = null
 var connected_players: Dictionary[int, ConnectedPlayer] = {}
 var player_seats: Dictionary[int, PlayerSeat] = {}
 var default_starting_cash = 100
-var current_game_state
+var current_game_state = GameState.State.PreGame
 
 ### Client fields
 var player_data = null

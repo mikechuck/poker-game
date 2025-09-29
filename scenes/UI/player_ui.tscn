@@ -42,17 +42,19 @@ offset_left = 68.0
 offset_right = 239.0
 offset_bottom = 25.0
 
-[node name="PlayerActionsPreGame" type="Control" parent="."]
+[node name="PlayerActionsPreGameHost" type="Control" parent="."]
+visible = false
 custom_minimum_size = Vector2(100, 100)
 layout_mode = 1
 anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = -100.0
 grow_horizontal = 2
 grow_vertical = 0
 
-[node name="Ready" type="Control" parent="PlayerActionsPreGame"]
+[node name="Ready" type="Control" parent="PlayerActionsPreGameHost"]
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
@@ -65,7 +67,7 @@ offset_right = 20.0
 grow_horizontal = 2
 grow_vertical = 0
 
-[node name="ReadyButton" type="CheckButton" parent="PlayerActionsPreGame/Ready"]
+[node name="ReadyButton" type="CheckButton" parent="PlayerActionsPreGameHost/Ready"]
 layout_mode = 0
 offset_left = -157.0
 offset_top = -50.0
@@ -77,7 +79,7 @@ theme_override_colors/font_color = Color(0.212305, 0.212305, 0.212305, 1)
 theme_override_constants/outline_size = 0
 text = "Ready"
 
-[node name="Start" type="Control" parent="PlayerActionsPreGame"]
+[node name="Start" type="Control" parent="PlayerActionsPreGameHost"]
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
@@ -90,7 +92,7 @@ offset_right = 20.0
 grow_horizontal = 2
 grow_vertical = 0
 
-[node name="StartButton" type="Button" parent="PlayerActionsPreGame/Start"]
+[node name="StartButton" type="Button" parent="PlayerActionsPreGameHost/Start"]
 layout_mode = 0
 offset_left = 25.0
 offset_top = -50.0
@@ -98,6 +100,42 @@ offset_right = 134.0
 mouse_default_cursor_shape = 2
 disabled = true
 text = "Start Game"
+
+[node name="PlayerActionsPreGameGuest" type="Control" parent="."]
+visible = false
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="Ready" type="Control" parent="PlayerActionsPreGameGuest"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -40.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="ReadyButton" type="CheckButton" parent="PlayerActionsPreGameGuest/Ready"]
+layout_mode = 0
+offset_left = -70.0
+offset_top = -50.0
+offset_right = 26.0
+offset_bottom = -19.0
+scale = Vector2(1.5, 1.5)
+mouse_default_cursor_shape = 2
+theme_override_colors/font_color = Color(0.212305, 0.212305, 0.212305, 1)
+theme_override_constants/outline_size = 0
+text = "Ready"
 
 [node name="PlayerActionsGame" type="Control" parent="."]
 visible = false
@@ -211,8 +249,9 @@ mouse_default_cursor_shape = 2
 text = "Fold
 "
 
-[connection signal="toggled" from="PlayerActionsPreGame/Ready/ReadyButton" to="." method="_on_ready_button_toggled"]
-[connection signal="button_down" from="PlayerActionsPreGame/Start/StartButton" to="." method="_on_start_button__down"]
+[connection signal="toggled" from="PlayerActionsPreGameHost/Ready/ReadyButton" to="." method="_on_ready_button_toggled"]
+[connection signal="button_down" from="PlayerActionsPreGameHost/Start/StartButton" to="." method="_on_start_button__down"]
+[connection signal="toggled" from="PlayerActionsPreGameGuest/Ready/ReadyButton" to="." method="_on_ready_button_toggled"]
 [connection signal="button_down" from="PlayerActionsGame/Check/CheckButton" to="." method="_on_start_button__down"]
 [connection signal="button_down" from="PlayerActionsGame/Bet/BetButton" to="." method="_on_start_button__down"]
 [connection signal="button_down" from="PlayerActionsGame/Call/CallButton" to="." method="_on_start_button__down"]

@@ -15,7 +15,7 @@ func _ready() -> void:
 	game_manager = get_parent().get_node("GameManager")
 	game_manager.player_seats_updated_signal.connect(_on_player_seats_updated)
 	game_manager.connected_players_updated_signal.connect(_on_connected_players_updated)
-	game_manager.game_started_signal.connect(_on_game_start)
+	game_manager.game_state_change_signal.connect(_on_game_state_change)
 	var seats_in_group = get_tree().get_nodes_in_group("seats")
 	for seat in seats_in_group:
 		var seat_id = seat.seat_number
@@ -24,21 +24,23 @@ func _ready() -> void:
 func _draw() -> void:
 	screen_origin = get_viewport_rect().size / 2
 
-func _on_game_start():
+func _on_game_state_change(old_game_state, new_game_state):
+	print("table got new game state")
 	for seat in seat_nodes.values():
 		seat.visible = false
 		
-func _on_connected_players_updated(new_connected_players: Dictionary[int, ConnectedPlayer]):
+func _on_connected_players_updated(old_connected_players, new_connected_players):
 	for connected_player in new_connected_players.values():
 		for player_seat in player_seats.values():
 			if (connected_player.id == player_seat.player_id):
-				player_seat.player_node.get_node("CashAmount").text = "$100"
+				pass
+				#player_seat.player_node.get_node("CashAmount").text = "$100"
 		#if connected_player.id == game_manager.player_data.id:
 			#print("matched player")
 			#player_data = connected_player
 			##$Player/PlayerCard/CashAmount.text = "$100"
 	
-func _on_player_seats_updated(new_player_seats: Dictionary[int, PlayerSeat]):
+func _on_player_seats_updated(old_player_seats, new_player_seats):
 	var poker_table = $PokerTable
 	
 	# Clear player seats first
