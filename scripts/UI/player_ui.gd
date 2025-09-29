@@ -2,6 +2,7 @@ extends Control
 
 var player_data = null
 var game_manager = null
+var server_manager = null
 var player_actions_pre_game = null
 var player_actions_game = null
 var start_button = null
@@ -9,6 +10,7 @@ var ready_toggle = null
 
 func _ready() -> void:
 	game_manager = get_parent().get_node("GameManager")
+	server_manager = get_parent().get_node("ServerManager")
 	game_manager.connected_players_updated_signal.connect(_on_connected_players_updated)
 	game_manager.game_started_signal.connect(_on_game_start_event)
 	start_button = $PlayerActionsPreGame/Start/StartButton
@@ -38,7 +40,6 @@ func _on_game_over_event() -> void:
 	player_actions_pre_game.visible = true
 	player_actions_game.visible = false
 		
-		
 func set_player_data(new_player_data):
 	player_data = new_player_data
 	var player_name_node = $PlayerName/Value
@@ -48,10 +49,8 @@ func set_player_data(new_player_data):
 	player_is_host_node.clear()
 	player_is_host_node.append_text(str(player_data.is_host))
 
-
 func _on_ready_button_toggled(toggled_on: bool) -> void:
-	game_manager.client_set_ready_status.rpc_id(1, toggled_on)
-
+	server_manager.set_ready_status.rpc_id(1, toggled_on)
 
 func _on_start_button__down() -> void:
 	game_manager.client_start_game.rpc_id(1)

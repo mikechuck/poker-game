@@ -30,10 +30,13 @@ func _on_game_start():
 		
 func _on_connected_players_updated(new_connected_players: Dictionary[int, ConnectedPlayer]):
 	for connected_player in new_connected_players.values():
-		if connected_player.id == game_manager.player_data.id:
-			print("matched player")
-			player_data = connected_player
-			$Player/PlayerCard/CashAmount.text = "$100"
+		for player_seat in player_seats.values():
+			if (connected_player.id == player_seat.player_id):
+				player_seat.player_node.get_node("CashAmount").text = "$100"
+		#if connected_player.id == game_manager.player_data.id:
+			#print("matched player")
+			#player_data = connected_player
+			##$Player/PlayerCard/CashAmount.text = "$100"
 	
 func _on_player_seats_updated(new_player_seats: Dictionary[int, PlayerSeat]):
 	var poker_table = $PokerTable
