@@ -66,7 +66,6 @@ func request_seat(seat_number: int):
 	desired_seat.player_id = client_id
 	game_manager.player_seats[seat_number] = desired_seat
 	game_manager.connected_players[client_id].is_spectating = false
-	print("Assigned player %s to seat number %s" % [client_id, seat_number])
 	client_manager.update_connected_players_list.rpc(game_manager.serialize_connected_players())
 	client_manager.update_player_seats_list.rpc(game_manager.serialize_player_seats())
 	
@@ -83,15 +82,11 @@ func start_game():
 	for player in game_manager.connected_players.values():
 		if !player.is_spectating && !player.is_ready:
 			all_players_ready = false
-			
-	print("is host? %s" % [game_manager.host_player.id == requestor_id])
-	print("is PreGame? %s" % game_manager.current_game_state)
-	print("all players ready? %s" % all_players_ready)
-			
 	if (game_manager.host_player.id == requestor_id &&
 		game_manager.current_game_state == GameState.State.PreGame &&
 		all_players_ready):
-		set_game_state(GameState.State.Shuffle)
+		#set_game_state(GameState.State.Shuffle)
+		game_manager.step_next_game_state()
 
 ### Helper functions
 
@@ -101,10 +96,10 @@ func set_player_seats():
 		player_seat.player_id = 0
 		game_manager.player_seats[i] = player_seat
 
-func set_game_state(new_game_state: GameState.State) -> void:
-	client_manager.game_state_change.rpc(game_manager.current_game_state, new_game_state)
-	print("Game state changed to: %s" % [new_game_state])
-	game_manager.current_game_state = new_game_state
+#func set_game_state(new_game_state: GameState.State) -> void:
+	#
+	#print("Game state changed to: %s" % [new_game_state])
+	#game_manager.current_game_state = new_game_state
 	#match game_state:
 		#GameState.State.Shuffle:
 			# do other game start things.

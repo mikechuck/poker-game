@@ -8,6 +8,7 @@ const server_port = 8083
 ### Scenes
 @export var player_scene: PackedScene = preload("res://scenes/player.tscn")
 @export var player_ui_scene: PackedScene = preload("res://scenes/UI/player_ui.tscn")
+@export var card_scene: PackedScene = preload("res://scenes/UI/card.tscn")
 
 ### Instantiated scenes
 var player_ui_instance = null
@@ -63,6 +64,22 @@ func _draw() -> void:
 	
 ### End lifecycle methods
 
+### Game cycle methods
+func step_next_game_state():
+	match current_game_state:
+		GameState.State.PreGame:
+			current_game_state = GameState.State.DealHole
+			client_manager.game_state_change.rpc(GameState.State.PreGame, GameState.State.DealHole)
+			deal_hole_cards()
+		GameState.State.DealHole:
+			current_game_state = GameState.State.Ante
+			client_manager.game_state_change.rpc(GameState.State.DealHole, GameState.State.Ante)
+
+func deal_hole_cards():
+	var card_instance = card_scene.instantiate()
+	card_instance.load_card_image("2", "D")
+	add_child(card_instance)
+	pass
 		
 ###################################### Helper Functions #############################################
 

@@ -17,15 +17,24 @@ func _ready() -> void:
 	player_actions_game = $PlayerActionsGame
 
 func _on_connected_players_updated(old_connected_players, new_connected_players):
-	set_player_buttons() # Player might change host status, etc
+	set_player_buttons()
+	set_player_data()
 
 func _on_game_state_change_event(old_game_state, new_game_state) -> void:
 	print("Game state has changed from %s to %s" % [old_game_state, new_game_state])
 	set_player_buttons()
 	
+func _on_ready_button_toggled(toggled_on: bool) -> void:
+	server_manager.set_ready_status.rpc_id(1, toggled_on)
+
+func _on_start_button__down() -> void:
+	server_manager.start_game.rpc_id(1)
+	
 func set_player_buttons():
 	match game_manager.current_game_state:
 		GameState.State.PreGame:
+			print("%s | pre game game state" % [game_manager.player_data.id])
+			print("%s | is spectating? %s" % [game_manager.player_data.id, game_manager.player_data.is_spectating])
 			if (game_manager.player_data.is_spectating):
 				player_actions_pre_game_host.visible = false
 				player_actions_pre_game_guest.visible = false
@@ -42,22 +51,20 @@ func set_player_buttons():
 				else:
 					start_button.disabled = true
 			else:
-				player_actions_pre_game_host = false
-				player_actions_pre_game_guest = true
+				player_actions_pre_game_host.visible = false
+				player_actions_pre_game_guest.visible = true
 		GameState.State.Shuffle:
+			player_actions_pre_game_host.visible = false
+			player_actions_pre_game_guest.visible = false
 			print("Showing shuffle UI text....")
 			pass # do nothing?
 	
-func set_player_data(new_player_data):
+func set_player_data():
 	var player_name_node = $PlayerName/Value
 	var player_is_host_node = $IsHost/Value
 	player_name_node.clear()
 	player_name_node.append_text(str(game_manager.player_data.id))
 	player_is_host_node.clear()
 	player_is_host_node.append_text(str(game_manager.player_data.is_host))
-
-func _on_ready_button_toggled(toggled_on: bool) -> void:
-	server_manager.set_ready_status.rpc_id(1, toggled_on)
-
-func _on_start_button__down() -> void:
-	server_manager.start_game.rpc_id(1)
+	
+func spawn_hold_cards
