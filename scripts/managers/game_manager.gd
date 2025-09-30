@@ -16,6 +16,7 @@ var player_ui_instance = null
 ### Managers
 var server_manager
 var client_manager
+var deck_manager
 
 ### Signals
 signal connected_players_updated_signal(old_connected_playes, new_connected_players)
@@ -42,6 +43,7 @@ var player_data = null
 func _ready() -> void:
 	server_manager = get_parent().get_node("ServerManager")
 	client_manager = get_parent().get_node("ClientManager")
+	deck_manager = get_parent().get_node("DeckManager")
 	
 	var args = OS.get_cmdline_args()
 	if (args.find("server_mode") >= 0):
@@ -66,20 +68,43 @@ func _draw() -> void:
 
 ### Game cycle methods
 func step_next_game_state():
+	var previous_game_state = current_game_state
 	match current_game_state:
 		GameState.State.PreGame:
-			current_game_state = GameState.State.DealHole
-			client_manager.game_state_change.rpc(GameState.State.PreGame, GameState.State.DealHole)
-			deal_hole_cards()
+			var next_game_state: GameState.State = GameState.State.Shuffle
+			current_game_state = next_game_state
+			client_manager.game_state_change.rpc(previous_game_state, next_game_state)
+			state_shuffle_cards()
+		GameState.State.Shuffle:
+			var next_game_state: GameState.State = GameState.State.DealHole
+			current_game_state = next_game_state
+			client_manager.game_state_change.rpc(previous_game_state, next_game_state)
+			state_deal_hole_cards()
 		GameState.State.DealHole:
-			current_game_state = GameState.State.Ante
-			client_manager.game_state_change.rpc(GameState.State.DealHole, GameState.State.Ante)
+			var next_game_state: GameState.State = GameState.State.Ante
+			current_game_state = next_game_state
+			client_manager.game_state_change.rpc(previous_game_state, next_game_state)
+		GameState.State.Ante:
+			var next_game_state: GameState.State = GameState.State.DealFlop
+			current_game_state = next_game_state
+			client_manager.game_state_change.rpc(previous_game_state, next_game_state)
 
-func deal_hole_cards():
-	var card_instance = card_scene.instantiate()
-	card_instance.load_card_image("2", "D")
-	add_child(card_instance)
-	pass
+func state_shuffle_cards():
+	deck_manager.shuffle_deck()
+	var timer = get_tree().create_timer(2.0)
+	await timer.timeout
+	step_next_game_state()
+	
+func state_deal_hole_cards():
+	for player in player_seats.values():
+		print("player: %s", player)
+		if player.player_id:
+			var hole_card1 = deck_manager.deal_card()
+			var hole_card2 = deck_manager.deal_card()
+			player.hole_cards = [hole_card1, hole_card2]
+			print("Found player %s, sending cards [%s,%s], [%s, %s]" % [hole_card1.number, hole_card1.suit, hole_card2.number, hole_card2.suit])
+			client_manager.deal_hole_cards.rpc(player.id, player.hole_cards)
+	step_next_game_state()
 		
 ###################################### Helper Functions #############################################
 

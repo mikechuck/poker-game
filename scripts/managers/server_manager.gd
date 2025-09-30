@@ -95,15 +95,4 @@ func set_player_seats():
 		var player_seat = PlayerSeat.new()
 		player_seat.player_id = 0
 		game_manager.player_seats[i] = player_seat
-
-#func set_game_state(new_game_state: GameState.State) -> void:
-	#
-	#print("Game state changed to: %s" % [new_game_state])
-	#game_manager.current_game_state = new_game_state
-	#match game_state:
-		#GameState.State.Shuffle:
-			# do other game start things.
-			# - deal cards
-			# - tell blinds to add antes
-			# - allow player one to make a bet
 	
