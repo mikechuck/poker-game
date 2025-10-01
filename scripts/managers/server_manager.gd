@@ -29,7 +29,6 @@ func _on_peer_connected(id):
 		connected_player.is_host = true
 	# For some reason, need to send to existing clients AND new client, maybe they don't exist in the stack yet
 	client_manager.update_connected_players_list.rpc(game_manager.serialize_connected_players())
-	client_manager.update_connected_players_list.rpc(id, game_manager.serialize_connected_players())
 	print("Number of players connected: %s" % [game_manager.connected_players.size()])
 	
 func _on_peer_disconnected(id):
@@ -42,6 +41,10 @@ func _on_peer_disconnected(id):
 		else:
 			game_manager.host_player = null
 			game_manager.current_game_state = GameState.State.PreGame
+	elif game_manager.connected_players.values().size() == 0:
+		game_manager.host_player = null
+		game_manager.current_game_state = GameState.State.PreGame
+		
 	# Clear the player from the seat
 	for seat in game_manager.player_seats.values():
 		if seat.player_id == id:

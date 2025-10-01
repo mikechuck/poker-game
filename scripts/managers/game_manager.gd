@@ -8,7 +8,6 @@ const server_port = 8083
 ### Scenes
 @export var player_scene: PackedScene = preload("res://scenes/player.tscn")
 @export var player_ui_scene: PackedScene = preload("res://scenes/UI/player_ui.tscn")
-@export var card_scene: PackedScene = preload("res://scenes/UI/card.tscn")
 
 ### Instantiated scenes
 var player_ui_instance = null
@@ -22,6 +21,7 @@ var deck_manager
 signal connected_players_updated_signal(old_connected_playes, new_connected_players)
 signal player_seats_updated_signal(old_player_seats, new_player_seats)
 signal game_state_change_signal(old_game_state, new_game_state)
+signal current_player_turn_updated_signal(player_turn)
 
 ### UI Fields
 var screen_origin
@@ -34,6 +34,7 @@ var connected_players: Dictionary[int, ConnectedPlayer] = {}
 var player_seats: Dictionary[int, PlayerSeat] = {}
 var default_starting_cash = 100
 var current_game_state = GameState.State.PreGame
+var current_player_turn: int = 0
 
 ### Client fields
 var player_data = null
@@ -91,19 +92,18 @@ func step_next_game_state():
 
 func state_shuffle_cards():
 	deck_manager.shuffle_deck()
-	var timer = get_tree().create_timer(2.0)
-	await timer.timeout
+	#var timer = get_tree().create_timer(2.0)
+	#await timer.timeout
 	step_next_game_state()
 	
 func state_deal_hole_cards():
 	for player in player_seats.values():
-		print("player: %s", player)
 		if player.player_id:
-			var hole_card1 = deck_manager.deal_card()
-			var hole_card2 = deck_manager.deal_card()
-			player.hole_cards = [hole_card1, hole_card2]
-			print("Found player %s, sending cards [%s,%s], [%s, %s]" % [hole_card1.number, hole_card1.suit, hole_card2.number, hole_card2.suit])
-			client_manager.deal_hole_cards.rpc(player.id, player.hole_cards)
+			var hole_card1: CardData = deck_manager.deal_card()
+			var hole_card2: CardData = deck_manager.deal_card()
+			player.hole_cards.append(hole_card1)
+			player.hole_cards.append(hole_card2)
+	client_manager.update_player_seats_list.rpc(serialize_player_seats())
 	step_next_game_state()
 		
 ###################################### Helper Functions #############################################
@@ -132,6 +132,18 @@ func deserialize_connected_players(new_connected_players) -> Dictionary[int, Con
 	for id in new_connected_players.keys():
 		deserialized_connected_players[id] = ConnectedPlayer.from_dict(new_connected_players[id])
 	return deserialized_connected_players
+	
+func serialize_cards(cards: Array[CardData]) -> Array[Dictionary]:
+	var card_dict_array: Array[Dictionary] = []
+	for card in cards:
+		card_dict_array.append(card.to_dict())
+	return card_dict_array
+	
+func deserialize_cards(cards: Array[Dictionary]) -> Array[CardData]:
+	var card_data_array: Array[CardData] = []
+	for card in cards:
+		card_data_array.append(CardData.from_dict(card))
+	return card_data_array
 	
 func get_next_free_seat(seat_number):
 	var desired_seat = player_seats.get(seat_number)

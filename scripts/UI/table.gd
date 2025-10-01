@@ -16,6 +16,7 @@ func _ready() -> void:
 	game_manager.player_seats_updated_signal.connect(_on_player_seats_updated)
 	game_manager.connected_players_updated_signal.connect(_on_connected_players_updated)
 	game_manager.game_state_change_signal.connect(_on_game_state_change)
+	game_manager.current_player_turn_updated_signal.connect(_on_player_turn_updated)
 	var seats_in_group = get_tree().get_nodes_in_group("seats")
 	for seat in seats_in_group:
 		var seat_id = seat.seat_number
@@ -25,9 +26,11 @@ func _draw() -> void:
 	screen_origin = get_viewport_rect().size / 2
 
 func _on_game_state_change(old_game_state, new_game_state):
-	print("table got new game state")
-	for seat in seat_nodes.values():
-		seat.visible = false
+	if new_game_state != GameState.State.PreGame:
+		for seat in seat_nodes.values():
+			seat.visible = false
+	if new_game_state == GameState.State.Ante:
+		set_player_indicator(game_manager.current_player_turn)
 		
 func _on_connected_players_updated(old_connected_players, new_connected_players):
 	for connected_player in new_connected_players.values():
@@ -65,3 +68,11 @@ func _on_player_seats_updated(old_player_seats, new_player_seats):
 			
 	# Set new data
 	player_seats = new_player_seats
+
+func _on_player_turn_updated(player_turn):
+	print("table new turn")
+	
+func set_player_indicator(seat_number):
+	#LEFTOFFFFF
+	var player_data = game_manager.player_seats.get(str(seat_number))
+	print("Table: Setting indicator for player %s at seat %s" % [player_data.player_id, seat_number])

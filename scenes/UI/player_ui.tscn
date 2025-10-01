@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://dof81yg1jefa"]
 
 [ext_resource type="Script" uid="uid://b1jfi6ws60cfm" path="res://scripts/UI/player_ui.gd" id="1_d6j1s"]
-[ext_resource type="Texture2D" uid="uid://bfr3hsrfkjxys" path="res://assets/HoleCardSpot.png" id="2_50a1s"]
+[ext_resource type="Texture2D" uid="uid://cku43xsg7wffl" path="res://assets/HoleCardSpot.png" id="2_50a1s"]
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -139,6 +139,70 @@ theme_override_colors/font_color = Color(0.212305, 0.212305, 0.212305, 1)
 theme_override_constants/outline_size = 0
 text = "Ready"
 
+[node name="Control" type="Control" parent="."]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="PlayerActionsAnte" type="Control" parent="."]
+visible = false
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -100.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="Ante" type="Control" parent="PlayerActionsAnte"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -60.0
+offset_top = -55.0
+offset_right = -60.0
+offset_bottom = -55.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="AnteButton" type="Button" parent="PlayerActionsAnte/Ante"]
+layout_mode = 0
+offset_left = -54.0
+offset_top = -25.0
+offset_right = 55.0
+offset_bottom = 25.0
+mouse_default_cursor_shape = 2
+text = "Ante
+"
+
+[node name="Fold" type="Control" parent="PlayerActionsAnte"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -20.0
+offset_top = -40.0
+offset_right = 20.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="FoldButton" type="Button" parent="PlayerActionsAnte/Fold"]
+layout_mode = 0
+offset_left = 28.0
+offset_top = -40.0
+offset_right = 137.0
+offset_bottom = 10.0
+mouse_default_cursor_shape = 2
+text = "Fold
+"
+
 [node name="PlayerActionsGame" type="Control" parent="."]
 visible = false
 custom_minimum_size = Vector2(100, 100)
@@ -275,7 +339,6 @@ text = "[font_size=22]Shuffling...[/font_size]"
 horizontal_alignment = 1
 
 [node name="HoleCards" type="Control" parent="."]
-visible = false
 layout_mode = 1
 anchors_preset = 3
 anchor_left = 1.0
@@ -286,18 +349,23 @@ offset_left = -40.0
 offset_top = -40.0
 grow_horizontal = 0
 grow_vertical = 0
+mouse_filter = 2
 
-[node name="HoleCardSpot" type="Sprite2D" parent="HoleCards"]
+[node name="HoleCardSpot0" type="Sprite2D" parent="HoleCards"]
+visible = false
 position = Vector2(-190, -75)
 texture = ExtResource("2_50a1s")
 
-[node name="HoleCardSpot2" type="Sprite2D" parent="HoleCards"]
+[node name="HoleCardSpot1" type="Sprite2D" parent="HoleCards"]
+visible = false
 position = Vector2(-50, -75)
 texture = ExtResource("2_50a1s")
 
 [connection signal="toggled" from="PlayerActionsPreGameHost/Ready/ReadyButton" to="." method="_on_ready_button_toggled"]
 [connection signal="button_down" from="PlayerActionsPreGameHost/Start/StartButton" to="." method="_on_start_button__down"]
 [connection signal="toggled" from="PlayerActionsPreGameGuest/Ready/ReadyButton" to="." method="_on_ready_button_toggled"]
+[connection signal="button_down" from="PlayerActionsAnte/Ante/AnteButton" to="." method="_on_start_button__down"]
+[connection signal="button_down" from="PlayerActionsAnte/Fold/FoldButton" to="." method="_on_start_button__down"]
 [connection signal="button_down" from="PlayerActionsGame/Check/CheckButton" to="." method="_on_start_button__down"]
 [connection signal="button_down" from="PlayerActionsGame/Bet/BetButton" to="." method="_on_start_button__down"]
 [connection signal="button_down" from="PlayerActionsGame/Call/CallButton" to="." method="_on_start_button__down"]

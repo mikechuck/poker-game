@@ -12,7 +12,8 @@ func to_dict() -> Dictionary:
 		"id": id,
 		"number": number,
 		"suit": suit,
-		"show": show
+		"show": show,
+		"is_delt": is_delt
 	}
 	
 static func from_dict(dict: Dictionary) -> CardData:
@@ -21,4 +22,5 @@ static func from_dict(dict: Dictionary) -> CardData:
 	instance.number = dict.get("number")
 	instance.suit = dict.get("suit")
 	instance.show = dict.get("show")
+	instance.is_delt = dict.get("is_delt")
 	return instance

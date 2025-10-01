@@ -2,12 +2,12 @@
 
 [ext_resource type="Script" uid="uid://b7pkboiy8lcrw" path="res://scripts/UI/table.gd" id="1_cfscn"]
 [ext_resource type="Script" uid="uid://t8a0fwy0ry0u" path="res://scripts/managers/game_manager.gd" id="1_h2fnp"]
-[ext_resource type="Texture2D" uid="uid://dokhuselowgtk" path="res://assets/PokerTable.png" id="2_sugp2"]
+[ext_resource type="Texture2D" uid="uid://cwksao8mmy0s6" path="res://assets/PokerTable.png" id="2_sugp2"]
 [ext_resource type="Script" uid="uid://cpie8lnbtl1nm" path="res://scripts/managers/game_state_manager.gd" id="2_tipki"]
 [ext_resource type="Script" uid="uid://cfyo1j7pfknw1" path="res://scripts/managers/client_manager.gd" id="3_85g3d"]
 [ext_resource type="PackedScene" uid="uid://iksy47spcvoa" path="res://scenes/UI/seat_button.tscn" id="3_jyhfs"]
 [ext_resource type="Script" uid="uid://bo8p0yfaaihfo" path="res://scripts/managers/server_manager.gd" id="4_choun"]
-[ext_resource type="Texture2D" uid="uid://c0640tbnh54rg" path="res://assets/DealerCardSpot.png" id="4_ya4ey"]
+[ext_resource type="Texture2D" uid="uid://cdibtxyl8cvkj" path="res://assets/DealerCardSpot.png" id="4_ya4ey"]
 [ext_resource type="PackedScene" uid="uid://dof81yg1jefa" path="res://scenes/UI/player_ui.tscn" id="5_tbgi4"]
 [ext_resource type="Script" uid="uid://cnawrfbgpgpfu" path="res://scripts/managers/deck_manager.gd" id="8_85g3d"]
 
@@ -34,6 +34,29 @@ script = ExtResource("1_cfscn")
 
 [node name="PokerTable" type="Sprite2D" parent="Table"]
 texture = ExtResource("2_sugp2")
+
+[node name="Cards" type="Node2D" parent="Table/PokerTable"]
+visible = false
+
+[node name="DealerCardSpot1" type="Sprite2D" parent="Table/PokerTable/Cards"]
+position = Vector2(-223, 0)
+texture = ExtResource("4_ya4ey")
+
+[node name="DealerCardSpot2" type="Sprite2D" parent="Table/PokerTable/Cards"]
+position = Vector2(-109, 0)
+texture = ExtResource("4_ya4ey")
+
+[node name="DealerCardSpot3" type="Sprite2D" parent="Table/PokerTable/Cards"]
+position = Vector2(5, 0)
+texture = ExtResource("4_ya4ey")
+
+[node name="DealerCardSpot4" type="Sprite2D" parent="Table/PokerTable/Cards"]
+position = Vector2(119, 0)
+texture = ExtResource("4_ya4ey")
+
+[node name="DealerCardSpot5" type="Sprite2D" parent="Table/PokerTable/Cards"]
+position = Vector2(233, 0)
+texture = ExtResource("4_ya4ey")
 
 [node name="Seats" type="Node2D" parent="Table/PokerTable"]
 
@@ -68,28 +91,6 @@ seat_number = 8
 [node name="SeatButton7" parent="Table/PokerTable/Seats" instance=ExtResource("3_jyhfs")]
 position = Vector2(-475, 80)
 seat_number = 7
-
-[node name="Cards" type="Node2D" parent="Table/PokerTable"]
-
-[node name="DealerCardSpot1" type="Sprite2D" parent="Table/PokerTable/Cards"]
-position = Vector2(-223, 0)
-texture = ExtResource("4_ya4ey")
-
-[node name="DealerCardSpot2" type="Sprite2D" parent="Table/PokerTable/Cards"]
-position = Vector2(-109, 0)
-texture = ExtResource("4_ya4ey")
-
-[node name="DealerCardSpot3" type="Sprite2D" parent="Table/PokerTable/Cards"]
-position = Vector2(5, 0)
-texture = ExtResource("4_ya4ey")
-
-[node name="DealerCardSpot4" type="Sprite2D" parent="Table/PokerTable/Cards"]
-position = Vector2(119, 0)
-texture = ExtResource("4_ya4ey")
-
-[node name="DealerCardSpot5" type="Sprite2D" parent="Table/PokerTable/Cards"]
-position = Vector2(233, 0)
-texture = ExtResource("4_ya4ey")
 
 [node name="PlayerUI" parent="." instance=ExtResource("5_tbgi4")]
 layout_mode = 1

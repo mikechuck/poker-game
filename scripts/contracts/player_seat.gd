@@ -7,11 +7,15 @@ var player_node: Node2D
 var hole_cards: Array[CardData] = []
 
 func to_dict() -> Dictionary:
+	var cards: Array[Dictionary] = []
+	for card in hole_cards:
+		cards.append(card.to_dict())
+		
 	return {
 		"pos": pos,
 		"player_id": player_id,
 		"player_node": player_node,
-		"hole_cards": hole_cards
+		"hole_cards": cards
 	}
 
 static func from_dict(dict) -> PlayerSeat:

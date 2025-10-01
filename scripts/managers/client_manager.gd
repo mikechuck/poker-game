@@ -56,12 +56,6 @@ func game_state_change(old_game_state, new_game_state):
 	game_manager.emit_signal("game_state_change_signal", old_game_state, new_game_state)
 	
 @rpc("reliable", "call_remote", "authority")
-func deal_hole_cards(new_cards: Array[Dictionary]):
-	var cards: Array[CardData]
-	for card in new_cards:
-		cards.append(CardData.from_dict(card))
-	#var card_instance = card_scene.instantiate()
-	#card_instance.load_card_image("2", "D")
-	#add_child(card_instance)
-	print("Card 1 | number: %s, suit: %s" % [cards[0].number, cards[0].suit])
-	print("Card 2 | number: %s, suit: %s" % [cards[1].number, cards[1].suit])
+func update_current_player_turn(player_turn):
+	game_manager.current_player_turn = player_turn
+	game_manager.emit_signal("current_player_turn_updated_signal", player_turn)
