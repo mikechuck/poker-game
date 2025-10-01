@@ -37,7 +37,7 @@ func _on_disconnected():
 func update_connected_players_list(new_connected_players_list):
 	for connected_player in new_connected_players_list.values():
 		if connected_player.id == multiplayer.get_unique_id():
-			game_manager.player_data = connected_player
+			game_manager.player_data = ConnectedPlayer.from_dict(connected_player)
 	var deserialized_new_list = game_manager.deserialize_connected_players(new_connected_players_list)
 	var old_connected_players = game_manager.connected_players.duplicate()
 	game_manager.connected_players = deserialized_new_list

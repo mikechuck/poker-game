@@ -21,6 +21,7 @@ func _ready() -> void:
 	server_manager = get_parent().get_node("ServerManager")
 	game_manager.connected_players_updated_signal.connect(_on_connected_players_updated)
 	game_manager.player_seats_updated_signal.connect(_on_player_seats_updated)
+	game_manager.current_player_turn_updated_signal.connect(_on_player_turn_updated)
 	game_manager.game_state_change_signal.connect(_on_game_state_change_event)
 	player_actions_pre_game_host_node = $PlayerActionsPreGameHost
 	player_actions_pre_game_guest_node = $PlayerActionsPreGameGuest
@@ -40,6 +41,9 @@ func _on_game_state_change_event(old_game_state, new_game_state) -> void:
 func _on_player_seats_updated(old_player_seats, new_player_seats) -> void:
 	# Hole cards are kept in player_seats data, use this to update the hold cards UI
 	update_hole_cards()
+
+func _on_player_turn_updated(player_turn) -> void:
+	set_player_buttons()
 	
 func _on_ready_button_toggled(toggled_on: bool) -> void:
 	server_manager.set_ready_status.rpc_id(1, toggled_on)
@@ -75,9 +79,19 @@ func set_player_buttons():
 			status_message.text = "Shuffling deck..."
 			status_message.visible = true
 		GameState.State.Ante:
-			print("ante state reached")
+			player_actions_pre_game_host_node.visible = false
+			player_actions_pre_game_guest_node.visible = false
 			status_message.visible = false
-			player_actions_ante_node.visible = true
+			player_actions_ante_node.visible = false
+			if game_manager.current_player_turn > 0:
+				if game_manager.player_seats[game_manager.current_player_turn].player_id == game_manager.player_data.id:
+					print("your turn!")
+					status_message.text = "Your turn"
+					status_message.visible = true
+					player_actions_ante_node.visible = true
+				else:
+					print("not your turn")
+				
 
 func update_hole_cards():
 	for player_seat in game_manager.player_seats.values():

@@ -17,7 +17,6 @@ script = SubResource("GDScript_xygjn")
 [node name="TurnIndicator" type="Sprite2D" parent="PlayerCard"]
 visible = false
 position = Vector2(83, 37)
-scale = Vector2(0.99, 0.99)
 texture = ExtResource("2_dqkch")
 
 [node name="DetailsCard" type="Sprite2D" parent="PlayerCard"]

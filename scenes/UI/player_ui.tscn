@@ -334,6 +334,7 @@ offset_top = 20.0
 offset_bottom = 50.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_colors/default_color = Color(0.20871, 0.20871, 0.20871, 1)
 bbcode_enabled = true
 text = "[font_size=22]Shuffling...[/font_size]"
 horizontal_alignment = 1

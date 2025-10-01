@@ -1,5 +1,6 @@
 leftoff: 
-	- in table.gd, finish adding the indicator to show player turn in set_player_indicator
+	- Show buttons in player_ui when it's their turn
+	- step through player turn on button press from turn client
 	- add "is host" crown to player card for host
 	- add "player_turn" logic to game_manager, replicate to clients
 	- add updated indicator to player when it is their turn 

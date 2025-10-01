@@ -29,8 +29,8 @@ func _on_game_state_change(old_game_state, new_game_state):
 	if new_game_state != GameState.State.PreGame:
 		for seat in seat_nodes.values():
 			seat.visible = false
-	if new_game_state == GameState.State.Ante:
-		set_player_indicator(game_manager.current_player_turn)
+	#if new_game_state == GameState.State.Ante:
+		#set_player_indicator(game_manager.current_player_turn)
 		
 func _on_connected_players_updated(old_connected_players, new_connected_players):
 	for connected_player in new_connected_players.values():
@@ -65,14 +65,17 @@ func _on_player_seats_updated(old_player_seats, new_player_seats):
 			seat_data.player_node = player_instance
 			add_child(player_instance)
 			seat_nodes[seat_id].visible = false
-			
 	# Set new data
 	player_seats = new_player_seats
 
 func _on_player_turn_updated(player_turn):
 	print("table new turn")
+	set_player_indicator(player_turn)
 	
 func set_player_indicator(seat_number):
-	#LEFTOFFFFF
-	var player_data = game_manager.player_seats.get(str(seat_number))
-	print("Table: Setting indicator for player %s at seat %s" % [player_data.player_id, seat_number])
+	# Remove all turn indicators, show the new one only
+	for player_seat in game_manager.player_seats.values():
+		if player_seat.player_node is Node2D:
+			player_seat.player_node.toggle_turn_indicator(false)
+	var player_data = game_manager.player_seats.get(seat_number)
+	player_data.player_node.toggle_turn_indicator(true)

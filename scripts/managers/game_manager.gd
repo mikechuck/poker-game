@@ -20,8 +20,8 @@ var deck_manager
 ### Signals
 signal connected_players_updated_signal(old_connected_playes, new_connected_players)
 signal player_seats_updated_signal(old_player_seats, new_player_seats)
-signal game_state_change_signal(old_game_state, new_game_state)
 signal current_player_turn_updated_signal(player_turn)
+signal game_state_change_signal(old_game_state, new_game_state)
 
 ### UI Fields
 var screen_origin
@@ -37,7 +37,7 @@ var current_game_state = GameState.State.PreGame
 var current_player_turn: int = 0
 
 ### Client fields
-var player_data = null
+var player_data: ConnectedPlayer = null
 
 ### Start lifecycle methods
 
@@ -85,6 +85,7 @@ func step_next_game_state():
 			var next_game_state: GameState.State = GameState.State.Ante
 			current_game_state = next_game_state
 			client_manager.game_state_change.rpc(previous_game_state, next_game_state)
+			state_start_ante_turns()
 		GameState.State.Ante:
 			var next_game_state: GameState.State = GameState.State.DealFlop
 			current_game_state = next_game_state
@@ -105,6 +106,10 @@ func state_deal_hole_cards():
 			player.hole_cards.append(hole_card2)
 	client_manager.update_player_seats_list.rpc(serialize_player_seats())
 	step_next_game_state()
+	
+func state_start_ante_turns() -> void:
+	current_player_turn = 1
+	client_manager.update_current_player_turn.rpc(current_player_turn)
 		
 ###################################### Helper Functions #############################################
 
