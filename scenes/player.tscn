@@ -1,9 +1,11 @@
-[gd_scene load_steps=6 format=3 uid="uid://x8p6qfmpkras"]
+[gd_scene load_steps=8 format=3 uid="uid://x8p6qfmpkras"]
 
 [ext_resource type="Script" uid="uid://dsw4s5bge27tu" path="res://scripts/UI/player.gd" id="1_4kbsb"]
 [ext_resource type="Texture2D" uid="uid://b2ll1mn2xb802" path="res://assets/PlayerCard/TurnIndicator.png" id="2_dqkch"]
 [ext_resource type="Texture2D" uid="uid://ddlkeu1b8yhay" path="res://assets/PlayerCard/DetailsCard.png" id="2_qhqgy"]
+[ext_resource type="Texture2D" uid="uid://bdr6mll513ay7" path="res://assets/PlayerCard/FoldBadge.png" id="2_tuyoq"]
 [ext_resource type="Texture2D" uid="uid://3pvy2qjel0j0" path="res://assets/PlayerCard/ProfilePicture.png" id="3_dqkch"]
+[ext_resource type="Texture2D" uid="uid://32sj57b461rj" path="res://assets/PlayerCard/BetBadge.png" id="3_fjrip"]
 
 [sub_resource type="GDScript" id="GDScript_xygjn"]
 
@@ -13,6 +15,40 @@ script = ExtResource("1_4kbsb")
 [node name="PlayerCard" type="Node2D" parent="."]
 position = Vector2(-40, -20)
 script = SubResource("GDScript_xygjn")
+
+[node name="FoldBadge" type="Sprite2D" parent="PlayerCard"]
+visible = false
+position = Vector2(116, -11)
+texture = ExtResource("2_tuyoq")
+
+[node name="Text" type="RichTextLabel" parent="PlayerCard/FoldBadge"]
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = -61.0
+offset_top = -16.0
+offset_right = -61.0
+offset_bottom = 8.0
+grow_horizontal = 2
+text = "Folded
+"
+horizontal_alignment = 1
+
+[node name="BetBadge" type="Sprite2D" parent="PlayerCard"]
+visible = false
+position = Vector2(116, -11)
+texture = ExtResource("3_fjrip")
+
+[node name="Text" type="RichTextLabel" parent="PlayerCard/BetBadge"]
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = -61.0
+offset_top = -16.0
+offset_right = -61.0
+offset_bottom = 8.0
+grow_horizontal = 2
+text = "
+"
+horizontal_alignment = 1
 
 [node name="TurnIndicator" type="Sprite2D" parent="PlayerCard"]
 visible = false

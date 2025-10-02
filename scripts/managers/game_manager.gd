@@ -33,6 +33,8 @@ var host_player: ConnectedPlayer = null
 var connected_players: Dictionary[int, ConnectedPlayer] = {}
 var player_seats: Dictionary[int, PlayerSeat] = {}
 var default_starting_cash = 100
+var default_big_blind = 10
+var default_small_blind = 5
 var current_game_state = GameState.State.PreGame
 var current_player_turn: int = 0
 
@@ -77,9 +79,13 @@ func step_next_game_state():
 			client_manager.game_state_change.rpc(previous_game_state, next_game_state)
 			state_shuffle_cards()
 		GameState.State.Shuffle:
-			var next_game_state: GameState.State = GameState.State.DealHole
+			var next_game_state: GameState.State = GameState.State.SetupPlayers
 			current_game_state = next_game_state
 			client_manager.game_state_change.rpc(previous_game_state, next_game_state)
+			#state_setup_players()
+		GameState.State.SetupPlayers:
+			var next_game_state: GameState.State = GameState.State.DealHole
+			current_game_state = next_game_state
 			state_deal_hole_cards()
 		GameState.State.DealHole:
 			var next_game_state: GameState.State = GameState.State.Ante
