@@ -9,5 +9,4 @@ func _ready() -> void:
 
 func _on_pressed() -> void:
 	var seat_button_node = get_parent()
-	print("Seat number pressed: %s" % [seat_button_node.seat_number])
 	server_manager.request_seat.rpc_id(1, seat_button_node.seat_number)

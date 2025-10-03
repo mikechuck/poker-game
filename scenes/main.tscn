@@ -61,36 +61,36 @@ texture = ExtResource("4_ya4ey")
 [node name="Seats" type="Node2D" parent="Table/PokerTable"]
 
 [node name="SeatButton1" parent="Table/PokerTable/Seats" instance=ExtResource("3_jyhfs")]
-position = Vector2(-202, -220)
+position = Vector2(-202, 168)
 seat_number = 1
 
 [node name="SeatButton2" parent="Table/PokerTable/Seats" instance=ExtResource("3_jyhfs")]
-position = Vector2(94, -220)
+position = Vector2(-475, 80)
 seat_number = 2
 
 [node name="SeatButton3" parent="Table/PokerTable/Seats" instance=ExtResource("3_jyhfs")]
-position = Vector2(374, -128)
+position = Vector2(-475, -128)
 seat_number = 3
 
 [node name="SeatButton4" parent="Table/PokerTable/Seats" instance=ExtResource("3_jyhfs")]
-position = Vector2(374, 80)
+position = Vector2(-202, -220)
 seat_number = 4
 
 [node name="SeatButton5" parent="Table/PokerTable/Seats" instance=ExtResource("3_jyhfs")]
-position = Vector2(94, 168)
+position = Vector2(94, -220)
 seat_number = 5
 
 [node name="SeatButton6" parent="Table/PokerTable/Seats" instance=ExtResource("3_jyhfs")]
-position = Vector2(-202, 168)
+position = Vector2(374, -128)
 seat_number = 6
 
-[node name="SeatButton8" parent="Table/PokerTable/Seats" instance=ExtResource("3_jyhfs")]
-position = Vector2(-475, -128)
-seat_number = 8
-
 [node name="SeatButton7" parent="Table/PokerTable/Seats" instance=ExtResource("3_jyhfs")]
-position = Vector2(-475, 80)
+position = Vector2(374, 80)
 seat_number = 7
+
+[node name="SeatButton8" parent="Table/PokerTable/Seats" instance=ExtResource("3_jyhfs")]
+position = Vector2(94, 168)
+seat_number = 8
 
 [node name="PlayerUI" parent="." instance=ExtResource("5_tbgi4")]
 layout_mode = 1
@@ -109,5 +109,3 @@ script = ExtResource("8_85g3d")
 
 [node name="GameManager" type="Node2D" parent="."]
 script = ExtResource("1_h2fnp")
-player_scene = null
-player_ui_scene = null

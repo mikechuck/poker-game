@@ -44,7 +44,7 @@ offset_left = 68.0
 offset_right = 239.0
 offset_bottom = 25.0
 
-[node name="PlayerActionsPreGameHost" type="Control" parent="."]
+[node name="PlayerActionsPreHandHost" type="Control" parent="."]
 visible = false
 custom_minimum_size = Vector2(100, 100)
 layout_mode = 1
@@ -56,7 +56,7 @@ offset_top = -100.0
 grow_horizontal = 2
 grow_vertical = 0
 
-[node name="Ready" type="Control" parent="PlayerActionsPreGameHost"]
+[node name="Ready" type="Control" parent="PlayerActionsPreHandHost"]
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
@@ -69,7 +69,7 @@ offset_right = 20.0
 grow_horizontal = 2
 grow_vertical = 0
 
-[node name="ReadyButton" type="CheckButton" parent="PlayerActionsPreGameHost/Ready"]
+[node name="ReadyButton" type="CheckButton" parent="PlayerActionsPreHandHost/Ready"]
 layout_mode = 0
 offset_left = -157.0
 offset_top = -50.0
@@ -81,7 +81,7 @@ theme_override_colors/font_color = Color(0.212305, 0.212305, 0.212305, 1)
 theme_override_constants/outline_size = 0
 text = "Ready"
 
-[node name="Start" type="Control" parent="PlayerActionsPreGameHost"]
+[node name="Start" type="Control" parent="PlayerActionsPreHandHost"]
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
@@ -94,7 +94,7 @@ offset_right = 20.0
 grow_horizontal = 2
 grow_vertical = 0
 
-[node name="StartButton" type="Button" parent="PlayerActionsPreGameHost/Start"]
+[node name="StartButton" type="Button" parent="PlayerActionsPreHandHost/Start"]
 layout_mode = 0
 offset_left = 25.0
 offset_top = -50.0
@@ -103,7 +103,7 @@ mouse_default_cursor_shape = 2
 disabled = true
 text = "Start Game"
 
-[node name="PlayerActionsPreGameGuest" type="Control" parent="."]
+[node name="PlayerActionsPreHandGuest" type="Control" parent="."]
 visible = false
 custom_minimum_size = Vector2(100, 100)
 layout_mode = 1
@@ -114,7 +114,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 0
 
-[node name="Ready" type="Control" parent="PlayerActionsPreGameGuest"]
+[node name="Ready" type="Control" parent="PlayerActionsPreHandGuest"]
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
@@ -127,7 +127,7 @@ offset_right = 20.0
 grow_horizontal = 2
 grow_vertical = 0
 
-[node name="ReadyButton" type="CheckButton" parent="PlayerActionsPreGameGuest/Ready"]
+[node name="ReadyButton" type="CheckButton" parent="PlayerActionsPreHandGuest/Ready"]
 layout_mode = 0
 offset_left = -70.0
 offset_top = -50.0
@@ -331,12 +331,13 @@ anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
 offset_top = 20.0
-offset_bottom = 50.0
+offset_bottom = 65.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_colors/default_color = Color(0.20871, 0.20871, 0.20871, 1)
 bbcode_enabled = true
-text = "[font_size=22]Shuffling...[/font_size]"
+text = "[font_size=26
+]Shuffling...[/font_size]"
 horizontal_alignment = 1
 
 [node name="HoleCards" type="Control" parent="."]
@@ -362,9 +363,9 @@ visible = false
 position = Vector2(-50, -75)
 texture = ExtResource("2_50a1s")
 
-[connection signal="toggled" from="PlayerActionsPreGameHost/Ready/ReadyButton" to="." method="_on_ready_button_toggled"]
-[connection signal="button_down" from="PlayerActionsPreGameHost/Start/StartButton" to="." method="_on_start_button__down"]
-[connection signal="toggled" from="PlayerActionsPreGameGuest/Ready/ReadyButton" to="." method="_on_ready_button_toggled"]
+[connection signal="toggled" from="PlayerActionsPreHandHost/Ready/ReadyButton" to="." method="_on_ready_button_toggled"]
+[connection signal="button_down" from="PlayerActionsPreHandHost/Start/StartButton" to="." method="_on_start_button__down"]
+[connection signal="toggled" from="PlayerActionsPreHandGuest/Ready/ReadyButton" to="." method="_on_ready_button_toggled"]
 [connection signal="button_down" from="PlayerActionsAnte/Ante/AnteButton" to="." method="_on_start_button__down"]
 [connection signal="button_down" from="PlayerActionsAnte/Fold/FoldButton" to="." method="_on_start_button__down"]
 [connection signal="button_down" from="PlayerActionsGame/Check/CheckButton" to="." method="_on_start_button__down"]

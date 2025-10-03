@@ -19,6 +19,8 @@ var is_small_blind: bool = false
 func _ready() -> void:
 	player_name_label_node.text = "[font_size=16][b]%s[/b][/font_size]" % [str(player_id)]
 	cash_amount_node.text = "$" + str(current_cash)
+	if is_player_turn:
+		turn_indicator_node.visible = true
 	if is_folded:
 		player_card_node.set_modulate("aaaaaa")
 		folded_badge_node.visible = true
@@ -28,31 +30,3 @@ func _ready() -> void:
 	if is_big_blind:
 		bet_badge_node.visible = true
 		bet_badge_node.get_node("Text").text = "BB"
-		
-func _draw() -> void:
-	pass
-
-func toggle_show_folded(show: bool) -> void:
-	is_folded = show
-	if show:
-		player_card_node.set_modulate("aaaaaa")
-		folded_badge_node.visible = true
-	else:
-		player_card_node.set_modulate(Color.WHITE)
-		folded_badge_node.visible = true
-	
-func toggle_show_big_blind(show: bool) -> void:
-	is_big_blind = show
-	if show:
-		bet_badge_node.visible = true
-		bet_badge_node.get_node("Text").text = "$" + str(game_manager.default_big_blind)
-	else:
-		bet_badge_node.visible = false
-		
-func toggle_show_small_blind(show: bool) -> void:
-	is_small_blind = show
-	if show:
-		bet_badge_node.visible = true
-		bet_badge_node.get_node("Text").text = "$" + str(game_manager.default_small_blind)
-	else:
-		bet_badge_node.visible = false

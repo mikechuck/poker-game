@@ -38,21 +38,21 @@ func update_connected_players_list(new_connected_players_list):
 	for connected_player in new_connected_players_list.values():
 		if connected_player.id == multiplayer.get_unique_id():
 			game_manager.player_data = ConnectedPlayer.from_dict(connected_player)
-	var deserialized_new_list = game_manager.deserialize_connected_players(new_connected_players_list)
-	var old_connected_players = game_manager.connected_players.duplicate()
-	game_manager.connected_players = deserialized_new_list
+	var deserialized_new_list = Serializer.deserialize_connected_players(new_connected_players_list)
+	var old_connected_players = game_manager.game_state_data.connected_players.duplicate()
+	game_manager.game_state_data.connected_players = deserialized_new_list
 	game_manager.emit_signal("connected_players_updated_signal", old_connected_players, deserialized_new_list)
 
 @rpc("reliable", "call_remote", "authority")
 func update_player_seats_list(new_player_seats):
-	var deserialized_new_list = game_manager.deserialize_player_seats(new_player_seats)
+	var deserialized_new_list = Serializer.deserialize_player_seats(new_player_seats)
 	var old_player_seats_list = game_manager.player_seats.duplicate()
 	game_manager.player_seats = deserialized_new_list
 	game_manager.emit_signal("player_seats_updated_signal", old_player_seats_list, deserialized_new_list)
 		
 @rpc("reliable", "call_remote", "authority")
 func game_state_change(old_game_state, new_game_state):
-	game_manager.current_game_state = new_game_state
+	game_manager.game_state_data.current_game_state = new_game_state
 	game_manager.emit_signal("game_state_change_signal", old_game_state, new_game_state)
 	
 @rpc("reliable", "call_remote", "authority")

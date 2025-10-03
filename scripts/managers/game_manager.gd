@@ -29,14 +29,19 @@ var single_angle = PI / 4
 var table_radius = 225
 
 ### Server fields
-var host_player: ConnectedPlayer = null
-var connected_players: Dictionary[int, ConnectedPlayer] = {}
-var player_seats: Dictionary[int, PlayerSeat] = {}
 var default_starting_cash = 100
 var default_big_blind = 10
 var default_small_blind = 5
-var current_game_state = GameState.State.PreGame
-var current_player_turn: int = 0
+
+var game_state_data: GameStateData
+
+### Poker logic fields
+#var current_game_state = GameState.State.PreHand
+#var starting_player_turn: int = 0
+#var current_player_turn: int = 0
+#var connected_players: Dictionary[int, ConnectedPlayer] = {}
+var player_seats: Dictionary[int, PlayerSeat] = {}
+var host_player: ConnectedPlayer = null
 
 ### Client fields
 var player_data: ConnectedPlayer = null
@@ -59,48 +64,61 @@ func _ready() -> void:
 		screen_origin = get_viewport_rect().size / 2
 		player_ui_instance = get_parent().find_child("PlayerUI")
 		client_manager.connect_to_server()
-		queue_redraw()
-		
-func _process(delta: float) -> void:
-	pass
-
-func _draw() -> void:
-	pass
 	
 ### End lifecycle methods
 
 ### Game cycle methods
 func step_next_game_state():
-	var previous_game_state = current_game_state
-	match current_game_state:
-		GameState.State.PreGame:
-			var next_game_state: GameState.State = GameState.State.Shuffle
-			current_game_state = next_game_state
+	var previous_game_state = game_state_data.current_game_state
+	match game_state_data.current_game_state:
+		GameState.State.PreHand:
+			var next_game_state: GameState.State = GameState.State.SetupHand
+			game_state_data.current_game_state = next_game_state
 			client_manager.game_state_change.rpc(previous_game_state, next_game_state)
-			state_shuffle_cards()
-		GameState.State.Shuffle:
-			var next_game_state: GameState.State = GameState.State.SetupPlayers
-			current_game_state = next_game_state
-			client_manager.game_state_change.rpc(previous_game_state, next_game_state)
-			#state_setup_players()
-		GameState.State.SetupPlayers:
+			state_setup_hand()
+		GameState.State.SetupHand:
 			var next_game_state: GameState.State = GameState.State.DealHole
-			current_game_state = next_game_state
+			game_state_data.current_game_state = next_game_state
+			client_manager.game_state_change.rpc(previous_game_state, next_game_state)
 			state_deal_hole_cards()
 		GameState.State.DealHole:
 			var next_game_state: GameState.State = GameState.State.Ante
-			current_game_state = next_game_state
+			game_state_data.current_game_state = next_game_state
 			client_manager.game_state_change.rpc(previous_game_state, next_game_state)
 			state_start_ante_turns()
 		GameState.State.Ante:
 			var next_game_state: GameState.State = GameState.State.DealFlop
-			current_game_state = next_game_state
+			game_state_data.current_game_state = next_game_state
 			client_manager.game_state_change.rpc(previous_game_state, next_game_state)
-
-func state_shuffle_cards():
+	
+func state_setup_hand():
+	# New shuffled deck
 	deck_manager.shuffle_deck()
-	#var timer = get_tree().create_timer(2.0)
-	#await timer.timeout
+	# Reset all player data
+	for player_seat in player_seats.values():
+		player_seat.reset_hand_data()
+	# Reset turn index
+	for i in range(1, player_seats.keys().size() + 1):
+		if player_seats[i].player_id != 0:
+			game_state_data.starting_player_turn = i
+			game_state_data.current_player_turn = i
+			break;
+	# Set initiate blind states
+	var small_blind_seat_num: int = game_state_data.starting_player_turn
+	# Setup small blind
+	for i in range(small_blind_seat_num, player_seats.keys().size() + 1):
+		if player_seats[i].player_id != 0:
+			player_seats[i].is_small_blind = true
+			small_blind_seat_num = i
+			break
+	# Setup big blind
+	for i in range(small_blind_seat_num + 1, player_seats.keys().size() + 1):
+		if player_seats[i].player_id != 0:
+			player_seats[i].is_big_blind = true
+			break;
+	# Update all clients with starting game state
+	client_manager.update_current_player_turn.rpc(game_state_data.current_player_turn)
+	client_manager.update_player_seats_list.rpc(Serializer.serialize_player_seats(player_seats))
 	step_next_game_state()
 	
 func state_deal_hole_cards():
@@ -110,51 +128,13 @@ func state_deal_hole_cards():
 			var hole_card2: CardData = deck_manager.deal_card()
 			player.hole_cards.append(hole_card1)
 			player.hole_cards.append(hole_card2)
-	client_manager.update_player_seats_list.rpc(serialize_player_seats())
+	client_manager.update_player_seats_list.rpc(Serializer.serialize_player_seats(player_seats))
 	step_next_game_state()
 	
 func state_start_ante_turns() -> void:
-	current_player_turn = 1
-	client_manager.update_current_player_turn.rpc(current_player_turn)
+	pass
 		
 ###################################### Helper Functions #############################################
-
-# Converts a dict of custom objects to dict of generic objects
-func serialize_player_seats() -> Dictionary:
-	var player_seats_dict = {}
-	for player_id in player_seats:
-		player_seats_dict[player_id] = player_seats[player_id].to_dict()
-	return player_seats_dict
-	
-func deserialize_player_seats(new_player_seats) -> Dictionary[int, PlayerSeat]:
-	var deserialized_player_seats: Dictionary[int, PlayerSeat] = {}
-	for id in new_player_seats.keys():
-		deserialized_player_seats[id] = PlayerSeat.from_dict(new_player_seats[id])
-	return deserialized_player_seats
-	
-func serialize_connected_players() -> Dictionary:
-	var connected_players_dict = {}
-	for player_id in connected_players:
-		connected_players_dict[player_id] = connected_players[player_id].to_dict()
-	return connected_players_dict
-	
-func deserialize_connected_players(new_connected_players) -> Dictionary[int, ConnectedPlayer]:
-	var deserialized_connected_players: Dictionary[int, ConnectedPlayer] = {}
-	for id in new_connected_players.keys():
-		deserialized_connected_players[id] = ConnectedPlayer.from_dict(new_connected_players[id])
-	return deserialized_connected_players
-	
-func serialize_cards(cards: Array[CardData]) -> Array[Dictionary]:
-	var card_dict_array: Array[Dictionary] = []
-	for card in cards:
-		card_dict_array.append(card.to_dict())
-	return card_dict_array
-	
-func deserialize_cards(cards: Array[Dictionary]) -> Array[CardData]:
-	var card_data_array: Array[CardData] = []
-	for card in cards:
-		card_data_array.append(CardData.from_dict(card))
-	return card_data_array
 	
 func get_next_free_seat(seat_number):
 	var desired_seat = player_seats.get(seat_number)

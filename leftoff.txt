@@ -1,5 +1,6 @@
 leftoff: 
-	- run state_setup_players to assign turn, bb, sb, etc initial game data
+	- finish swapping everything in game_state_data to be referenced correctly
+	- update signals to just produce the game state data upate signal (not created yet)
 	- step through player turn on button press from turn client
 	- add "is host" crown to player card for host
 	- add "player_turn" logic to game_manager, replicate to clients

@@ -8,6 +8,12 @@ var is_folded: bool = false
 var is_big_blind: bool = false
 var is_small_blind: bool = false
 
+func reset_hand_data() -> void:
+	hole_cards = []
+	is_folded = false
+	is_big_blind = false
+	is_small_blind = false
+
 func to_dict() -> Dictionary:
 	var cards: Array[Dictionary] = []
 	for card in hole_cards:
@@ -29,10 +35,6 @@ static func from_dict(dict) -> PlayerSeat:
 	instance.is_folded = dict.get("is_folded")
 	instance.is_big_blind = dict.get("is_big_blind")
 	instance.is_small_blind = dict.get("is_small_blind")
-	
-	var cards: Array[CardData] = []
-	for card in dict.get("hole_cards"):
-		cards.append(CardData.from_dict(card))
-	instance.hole_cards = cards
+	instance.hole_cards = Serializer.deserialize_cards(dict.get("hole_cards"))
 	
 	return instance

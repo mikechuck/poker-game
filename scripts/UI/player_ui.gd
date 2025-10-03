@@ -19,12 +19,12 @@ var hole_card_instances
 func _ready() -> void:
 	game_manager = get_parent().get_node("GameManager")
 	server_manager = get_parent().get_node("ServerManager")
-	game_manager.connected_players_updated_signal.connect(_on_connected_players_updated)
+	game_manager.game_state_data.connected_players_updated_signal.connect(_on_connected_players_updated)
 	game_manager.player_seats_updated_signal.connect(_on_player_seats_updated)
 	game_manager.current_player_turn_updated_signal.connect(_on_player_turn_updated)
 	game_manager.game_state_change_signal.connect(_on_game_state_change_event)
-	player_actions_pre_game_host_node = $PlayerActionsPreGameHost
-	player_actions_pre_game_guest_node = $PlayerActionsPreGameGuest
+	player_actions_pre_game_host_node = $PlayerActionsPreHandHost
+	player_actions_pre_game_guest_node = $PlayerActionsPreHandGuest
 	player_actions_ante_node = $PlayerActionsAnte
 	player_actions_game_node = $PlayerActionsGame
 	status_message = $StatusMessage/Text
@@ -53,17 +53,17 @@ func _on_start_button__down() -> void:
 	
 func set_player_buttons():
 	status_message.visible = false
-	match game_manager.current_game_state:
-		GameState.State.PreGame:
+	match game_manager.game_state_data.current_game_state:
+		GameState.State.PreHand:
 			if (game_manager.player_data.is_spectating):
 				player_actions_pre_game_host_node.visible = false
 				player_actions_pre_game_guest_node.visible = false
 			elif (game_manager.player_data.is_host):
-				var start_button = $PlayerActionsPreGameHost/Start/StartButton
+				var start_button = $PlayerActionsPreHandHost/Start/StartButton
 				var all_players_ready = true
 				player_actions_pre_game_host_node.visible = true
 				player_actions_pre_game_guest_node.visible = false
-				for player in game_manager.connected_players.values():
+				for player in game_manager.game_state_data.connected_players.values():
 					if !player.is_spectating && !player.is_ready:
 						all_players_ready = false
 				if all_players_ready && game_manager.player_data.is_host:
@@ -73,25 +73,22 @@ func set_player_buttons():
 			else:
 				player_actions_pre_game_host_node.visible = false
 				player_actions_pre_game_guest_node.visible = true
-		GameState.State.Shuffle:
-			player_actions_pre_game_host_node.visible = false
-			player_actions_pre_game_guest_node.visible = false
-			status_message.text = "Shuffling deck..."
-			status_message.visible = true
 		GameState.State.Ante:
 			player_actions_pre_game_host_node.visible = false
 			player_actions_pre_game_guest_node.visible = false
 			status_message.visible = false
 			player_actions_ante_node.visible = false
-			if game_manager.current_player_turn > 0:
-				if game_manager.player_seats[game_manager.current_player_turn].player_id == game_manager.player_data.id:
-					print("your turn!")
-					status_message.text = "Your turn"
+			if game_manager.game_state_data.current_player_turn > 0:
+				if game_manager.player_seats[game_manager.game_state_data.current_player_turn].player_id == game_manager.player_data.id:
+					set_status_text("Your turn")
 					status_message.visible = true
 					player_actions_ante_node.visible = true
 				else:
 					print("not your turn")
-				
+
+func set_status_text(text: String) -> void:
+	status_message.text = "[font_size=26]" + text + "[/font_size]"
+	
 
 func update_hole_cards():
 	for player_seat in game_manager.player_seats.values():
