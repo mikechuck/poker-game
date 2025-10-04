@@ -18,7 +18,7 @@ script = SubResource("GDScript_xygjn")
 
 [node name="FoldBadge" type="Sprite2D" parent="PlayerCard"]
 visible = false
-position = Vector2(116, -11)
+position = Vector2(116, -15)
 texture = ExtResource("2_tuyoq")
 
 [node name="Text" type="RichTextLabel" parent="PlayerCard/FoldBadge"]
@@ -34,6 +34,7 @@ text = "Folded
 horizontal_alignment = 1
 
 [node name="BetBadge" type="Sprite2D" parent="PlayerCard"]
+visible = false
 position = Vector2(116, -15)
 texture = ExtResource("3_fjrip")
 
@@ -50,6 +51,7 @@ text = "
 horizontal_alignment = 1
 
 [node name="TurnIndicator" type="Sprite2D" parent="PlayerCard"]
+visible = false
 position = Vector2(83, 37)
 texture = ExtResource("2_dqkch")
 

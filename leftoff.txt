@@ -1,14 +1,10 @@
 leftoff: 
-	- finish swapping everything in game_state_data to be referenced correctly
-	- update signals to just produce the game state data upate signal (not created yet)
-	- step through player turn on button press from turn client
-	- add "is host" crown to player card for host
-	- add "player_turn" logic to game_manager, replicate to clients
-	- add updated indicator to player when it is their turn 
-	- started adding logic for cash amounts. hook up player card money to actual data
-	- once this data is displayed, then integrate the bet button against it
+	- Start adding logic for cash amounts. hook up player card money to actual data on PlayerSeat
+	- once this data is displayed, then integrate the Ante button against it
+	- Implement pot into game_state_data, bet button removes money from that player and put's into pot
 
 Todo:
+	- add "is host" crown to player card for host
 	- Add "is server" checks to rpc functions
 	- show list of connected players in room
 	- when all players are in "ready" state", host can select "start" button which tells all client to disable seat selection and ready button

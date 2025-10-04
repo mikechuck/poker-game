@@ -21,12 +21,14 @@ func _ready() -> void:
 	cash_amount_node.text = "$" + str(current_cash)
 	if is_player_turn:
 		turn_indicator_node.visible = true
+		
+	# Badge logic, only want one
 	if is_folded:
 		player_card_node.set_modulate("aaaaaa")
 		folded_badge_node.visible = true
-	if is_small_blind:
+	elif is_small_blind:
 		bet_badge_node.visible = true
 		bet_badge_node.get_node("Text").text = "SB"
-	if is_big_blind:
+	elif is_big_blind:
 		bet_badge_node.visible = true
 		bet_badge_node.get_node("Text").text = "BB"

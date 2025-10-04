@@ -24,11 +24,10 @@ func _on_peer_connected(id):
 	connected_player.current_cash = game_manager.default_starting_cash
 	game_manager.game_state_data.connected_players[id] = connected_player
 	# If this was the first player to connect, set it as host player
-	if (game_manager.host_player == null):
-		game_manager.host_player = connected_player
+	if (game_manager.game_state_data.host_player_id == 0):
+		game_manager.game_state_data.host_player_id = connected_player.id
 		connected_player.is_host = true
-	# For some reason, need to send to existing clients AND new client, maybe they don't exist in the stack yet
-	client_manager.update_connected_players_list.rpc(Serializer.serialize_connected_players(game_manager.game_state_data.connected_players))
+	client_manager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
 	print("Number of players connected: %s" % [game_manager.game_state_data.connected_players.size()])
 	
 func _on_peer_disconnected(id):
@@ -37,21 +36,20 @@ func _on_peer_disconnected(id):
 	if disconnecting_player.is_host:
 		if (game_manager.game_state_data.connected_players.values().size() > 0):
 			var new_host_id = game_manager.game_state_data.connected_players.keys()[0]
-			game_manager.host_player = game_manager.connected_players.get(new_host_id)
+			game_manager.game_state_data.host_player_id = new_host_id
 		else:
-			game_manager.host_player = null
-			game_manager.game_state_data.current_game_state = GameState.State.PreHand
+			game_manager.game_state_data.host_player_id = 0
+			game_manager.game_state_data.game_state = GameState.State.PreHand
 	elif game_manager.game_state_data.connected_players.values().size() == 0:
-		game_manager.host_player = null
-		game_manager.game_state_data.current_game_state = GameState.State.PreHand
+		game_manager.game_state_data.host_player_id = 0
+		game_manager.game_state_data.game_state = GameState.State.PreHand
 		
 	# Clear the player from the seat
-	for seat in game_manager.player_seats.values():
+	for seat in game_manager.game_state_data.player_seats.values():
 		if seat.player_id == id:
 			seat.player_id = 0
 			seat.player_node = null
-	client_manager.update_connected_players_list.rpc(Serializer.serialize_connected_players(game_manager.game_state_data.connected_players))
-	client_manager.update_player_seats_list.rpc(Serializer.serialize_player_seats(game_manager.game_state_data.player_seats))
+	client_manager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
 	print("Number of players connected: %s" % [game_manager.game_state_data.connected_players.size()])
 
 ### RPC Functions
@@ -62,20 +60,19 @@ func request_seat(seat_number: int):
 	# Check to see if seat is already filled
 	seat_number = game_manager.get_next_free_seat(seat_number)
 	# First remove them from their current seat then put them in the new seat
-	var desired_seat = game_manager.player_seats.get(seat_number)
-	for seat in game_manager.player_seats.values():
+	var desired_seat = game_manager.game_state_data.player_seats.get(seat_number)
+	for seat in game_manager.game_state_data.player_seats.values():
 		if (seat.player_id == client_id):
 			seat.player_id = 0
 	desired_seat.player_id = client_id
-	game_manager.player_seats[seat_number] = desired_seat
+	game_manager.game_state_data.player_seats[seat_number] = desired_seat
 	game_manager.game_state_data.connected_players[client_id].is_spectating = false
-	client_manager.update_connected_players_list.rpc(Serializer.serialize_connected_players(game_manager.game_state_data.connected_players))
-	client_manager.update_player_seats_list.rpc(Serializer.serialize_player_seats(game_manager.game_state_data.player_seats))
+	client_manager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
 	
 @rpc("reliable", "any_peer")
 func set_ready_status(is_ready: bool):
 	game_manager.game_state_data.connected_players[multiplayer.get_remote_sender_id()].is_ready = is_ready
-	client_manager.update_connected_players_list.rpc(Serializer.serialize_connected_players(game_manager.game_state_data.connected_players))
+	client_manager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
 	
 @rpc("reliable", "any_peer")
 func start_game():
@@ -85,10 +82,17 @@ func start_game():
 	for player in game_manager.game_state_data.connected_players.values():
 		if !player.is_spectating && !player.is_ready:
 			all_players_ready = false
-	if (game_manager.host_player.id == requestor_id &&
-		game_manager.game_state_data.current_game_state == GameState.State.PreHand &&
+	if (game_manager.game_state_data.host_player_id == requestor_id &&
+		game_manager.game_state_data.game_state == GameState.State.PreHand &&
 		all_players_ready):
 		game_manager.step_next_game_state()
+		
+@rpc("reliable", "any_peer")
+func player_action_taken(player_action: int):
+	print("player action: %s" % player_action)
+	match player_action:
+		PlayerTurnAction.Action.Fold:
+			game_manager.player_action_folded()
 
 ### Helper functions
 
@@ -96,5 +100,5 @@ func set_player_seats():
 	for i in range(1, 9):
 		var player_seat = PlayerSeat.new()
 		player_seat.player_id = 0
-		game_manager.player_seats[i] = player_seat
+		game_manager.game_state_data.player_seats[i] = player_seat
 	

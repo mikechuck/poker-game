@@ -28,13 +28,14 @@ func to_dict() -> Dictionary:
 		"is_small_blind": is_small_blind
 	}
 
-static func from_dict(dict) -> PlayerSeat:
+static func from_dict(dict: Dictionary) -> PlayerSeat:
 	var instance = PlayerSeat.new()
-	instance.player_id = dict.get("player_id")
-	instance.player_node = dict.get("player_node")
-	instance.is_folded = dict.get("is_folded")
-	instance.is_big_blind = dict.get("is_big_blind")
-	instance.is_small_blind = dict.get("is_small_blind")
-	instance.hole_cards = Serializer.deserialize_cards(dict.get("hole_cards"))
+	if dict != {}:
+		instance.player_id = dict.get("player_id")
+		instance.player_node = dict.get("player_node")
+		instance.is_folded = dict.get("is_folded")
+		instance.is_big_blind = dict.get("is_big_blind")
+		instance.is_small_blind = dict.get("is_small_blind")
+		instance.hole_cards = Serializer.deserialize_cards(dict.get("hole_cards"))
 	
 	return instance
