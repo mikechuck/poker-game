@@ -5,7 +5,6 @@ enum State {
 	PreHand,
 	SetupHand,
 	DealHole,
-	Ante,
 	BetHole,
 	DealFlop,
 	BetFlop,

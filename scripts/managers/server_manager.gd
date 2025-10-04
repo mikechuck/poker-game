@@ -88,11 +88,9 @@ func start_game():
 		game_manager.step_next_game_state()
 		
 @rpc("reliable", "any_peer")
-func player_action_taken(player_action: int):
-	print("player action: %s" % player_action)
-	match player_action:
-		PlayerTurnAction.Action.Fold:
-			game_manager.player_action_folded()
+func player_action_taken(player_action: int, action_value):
+	print("player action: %s, value: %s" % [player_action, action_value])
+	game_manager.player_action_taken(player_action, action_value)
 
 ### Helper functions
 

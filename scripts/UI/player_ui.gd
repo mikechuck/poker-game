@@ -14,7 +14,7 @@ var player_actions_game_node = null
 var ready_toggle = null
 var status_message = null
 var hole_cards_node = null
-var hole_card_instances
+var start_button_node = null
 
 func _ready() -> void:
 	game_manager = get_parent().get_node("GameManager")
@@ -26,8 +26,10 @@ func _ready() -> void:
 	player_actions_game_node = $PlayerActionsGame
 	status_message = $StatusMessage/Text
 	hole_cards_node = $HoleCards
+	start_button_node = $PlayerActionsPreHandHost/Start/StartButton
 	
 func _on_game_state_data_updated(old_game_state_data, new_game_state_data):
+	set_status_message()
 	if (old_game_state_data.connected_players != new_game_state_data.connected_players):
 		handle_connected_players_updated(old_game_state_data.connected_players, new_game_state_data.connected_players)
 	if (old_game_state_data.game_state != new_game_state_data.game_state):
@@ -42,53 +44,48 @@ func handle_connected_players_updated(old_connected_players, new_connected_playe
 	set_player_data()
 
 func handle_game_state_change(old_game_state, new_game_state) -> void:
-	print("Game state has changed from %s to %s" % [old_game_state, new_game_state])
 	set_player_buttons()
 
 func handle_player_seats_updated(old_player_seats, new_player_seats) -> void:
-	# Hole cards are kept in player_seats data, use this to update the hold cards UI
 	update_hole_cards()
 
 func handle_player_turn_updated(old_player_turn, new_player_turn) -> void:
 	set_player_buttons()
 	
+func set_status_message() -> void:
+	if (is_client_turn()):
+		status_message.visible = true
+		set_status_text("Your turn")
+	else:
+		status_message.visible = false
+	
 func set_player_buttons():
-	status_message.visible = false
+	player_actions_pre_game_host_node.visible = false
+	player_actions_pre_game_guest_node.visible = false
+	player_actions_ante_node.visible = false
+	start_button_node.disabled = false
+	# Match on game state to decide which buttons to show
 	match game_manager.game_state_data.game_state:
 		GameState.State.PreHand:
-			if (game_manager.get_client_player_data().is_spectating):
-				player_actions_pre_game_host_node.visible = false
-				player_actions_pre_game_guest_node.visible = false
-			elif (game_manager.get_client_player_data().is_host):
-				var start_button = $PlayerActionsPreHandHost/Start/StartButton
-				var all_players_ready = true
-				player_actions_pre_game_host_node.visible = true
-				player_actions_pre_game_guest_node.visible = false
-				for player in game_manager.game_state_data.connected_players.values():
-					if !player.is_spectating && !player.is_ready:
-						all_players_ready = false
-				if all_players_ready && game_manager.get_client_player_data().is_host:
-					start_button.disabled = false
+			if (!game_manager.get_client_player_data().is_spectating):
+				if (game_manager.get_client_player_data().is_host):
+					player_actions_pre_game_host_node.visible = true
+					# Only enable start button if all players are ready
+					for player in game_manager.game_state_data.connected_players.values():
+						if !player.is_spectating && !player.is_ready:
+							start_button_node.disabled = true
 				else:
-					start_button.disabled = true
-			else:
-				player_actions_pre_game_host_node.visible = false
-				player_actions_pre_game_guest_node.visible = true
-		GameState.State.Ante:
-			player_actions_pre_game_host_node.visible = false
-			player_actions_pre_game_guest_node.visible = false
-			status_message.visible = false
-			player_actions_ante_node.visible = false
+					player_actions_pre_game_guest_node.visible = true
+		GameState.State.BetHole:
+			var current_turn_player_seat_data = get_current_turn_seat_data()
 			if game_manager.game_state_data.player_turn > 0:
-				if game_manager.game_state_data.player_seats[game_manager.game_state_data.player_turn].player_id == game_manager.get_client_player_data().id:
-					set_status_text("Your turn")
-					status_message.visible = true
+				if is_client_turn():
 					player_actions_ante_node.visible = true
-				else:
-					print("not your turn")
-
-func set_status_text(text: String) -> void:
-	status_message.text = "[font_size=26]" + text + "[/font_size]"
+					# Set ante button value based on blind state
+					if (current_turn_player_seat_data.is_small_blind):
+						player_actions_ante_node.get_node("Ante/AnteButton").text = "Bet $%s" % game_manager.default_small_blind
+					if (current_turn_player_seat_data.is_big_blind):
+						player_actions_ante_node.get_node("Ante/AnteButton").text = "Bet $%s" % game_manager.default_big_blind
 	
 func update_hole_cards():
 	for player_seat in game_manager.game_state_data.player_seats.values():
@@ -109,6 +106,18 @@ func set_player_data():
 	player_is_host_node.clear()
 	player_is_host_node.append_text(str(game_manager.get_client_player_data().is_host))
 	
+func is_client_turn() -> bool:
+	if (game_manager.game_state_data.player_turn != 0):
+		return game_manager.game_state_data.player_seats[game_manager.game_state_data.player_turn].player_id == game_manager.get_client_player_data().id
+	else:
+		return false
+
+func get_current_turn_seat_data() -> PlayerSeat:
+	return game_manager.game_state_data.player_seats[game_manager.game_state_data.player_turn]
+
+func set_status_text(text: String) -> void:
+	status_message.text = "[font_size=26]" + text + "[/font_size]"
+	
 	
 ### Button signal methods ###
 
@@ -121,4 +130,12 @@ func _on_start_button_pressed() -> void:
 	
 ### PlayerActionsAnte
 func _on_fold_button_pressed() -> void:
-	server_manager.player_action_taken.rpc_id(1, PlayerTurnAction.Action.Fold)
+	server_manager.player_action_taken.rpc_id(1, PlayerTurnAction.Action.Fold, null)
+
+func _on_ante_button_pressed() -> void:
+	var bet_amount = 0
+	if (get_current_turn_seat_data().is_small_blind):
+		bet_amount = game_manager.default_small_blind
+	elif (get_current_turn_seat_data().is_big_blind):
+		bet_amount = game_manager.default_big_blind
+	server_manager.player_action_taken.rpc_id(1, PlayerTurnAction.Action.Bet, bet_amount)

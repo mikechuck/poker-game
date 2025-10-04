@@ -66,11 +66,11 @@ func step_next_game_state():
 			client_manager.update_game_state_data.rpc(game_state_data.to_dict())
 			state_deal_hole_cards()
 		GameState.State.DealHole:
-			var next_game_state: GameState.State = GameState.State.Ante
+			var next_game_state: GameState.State = GameState.State.BetHole
 			game_state_data.game_state = next_game_state
 			client_manager.update_game_state_data.rpc(game_state_data.to_dict())
 			state_start_ante_turns()
-		GameState.State.Ante:
+		GameState.State.BetHole:
 			var next_game_state: GameState.State = GameState.State.DealFlop
 			game_state_data.game_state = next_game_state
 			client_manager.update_game_state_data.rpc(game_state_data.to_dict())
@@ -81,25 +81,16 @@ func state_setup_hand():
 	# Reset all player data
 	for player_seat in game_state_data.player_seats.values():
 		player_seat.reset_hand_data()
-	# Reset turn index
-	for i in range(1, game_state_data.player_seats.keys().size() + 1):
-		if game_state_data.player_seats[i].player_id != 0:
-			game_state_data.player_turn = i
-			game_state_data.player_turn = i
-			break;
-	# Set initiate blind states
-	var small_blind_seat_num: int = game_state_data.player_turn
-	# Setup small blind
-	for i in range(small_blind_seat_num, game_state_data.player_seats.keys().size() + 1):
-		if game_state_data.player_seats[i].player_id != 0:
-			game_state_data.player_seats[i].is_small_blind = true
-			small_blind_seat_num = i
-			break
-	# Setup big blind
-	for i in range(small_blind_seat_num + 1, game_state_data.player_seats.keys().size() + 1):
-		if game_state_data.player_seats[i].player_id != 0:
-			game_state_data.player_seats[i].is_big_blind = true
-			break;
+	# Reset turn and blinds index
+	# Eventually, going to have to decouple first player turn from small blind seat num since those rotate
+	# Rotating blinds can be done by accessing old game state data from previous round
+	var first_player_seat_index = get_next_player_seat(1)
+	var second_player_seat_index = get_next_player_seat(first_player_seat_index + 1)
+	print("first_player_seat_index: %s" % first_player_seat_index)
+	print("second_player_seat_index: %s" % second_player_seat_index)
+	game_state_data.player_turn = first_player_seat_index
+	game_state_data.player_seats[first_player_seat_index].is_small_blind = true
+	game_state_data.player_seats[second_player_seat_index].is_big_blind = true
 	# Update all clients with starting game state
 	client_manager.update_game_state_data.rpc(game_state_data.to_dict())
 	step_next_game_state()
@@ -118,19 +109,32 @@ func state_start_ante_turns() -> void:
 	pass
 	
 ### Player actions
+func player_action_taken(player_action: PlayerTurnAction.Action, action_value):
+	# match on enum, call individual functions
+	match player_action:
+		PlayerTurnAction.Action.Fold:
+			player_action_folded()
+		PlayerTurnAction.Action.Bet:
+			player_action_bet(action_value)
+	# Check to see if we need to step next game state, this is where we do all that logic
+	increment_player_turn()
+	client_manager.update_game_state_data.rpc(game_state_data.to_dict())
+	
 func player_action_folded():
-	print("old player turn: %s" % game_state_data.player_turn)
 	var requestor_id = multiplayer.get_remote_sender_id()
 	for player_seat in game_state_data.player_seats.values():
 		if (player_seat.player_id == requestor_id):
 			player_seat.is_folded = true
-	increment_player_turn()
-	print("new player turn: %s" % game_state_data.player_turn)
-	client_manager.update_game_state_data.rpc(game_state_data.to_dict())
+	
+func player_action_bet(bet_value):
+	var client_player_data = game_state_data.connected_players.get(multiplayer.get_remote_sender_id())
+	client_player_data.current_cash -= bet_value
+	pass
 	
 func increment_player_turn() -> void:
 	var current_player_turn = game_state_data.player_turn
 	var next_player_turn = get_next_player_seat(current_player_turn + 1)
+	print("Incrementing player turn from %s to %s" % [current_player_turn, next_player_turn])
 	game_state_data.player_turn = next_player_turn
 		
 ###################################### Helper Functions #############################################
@@ -138,17 +142,20 @@ func increment_player_turn() -> void:
 func get_next_player_seat(seat_number) -> int:
 	var desired_seat = game_state_data.player_seats.get(seat_number)
 	if (desired_seat.player_id == 0):
-		seat_number = seat_number + 1
+		seat_number = get_next_seat_in_range(seat_number)
 		seat_number = get_next_player_seat(seat_number)
 	return seat_number
 	
 func get_next_free_seat(seat_number) -> int:
 	var desired_seat = game_state_data.player_seats.get(seat_number)
 	if (desired_seat.player_id != 0):
-		seat_number = (seat_number + 1) % 8
+		seat_number = get_next_seat_in_range(seat_number)
 		desired_seat = game_state_data.player_seats.get(seat_number)
 		seat_number = get_next_free_seat(seat_number)
 	return seat_number
+	
+func get_next_seat_in_range(seat_number) -> int:
+	return ((seat_number) % 8) + 1
 	
 func get_client_player_data() -> ConnectedPlayer:
 	for player in game_state_data.connected_players.values():
