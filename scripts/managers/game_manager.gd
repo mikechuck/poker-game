@@ -54,6 +54,8 @@ func _ready() -> void:
 
 ### Game cycle methods
 func step_next_game_state():
+	# Add a timer between states so users don't get confused
+	# await get_tree().create_timer(1).timeout
 	match game_state_data.game_state:
 		GameState.State.PreHand:
 			var next_game_state: GameState.State = GameState.State.SetupHand
@@ -69,7 +71,6 @@ func step_next_game_state():
 			var next_game_state: GameState.State = GameState.State.BetHole
 			game_state_data.game_state = next_game_state
 			client_manager.update_game_state_data.rpc(game_state_data.to_dict())
-			state_start_ante_turns()
 		GameState.State.BetHole:
 			var next_game_state: GameState.State = GameState.State.DealFlop
 			game_state_data.game_state = next_game_state
@@ -86,8 +87,6 @@ func state_setup_hand():
 	# Rotating blinds can be done by accessing old game state data from previous round
 	var first_player_seat_index = get_next_player_seat(1)
 	var second_player_seat_index = get_next_player_seat(first_player_seat_index + 1)
-	print("first_player_seat_index: %s" % first_player_seat_index)
-	print("second_player_seat_index: %s" % second_player_seat_index)
 	game_state_data.player_turn = first_player_seat_index
 	game_state_data.player_seats[first_player_seat_index].is_small_blind = true
 	game_state_data.player_seats[second_player_seat_index].is_big_blind = true
@@ -116,7 +115,6 @@ func player_action_taken(player_action: PlayerTurnAction.Action, action_value):
 			player_action_folded()
 		PlayerTurnAction.Action.Bet:
 			player_action_bet(action_value)
-	# Check to see if we need to step next game state, this is where we do all that logic
 	increment_player_turn()
 	client_manager.update_game_state_data.rpc(game_state_data.to_dict())
 	
@@ -127,17 +125,48 @@ func player_action_folded():
 			player_seat.is_folded = true
 	
 func player_action_bet(bet_value):
-	var client_player_data = game_state_data.connected_players.get(multiplayer.get_remote_sender_id())
-	client_player_data.current_cash -= bet_value
-	pass
-	
+	game_state_data.connected_players.get(multiplayer.get_remote_sender_id()).current_cash -= bet_value
+	game_state_data.pot_value += bet_value
+
+		
+###################################### Helper Functions #############################################
+
 func increment_player_turn() -> void:
 	var current_player_turn = game_state_data.player_turn
 	var next_player_turn = get_next_player_seat(current_player_turn + 1)
-	print("Incrementing player turn from %s to %s" % [current_player_turn, next_player_turn])
-	game_state_data.player_turn = next_player_turn
-		
-###################################### Helper Functions #############################################
+	print("Current turn: %s, next turn: %s" % [current_player_turn, next_player_turn])
+	for index in game_state_data.player_seats.keys():
+		print("player seat index: %s" % index)
+	var next_player_data = game_state_data.player_seats.get(next_player_turn)
+	print("next_player_data: %s" % next_player_data)
+	# If user is folded or can't bet, increment again.
+	# If we end up at the same player, step to next game state.
+	while current_player_turn != next_player_turn:
+		if (next_player_data.is_folded || next_player_data.current_cash == 0):
+			next_player_turn = get_next_player_seat(next_player_turn + 1)
+			next_player_data = game_state_data.player_seats.get(next_player_turn)
+	
+	# Made it all the way around to current player, move onto next game state
+	if (current_player_turn == next_player_turn):
+		step_next_game_state()
+	else:
+		game_state_data.player_turn = next_player_turn
+
+# Num of players in the hand that have not folded and can still bet
+func get_num_active_players_in_hand() -> int:
+	var num_active_players = 0
+	for player in game_state_data.player_seats.values():
+		if !player.is_folded && !player.is_spectating && player.current_cash != 0:
+			num_active_players += 1
+	return num_active_players
+
+# Num of players in the hand that have not folded
+func get_num_players_in_hand() -> int:
+	var num_active_players = 0
+	for player in game_state_data.player_seats.values():
+		if !player.is_folded && !player.is_spectating && player.current_cash != 0:
+			num_active_players += 1
+	return num_active_players
 
 func get_next_player_seat(seat_number) -> int:
 	var desired_seat = game_state_data.player_seats.get(seat_number)

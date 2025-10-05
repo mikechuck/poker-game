@@ -63,6 +63,7 @@ func set_player_buttons():
 	player_actions_pre_game_host_node.visible = false
 	player_actions_pre_game_guest_node.visible = false
 	player_actions_ante_node.visible = false
+	player_actions_game_node.visible = false
 	start_button_node.disabled = false
 	# Match on game state to decide which buttons to show
 	match game_manager.game_state_data.game_state:
@@ -77,15 +78,20 @@ func set_player_buttons():
 				else:
 					player_actions_pre_game_guest_node.visible = true
 		GameState.State.BetHole:
-			var current_turn_player_seat_data = get_current_turn_seat_data()
 			if game_manager.game_state_data.player_turn > 0:
 				if is_client_turn():
+					var current_turn_player_seat_data = get_current_turn_seat_data()
 					player_actions_ante_node.visible = true
 					# Set ante button value based on blind state
 					if (current_turn_player_seat_data.is_small_blind):
 						player_actions_ante_node.get_node("Ante/AnteButton").text = "Bet $%s" % game_manager.default_small_blind
 					if (current_turn_player_seat_data.is_big_blind):
 						player_actions_ante_node.get_node("Ante/AnteButton").text = "Bet $%s" % game_manager.default_big_blind
+		GameState.State.DealFlop:
+			if game_manager.game_state_data.player_turn > 0:
+				if is_client_turn():
+					var current_turn_player_seat_data = get_current_turn_seat_data()
+					player_actions_game_node.visible = true
 	
 func update_hole_cards():
 	for player_seat in game_manager.game_state_data.player_seats.values():
@@ -117,7 +123,6 @@ func get_current_turn_seat_data() -> PlayerSeat:
 
 func set_status_text(text: String) -> void:
 	status_message.text = "[font_size=26]" + text + "[/font_size]"
-	
 	
 ### Button signal methods ###
 

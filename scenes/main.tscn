@@ -36,7 +36,6 @@ script = ExtResource("1_cfscn")
 texture = ExtResource("2_sugp2")
 
 [node name="Cards" type="Node2D" parent="Table/PokerTable"]
-visible = false
 
 [node name="DealerCardSpot1" type="Sprite2D" parent="Table/PokerTable/Cards"]
 position = Vector2(-223, 0)
@@ -91,6 +90,28 @@ seat_number = 7
 [node name="SeatButton8" parent="Table/PokerTable/Seats" instance=ExtResource("3_jyhfs")]
 position = Vector2(94, 168)
 seat_number = 8
+
+[node name="Pot" type="Control" parent="Table/PokerTable"]
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -553.0
+offset_top = -313.5
+offset_right = -353.0
+offset_bottom = -273.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Value" type="RichTextLabel" parent="Table/PokerTable/Pot"]
+visible = false
+layout_mode = 0
+offset_right = 200.0
+offset_bottom = 40.0
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="PlayerUI" parent="." instance=ExtResource("5_tbgi4")]
 layout_mode = 1

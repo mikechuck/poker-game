@@ -21,7 +21,6 @@ func _on_peer_connected(id):
 	var connected_player = ConnectedPlayer.new()
 	connected_player.id = id
 	connected_player.starting_cash = game_manager.default_starting_cash
-	connected_player.current_cash = game_manager.default_starting_cash
 	game_manager.game_state_data.connected_players[id] = connected_player
 	# If this was the first player to connect, set it as host player
 	if (game_manager.game_state_data.host_player_id == 0):

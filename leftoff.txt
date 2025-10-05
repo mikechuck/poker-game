@@ -1,4 +1,5 @@
 leftoff: 
+	- Finish up switching cash logic to player seat instead of connected_player fiel
 	- Start adding logic for cash amounts. hook up player card money to actual data on PlayerSeat
 	- once this data is displayed, then integrate the Ante button against it
 	- Implement pot into game_state_data, bet button removes money from that player and put's into pot

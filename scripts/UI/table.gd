@@ -11,6 +11,8 @@ var player_seats: Dictionary[int, PlayerSeat]
 var seat_nodes: Dictionary[int, Node]
 var player_data: ConnectedPlayer
 
+@onready var pot_value_node = $PokerTable/Pot/Value
+
 func _ready() -> void:
 	game_manager = get_parent().get_node("GameManager")
 	game_manager.game_state_data_updated_signal.connect(_on_game_state_data_change)
@@ -48,6 +50,16 @@ func handle_player_turn_updated(old_player_turn, new_player_turn):
 	
 func redraw_table_players():
 	var poker_table = $PokerTable
+	
+	# Set pot value
+	if (game_manager.game_state_data.game_state != GameState.State.PreHand &&
+		game_manager.game_state_data.game_state != GameState.State.PostHand):
+		pot_value_node.visible = true
+		pot_value_node.text = "Pot: $%s" % [game_manager.game_state_data.pot_value]
+	else:
+		pot_value_node.visible = false
+	
+	# TODO: Set delt cards onto table
 	
 	# Clear player seats first
 	for seat_id in player_seats.keys():
