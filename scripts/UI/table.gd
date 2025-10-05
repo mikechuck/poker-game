@@ -37,12 +37,12 @@ func handle_game_state_updated(old_game_state, new_game_state):
 			seat.visible = false
 			
 func handle_connected_players_updated(old_connected_players, new_connected_players):
-	var current_player = game_manager.game_state_data.connected_players.get(multiplayer.get_unique_id())
-	for player_seat in game_manager.game_state_data.player_seats.values():
-		if (current_player.id == player_seat.player_id && player_seat.player_node):
-			player_seat.player_node.get_node("PlayerCard/CashAmount").text = "$" + str(current_player.current_cash)
+	pass
 	
 func handle_player_seats_updated(old_player_seats, new_player_seats):
+	for player_seat in game_manager.game_state_data.player_seats.values():
+		if (multiplayer.get_unique_id() == player_seat.player_id && player_seat.player_node):
+			player_seat.player_node.get_node("PlayerCard/CashAmount").text = "$" + str(player_seat.hand_cash)
 	redraw_table_players()
 
 func handle_player_turn_updated(old_player_turn, new_player_turn):
@@ -79,7 +79,7 @@ func redraw_table_players():
 			player_instance.position = (poker_table.scale * seat_node.position)
 			player_instance.player_id = seat_data.player_id
 			player_instance.is_player_turn = game_manager.game_state_data.player_turn == seat_id
-			player_instance.current_cash = game_manager.game_state_data.connected_players.get(seat_data.player_id).current_cash
+			player_instance.hand_cash = seat_data.hand_cash
 			player_instance.is_folded = seat_data.is_folded
 			player_instance.is_big_blind = seat_data.is_big_blind
 			player_instance.is_small_blind = seat_data.is_small_blind

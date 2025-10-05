@@ -139,11 +139,6 @@ theme_override_colors/font_color = Color(0.212305, 0.212305, 0.212305, 1)
 theme_override_constants/outline_size = 0
 text = "Ready"
 
-[node name="Control" type="Control" parent="."]
-anchors_preset = 0
-offset_right = 40.0
-offset_bottom = 40.0
-
 [node name="PlayerActionsAnte" type="Control" parent="."]
 visible = false
 custom_minimum_size = Vector2(100, 100)

@@ -125,7 +125,7 @@ func player_action_folded():
 			player_seat.is_folded = true
 	
 func player_action_bet(bet_value):
-	game_state_data.connected_players.get(multiplayer.get_remote_sender_id()).current_cash -= bet_value
+	get_client_player_seat().hand_cash -= bet_value
 	game_state_data.pot_value += bet_value
 
 		
@@ -135,28 +135,26 @@ func increment_player_turn() -> void:
 	var current_player_turn = game_state_data.player_turn
 	var next_player_turn = get_next_player_seat(current_player_turn + 1)
 	print("Current turn: %s, next turn: %s" % [current_player_turn, next_player_turn])
-	for index in game_state_data.player_seats.keys():
-		print("player seat index: %s" % index)
 	var next_player_data = game_state_data.player_seats.get(next_player_turn)
 	print("next_player_data: %s" % next_player_data)
 	# If user is folded or can't bet, increment again.
 	# If we end up at the same player, step to next game state.
-	while current_player_turn != next_player_turn:
-		if (next_player_data.is_folded || next_player_data.current_cash == 0):
-			next_player_turn = get_next_player_seat(next_player_turn + 1)
-			next_player_data = game_state_data.player_seats.get(next_player_turn)
-	
-	# Made it all the way around to current player, move onto next game state
-	if (current_player_turn == next_player_turn):
-		step_next_game_state()
-	else:
-		game_state_data.player_turn = next_player_turn
+	#while current_player_turn != next_player_turn:
+		#if (next_player_data.is_folded || next_player_data.hand_cash == 0):
+			#next_player_turn = get_next_player_seat(next_player_turn + 1)
+			#next_player_data = game_state_data.player_seats.get(next_player_turn)
+	#
+	## Made it all the way around to current player, move onto next game state
+	#if (current_player_turn == next_player_turn):
+		#step_next_game_state()
+	#else:
+	game_state_data.player_turn = next_player_turn
 
 # Num of players in the hand that have not folded and can still bet
 func get_num_active_players_in_hand() -> int:
 	var num_active_players = 0
 	for player in game_state_data.player_seats.values():
-		if !player.is_folded && !player.is_spectating && player.current_cash != 0:
+		if !player.is_folded && !player.is_spectating && player.hand_cash != 0:
 			num_active_players += 1
 	return num_active_players
 
@@ -164,7 +162,7 @@ func get_num_active_players_in_hand() -> int:
 func get_num_players_in_hand() -> int:
 	var num_active_players = 0
 	for player in game_state_data.player_seats.values():
-		if !player.is_folded && !player.is_spectating && player.current_cash != 0:
+		if !player.is_folded && !player.is_spectating && player.hand_cash != 0:
 			num_active_players += 1
 	return num_active_players
 
@@ -189,5 +187,14 @@ func get_next_seat_in_range(seat_number) -> int:
 func get_client_player_data() -> ConnectedPlayer:
 	for player in game_state_data.connected_players.values():
 		if player.id == multiplayer.get_unique_id():
+			return player
+	return null
+	
+func get_client_player_seat() -> PlayerSeat:
+	for player in game_state_data.player_seats.values():
+		print("player_id: %s" % player.player_id)
+		print("unique_id: %s" % multiplayer.get_unique_id())
+		print("sender_id: %s" % multiplayer.get_remote_sender_id())
+		if player.player_id == multiplayer.get_unique_id():
 			return player
 	return null

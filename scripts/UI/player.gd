@@ -11,14 +11,14 @@ class_name Player
 
 var player_id = 0
 var is_player_turn: bool = false
-var current_cash: int = 0
+var hand_cash: int = 0
 var is_folded: bool = false
 var is_big_blind: bool = false
 var is_small_blind: bool = false
 
 func _ready() -> void:
 	player_name_label_node.text = "[font_size=16][b]%s[/b][/font_size]" % [str(player_id)]
-	cash_amount_node.text = "$" + str(current_cash)
+	cash_amount_node.text = "$" + str(hand_cash)
 	if is_player_turn:
 		turn_indicator_node.visible = true
 		
