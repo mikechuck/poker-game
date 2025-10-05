@@ -79,6 +79,7 @@ func redraw_table_players():
 			player_instance.position = (poker_table.scale * seat_node.position)
 			player_instance.player_id = seat_data.player_id
 			player_instance.is_player_turn = game_manager.game_state_data.player_turn == seat_id
+			print("seat_data.hand_cash: %s" % seat_data.hand_cash)
 			player_instance.hand_cash = seat_data.hand_cash
 			player_instance.is_folded = seat_data.is_folded
 			player_instance.is_big_blind = seat_data.is_big_blind

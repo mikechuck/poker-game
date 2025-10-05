@@ -64,6 +64,7 @@ func request_seat(seat_number: int):
 		if (seat.player_id == client_id):
 			seat.player_id = 0
 	desired_seat.player_id = client_id
+	desired_seat.hand_cash = game_manager.default_starting_cash
 	game_manager.game_state_data.player_seats[seat_number] = desired_seat
 	game_manager.game_state_data.connected_players[client_id].is_spectating = false
 	client_manager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
@@ -72,22 +73,9 @@ func request_seat(seat_number: int):
 func set_ready_status(is_ready: bool):
 	game_manager.game_state_data.connected_players[multiplayer.get_remote_sender_id()].is_ready = is_ready
 	client_manager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
-	
-@rpc("reliable", "any_peer")
-func start_game():
-	var requestor_id = multiplayer.get_remote_sender_id()
-	# Ensure all players are ready before starting
-	var all_players_ready = true
-	for player in game_manager.game_state_data.connected_players.values():
-		if !player.is_spectating && !player.is_ready:
-			all_players_ready = false
-	if (game_manager.game_state_data.host_player_id == requestor_id &&
-		game_manager.game_state_data.game_state == GameState.State.PreHand &&
-		all_players_ready):
-		game_manager.step_next_game_state()
 		
 @rpc("reliable", "any_peer")
-func player_action_taken(player_action: int, action_value):
+func player_action_taken(player_action: int, action_value = null):
 	print("player action: %s, value: %s" % [player_action, action_value])
 	game_manager.player_action_taken(player_action, action_value)
 

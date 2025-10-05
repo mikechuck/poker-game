@@ -68,8 +68,8 @@ func set_player_buttons():
 	# Match on game state to decide which buttons to show
 	match game_manager.game_state_data.game_state:
 		GameState.State.PreHand:
-			if (!game_manager.get_client_player_data().is_spectating):
-				if (game_manager.get_client_player_data().is_host):
+			if (!game_manager.client_get_player_data().is_spectating):
+				if (game_manager.client_get_player_data().is_host):
 					player_actions_pre_game_host_node.visible = true
 					# Only enable start button if all players are ready
 					for player in game_manager.game_state_data.connected_players.values():
@@ -95,7 +95,7 @@ func set_player_buttons():
 	
 func update_hole_cards():
 	for player_seat in game_manager.game_state_data.player_seats.values():
-		if player_seat.player_id == game_manager.get_client_player_data().id && player_seat.hole_cards.size() > 0:
+		if player_seat.player_id == game_manager.client_get_player_data().id && player_seat.hole_cards.size() > 0:
 			for i in range(2):
 				var card_data = player_seat.hole_cards[i]
 				var card_instance = card_scene.instantiate()
@@ -108,13 +108,13 @@ func set_player_data():
 	var player_name_node = $PlayerName/Value
 	var player_is_host_node = $IsHost/Value
 	player_name_node.clear()
-	player_name_node.append_text(str(game_manager.get_client_player_data().id))
+	player_name_node.append_text(str(game_manager.client_get_player_data().id))
 	player_is_host_node.clear()
-	player_is_host_node.append_text(str(game_manager.get_client_player_data().is_host))
+	player_is_host_node.append_text(str(game_manager.client_get_player_data().is_host))
 	
 func is_client_turn() -> bool:
 	if (game_manager.game_state_data.player_turn != 0):
-		return game_manager.game_state_data.player_seats[game_manager.game_state_data.player_turn].player_id == game_manager.get_client_player_data().id
+		return game_manager.game_state_data.player_seats[game_manager.game_state_data.player_turn].player_id == game_manager.client_get_player_data().id
 	else:
 		return false
 
@@ -131,11 +131,11 @@ func _on_ready_button_toggled(toggled_on: bool) -> void:
 	server_manager.set_ready_status.rpc_id(1, toggled_on)
 
 func _on_start_button_pressed() -> void:
-	server_manager.start_game.rpc_id(1)
+	server_manager.player_action_taken.rpc_id(1, PlayerTurnAction.Action.StartGame)
 	
 ### PlayerActionsAnte
 func _on_fold_button_pressed() -> void:
-	server_manager.player_action_taken.rpc_id(1, PlayerTurnAction.Action.Fold, null)
+	server_manager.player_action_taken.rpc_id(1, PlayerTurnAction.Action.Fold)
 
 func _on_ante_button_pressed() -> void:
 	var bet_amount = 0

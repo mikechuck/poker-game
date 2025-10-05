@@ -14,7 +14,6 @@ func reset_hand_data() -> void:
 	is_folded = false
 	is_big_blind = false
 	is_small_blind = false
-	hand_cash = 0
 
 func to_dict() -> Dictionary:
 	var cards: Array[Dictionary] = []

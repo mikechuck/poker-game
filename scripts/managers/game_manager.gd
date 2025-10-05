@@ -111,12 +111,27 @@ func state_start_ante_turns() -> void:
 func player_action_taken(player_action: PlayerTurnAction.Action, action_value):
 	# match on enum, call individual functions
 	match player_action:
+		PlayerTurnAction.Action.StartGame:
+			player_action_start_game()
 		PlayerTurnAction.Action.Fold:
 			player_action_folded()
+			increment_player_turn()
 		PlayerTurnAction.Action.Bet:
 			player_action_bet(action_value)
-	increment_player_turn()
+			increment_player_turn()
 	client_manager.update_game_state_data.rpc(game_state_data.to_dict())
+
+func player_action_start_game() -> void:
+	var requestor_id = multiplayer.get_remote_sender_id()
+	# Ensure all players are ready before starting
+	var all_players_ready = true
+	for player in game_state_data.connected_players.values():
+		if !player.is_spectating && !player.is_ready:
+			all_players_ready = false
+	if (game_state_data.host_player_id == requestor_id &&
+		game_state_data.game_state == GameState.State.PreHand &&
+		all_players_ready):
+		step_next_game_state()
 	
 func player_action_folded():
 	var requestor_id = multiplayer.get_remote_sender_id()
@@ -125,7 +140,7 @@ func player_action_folded():
 			player_seat.is_folded = true
 	
 func player_action_bet(bet_value):
-	get_client_player_seat().hand_cash -= bet_value
+	server_get_player_seat().hand_cash -= bet_value
 	game_state_data.pot_value += bet_value
 
 		
@@ -183,18 +198,17 @@ func get_next_free_seat(seat_number) -> int:
 	
 func get_next_seat_in_range(seat_number) -> int:
 	return ((seat_number) % 8) + 1
-	
-func get_client_player_data() -> ConnectedPlayer:
+
+# To be used on the client only	
+func client_get_player_data() -> ConnectedPlayer:
 	for player in game_state_data.connected_players.values():
 		if player.id == multiplayer.get_unique_id():
 			return player
 	return null
 	
-func get_client_player_seat() -> PlayerSeat:
+# To be used on the server only
+func server_get_player_seat() -> PlayerSeat:
 	for player in game_state_data.player_seats.values():
-		print("player_id: %s" % player.player_id)
-		print("unique_id: %s" % multiplayer.get_unique_id())
-		print("sender_id: %s" % multiplayer.get_remote_sender_id())
-		if player.player_id == multiplayer.get_unique_id():
+		if player.player_id == multiplayer.get_remote_sender_id():
 			return player
 	return null
