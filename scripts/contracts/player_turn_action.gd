@@ -7,5 +7,6 @@ enum Action {
 	Ante,
 	Bet,
 	Raise,
-	Call
+	Call,
+	Check
 }

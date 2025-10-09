@@ -2,6 +2,7 @@ extends Control
 
 @export var player_scene: PackedScene = preload("res://scenes/player.tscn")
 @export var seat_select_button_scene: PackedScene = preload("res://scenes/UI/seat_button.tscn")
+@export var card_scene: PackedScene = preload("res://scenes/UI/card.tscn")
 
 var game_manager
 var poker_table_position
@@ -10,8 +11,11 @@ var table_radius = 225
 var player_seats: Dictionary[int, PlayerSeat]
 var seat_nodes: Dictionary[int, Node]
 var player_data: ConnectedPlayer
+var board_card_scale: float = 0.8
 
+@onready var poker_table_node = $PokerTable
 @onready var pot_value_node = $PokerTable/Pot/Value
+@onready var board_cards_node = $PokerTable/Cards
 
 func _ready() -> void:
 	game_manager = get_parent().get_node("GameManager")
@@ -30,6 +34,8 @@ func _on_game_state_data_change(old_game_state_data, new_game_state_data):
 		handle_player_turn_updated(old_game_state_data.player_turn, new_game_state_data.player_turn)
 	if (old_game_state_data.game_state != new_game_state_data.game_state):
 		handle_game_state_updated(old_game_state_data.game_state, new_game_state_data.game_state)
+	if (old_game_state_data.board_cards != new_game_state_data.board_cards):
+		handle_board_cards_updated(old_game_state_data.board_cards, new_game_state_data.board_cards)
 
 func handle_game_state_updated(old_game_state, new_game_state):
 	if new_game_state != GameState.State.PreHand:
@@ -48,9 +54,22 @@ func handle_player_seats_updated(old_player_seats, new_player_seats):
 func handle_player_turn_updated(old_player_turn, new_player_turn):
 	redraw_table_players()
 	
+func handle_board_cards_updated(old_board_cards, new_board_cards):
+	for i in range(5):
+		var card_spot = board_cards_node.get_node("DealerCardSpot" + str(i + 1))
+		if i < new_board_cards.size():
+			var card_data = new_board_cards[i]
+			var card_instance = card_scene.instantiate()
+			card_instance.value = card_data.value
+			card_instance.suit = card_data.suit
+			card_instance.position = card_spot.position
+			card_instance.scale = Vector2(board_card_scale, board_card_scale)
+			board_cards_node.add_child(card_instance)
+			card_spot.visible = false
+		else:
+			card_spot.visible = true
+		
 func redraw_table_players():
-	var poker_table = $PokerTable
-	
 	# Set pot value
 	if (game_manager.game_state_data.game_state != GameState.State.PreHand &&
 		game_manager.game_state_data.game_state != GameState.State.PostHand):
@@ -58,8 +77,6 @@ func redraw_table_players():
 		pot_value_node.text = "Pot: $%s" % [game_manager.game_state_data.pot_value]
 	else:
 		pot_value_node.visible = false
-	
-	# TODO: Set delt cards onto table
 	
 	# Clear player seats first
 	for seat_id in player_seats.keys():
@@ -76,11 +93,11 @@ func redraw_table_players():
 		if seat_data.player_id != 0:
 			var player_instance = player_scene.instantiate()
 			# Need to transform seat position coords from local scale to global scale (0.4 -> 1)
-			player_instance.position = (poker_table.scale * seat_node.position)
+			player_instance.position = (poker_table_node.scale * seat_node.position)
 			player_instance.player_id = seat_data.player_id
 			player_instance.is_player_turn = game_manager.game_state_data.player_turn == seat_id
-			print("seat_data.hand_cash: %s" % seat_data.hand_cash)
 			player_instance.hand_cash = seat_data.hand_cash
+			player_instance.bet_value = seat_data.bet_value
 			player_instance.is_folded = seat_data.is_folded
 			player_instance.is_big_blind = seat_data.is_big_blind
 			player_instance.is_small_blind = seat_data.is_small_blind

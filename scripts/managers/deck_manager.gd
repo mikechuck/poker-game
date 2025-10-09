@@ -7,7 +7,7 @@ var game_manager = null
 var cards: Array[CardData]
 var card_types: Array[CardData]
 var suits: Array[String] = ["D", "H", "C", "P"]
-var faces: Array[String] = ["J", "Q", "K", "A"]
+var faces: Dictionary[String, int] = {"J": 11, "Q": 12, "K": 13, "A": 14}
 var deck: Array[CardData]
 
 func _ready():
@@ -16,17 +16,19 @@ func _ready():
 	for suit in suits:
 		for i in range(2, 11):
 			var new_card = CardData.new()
-			new_card.number = str(i)
+			new_card.number = i
+			new_card.value = str(i)
 			new_card.suit = suit
 			cards.append(new_card)
-		for face in faces:
+		for i in faces.keys():
 			var new_card = CardData.new()
-			new_card.number = face
+			new_card.number = faces[i]
+			new_card.value = i
 			new_card.suit = suit
 			cards.append(new_card)
 
 func shuffle_deck():
-	deck = cards
+	deck = cards.duplicate()
 	for i in range(0, 10):
 		deck = _shuffle_deck(deck)
 			

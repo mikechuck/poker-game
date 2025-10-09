@@ -20,7 +20,7 @@ func start_server():
 func _on_peer_connected(id):
 	var connected_player = ConnectedPlayer.new()
 	connected_player.id = id
-	connected_player.account_total_cash = game_manager.default_starting_cash
+	connected_player.account_total_cash = GameStateData.default_starting_cash
 	game_manager.game_state_data.connected_players[id] = connected_player
 	# If this was the first player to connect, set it as host player
 	if (game_manager.game_state_data.host_player_id == 0):
@@ -48,6 +48,8 @@ func _on_peer_disconnected(id):
 		if seat.player_id == id:
 			seat.player_id = 0
 			seat.player_node = null
+	if game_manager.game_state_data.connected_players.size() == 0:
+		game_manager.reset_hand()
 	client_manager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
 	print("Number of players connected: %s" % [game_manager.game_state_data.connected_players.size()])
 
@@ -56,27 +58,15 @@ func _on_peer_disconnected(id):
 @rpc("reliable", "any_peer")
 func request_seat(seat_number: int):
 	var client_id = multiplayer.get_remote_sender_id()
-	# Check to see if seat is already filled
-	seat_number = game_manager.get_next_free_seat(seat_number)
-	# First remove them from their current seat then put them in the new seat
-	var desired_seat = game_manager.game_state_data.player_seats.get(seat_number)
-	for seat in game_manager.game_state_data.player_seats.values():
-		if (seat.player_id == client_id):
-			seat.player_id = 0
-	desired_seat.player_id = client_id
-	desired_seat.hand_cash = game_manager.default_starting_cash
-	game_manager.game_state_data.player_seats[seat_number] = desired_seat
-	game_manager.game_state_data.connected_players[client_id].is_spectating = false
-	client_manager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
+	game_manager.assign_player_to_seat(client_id, seat_number)
 	
 @rpc("reliable", "any_peer")
 func set_ready_status(is_ready: bool):
-	game_manager.game_state_data.connected_players[multiplayer.get_remote_sender_id()].is_ready = is_ready
+	game_manager.server_get_player_seat().is_ready = is_ready
 	client_manager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
 		
 @rpc("reliable", "any_peer")
 func player_action_taken(player_action: int, action_value = null):
-	print("player action: %s, value: %s" % [player_action, action_value])
 	game_manager.player_action_taken(player_action, action_value)
 
 ### Helper functions
@@ -84,6 +74,18 @@ func player_action_taken(player_action: int, action_value = null):
 func set_player_seats():
 	for i in range(1, 9):
 		var player_seat = PlayerSeat.new()
+		player_seat.seat_index = i
 		player_seat.player_id = 0
 		game_manager.game_state_data.player_seats[i] = player_seat
+		
+
+### Debug rpc methods
+@rpc("reliable", "any_peer")
+func call_debug_deal_flop() -> void:
+	game_manager.debug_goto_deal_flop()
+	
+@rpc("reliable", "any_peer")
+func call_debug_end_step() -> void:
+	game_manager.debug_goto_end_step()
+
 	

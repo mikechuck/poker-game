@@ -1,6 +1,5 @@
 leftoff: 
-	- Finish up switching cash logic to player seat instead of connected_player field (search for "current_cash" and make sure it all referenced correctly)
-
+	- continue with one_pair calculation
 Todo:
 	- add "is host" crown to player card for host
 	- Add "is server" checks to rpc functions
