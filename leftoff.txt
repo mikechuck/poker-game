@@ -1,5 +1,5 @@
 leftoff: 
-	- continue with one_pair calculation
+	- continue with player hand calculations
 Todo:
 	- add "is host" crown to player card for host
 	- Add "is server" checks to rpc functions

@@ -384,6 +384,7 @@ mouse_default_cursor_shape = 2
 text = "DealFlop"
 
 [node name="EndStep" type="Button" parent="Debug"]
+layout_mode = 0
 offset_top = 100.0
 offset_right = 100.0
 offset_bottom = 131.0

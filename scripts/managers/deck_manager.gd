@@ -45,3 +45,121 @@ func deal_card() -> CardData:
 	deck.remove_at(0)
 	print("Card delt: [%s, %s]" % [new_card.number, new_card.suit])
 	return new_card
+	
+
+######### Helper functions for calulation hand values. Put here to keep game_manager clean #########
+
+func find_highest_hand_value(sorted_cards) -> int: 
+	var hand_value: int = 0
+	
+	hand_value = get_royal_flush(sorted_cards)
+	if (hand_value != 0):
+		return hand_value
+		
+	hand_value = get_straight_flush_score(sorted_cards)
+	if (hand_value != 0):
+		return hand_value
+	
+	hand_value = get_four_kind_score(sorted_cards)
+	if (hand_value != 0):
+		return hand_value
+		
+	hand_value = get_full_house_score(sorted_cards)
+	if (hand_value != 0):
+		return hand_value
+		
+	hand_value = get_flush_score(sorted_cards)
+	if (hand_value != 0):
+		return hand_value
+		
+	hand_value = get_straight_score(sorted_cards)
+	if (hand_value != 0):
+		return hand_value
+	
+	hand_value = get_three_kind_score(sorted_cards)
+	if (hand_value != 0):
+		return hand_value
+		
+	hand_value = get_two_pair_score(sorted_cards)
+	if (hand_value != 0):
+		return hand_value
+		
+	hand_value = get_one_pair_score(sorted_cards)
+	if (hand_value != 0):
+		return hand_value
+		
+	hand_value = get_high_card_score(sorted_cards)
+	return hand_value
+		
+func get_royal_flush(sorted_cards) -> int:
+	var suit: String = sorted_cards[0].suit
+	for i in sorted_cards.size():
+		# Ensure all the same suit
+		if (sorted_cards[i].suit != suit):
+			return 0
+	# Ensure they are face cards
+	if (
+		sorted_cards[0].number == 14 &&
+		sorted_cards[1].number == 13 &&
+		sorted_cards[2].number == 12 &&
+		sorted_cards[3].number == 11 && 
+		sorted_cards[4].number == 10
+	):
+		return 1 * pow(10, HandRanks.Rank.RoyalFlush)
+	else:
+		return 0
+
+func get_straight_flush_score(sorted_cards) -> int:
+	var suit: String = sorted_cards[0].suit
+	
+	# Ensure all the same suit
+	for i in sorted_cards.size():
+		if (sorted_cards[i].suit != suit):
+			return 0
+		
+	# Ensure they are consecutive
+	for i in range (1, sorted_cards.size()):
+		if (sorted_cards[i].number + 1 != sorted_cards[i - 1].number):
+			return 0
+			
+	return sorted_cards[0].number * pow(10, HandRanks.Rank.StraightFlush)
+	
+func get_four_kind_score(sorted_cards) -> int:
+	var previous_number: int = 0
+	var pair_number: int = 0
+	#for card in sorted_cards:
+	return 0
+	
+func get_full_house_score(sorted_cards) -> int:
+	return 0
+	
+func get_flush_score(sorted_cards) -> int:
+	return 0
+
+func get_straight_score(sorted_cards) -> int:
+	return 0
+	
+func get_three_kind_score(sorted_cards) -> int:
+	return 0
+	
+func get_two_pair_score(sorted_cards) -> int:
+	return 0
+	
+func get_one_pair_score(sorted_cards) -> int:
+	var previous_number: int = 0
+	var one_pair_number: int = 0
+	for i in sorted_cards.size():
+		var card = sorted_cards[i]
+		if previous_number == card.number:
+			one_pair_number = card.number
+			# Remove the pair from the cards so that we can grab the kicker if needed
+			sorted_cards.remove_at(i)
+			sorted_cards.remove_at(i - 1)
+			break
+		previous_number = card.number
+	return one_pair_number * pow(10, HandRanks.Rank.OnePair)
+
+func get_high_card_score(sorted_cards) -> int:
+	var high_card_score = sorted_cards[0].number * pow(10, HandRanks.Rank.HighCard)
+	return high_card_score
+	

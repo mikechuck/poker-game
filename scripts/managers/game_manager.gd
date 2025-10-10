@@ -187,21 +187,19 @@ func state_end_step() -> void:
 func find_winning_seat() -> PlayerSeat:
 	var highest_hand_value = 0
 	var winning_seat: PlayerSeat
+	var player_scores: Dictionary[int, int]
 	for seat in game_state_data.player_seats.values():
+		if seat.player_id == 0: continue # only evaluate score for filled seats
 		var hand_value: float = 0
 		var full_cards = seat.hole_cards + game_state_data.board_cards
 		full_cards.sort_custom(func(a, b):
 			return a.number > b.number)
-		hand_value += get_high_card(full_cards) * pow(10, HandRanks.Rank.HighCard)
-		#hand_value += get_one_pair(sorted_cards) * pow(10, HandRanks.Rank.OnePair)
-		print("hand_value: %s" % hand_value)
+		print("Player hand: [%s%s, %s%s, %s%s, %s%s, %s%s]" % [full_cards[0].value, full_cards[0].suit, full_cards[1].value, full_cards[1].suit, full_cards[2].value, full_cards[2].suit, full_cards[3].value, full_cards[3].suit, full_cards[4].value, full_cards[4].suit])
+		# Keep track of the remaining cards once we find the players score, might need to evaluate kickers
+		seat.sorted_hand_cards = full_cards
+		# Optimistically get the highest hand score, break once found
+		hand_value = deck_manager.find_highest_hand_value(seat.sorted_hand_cards)
 	return winning_seat
-		
-func get_high_card(sorted_cards) -> int:
-	return sorted_cards[0].number
-	
-func get_one_pair(sorted_cards) -> int:
-	return 1
 	
 ### Player actions
 func player_action_taken(player_action: PlayerTurnAction.Action, action_value):
