@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://dof81yg1jefa"]
 
 [ext_resource type="Script" uid="uid://b1jfi6ws60cfm" path="res://scripts/UI/player_ui.gd" id="1_d6j1s"]
-[ext_resource type="Texture2D" uid="uid://cku43xsg7wffl" path="res://assets/HoleCardSpot.png" id="2_50a1s"]
+[ext_resource type="Texture2D" uid="uid://bfr3hsrfkjxys" path="res://assets/HoleCardSpot.png" id="2_50a1s"]
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -382,7 +382,7 @@ offset_top = 60.0
 offset_right = 100.0
 offset_bottom = 91.0
 mouse_default_cursor_shape = 2
-text = "Start"
+text = "New Hand"
 
 [node name="DealFlop" type="Button" parent="Debug"]
 layout_mode = 0

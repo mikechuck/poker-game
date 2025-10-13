@@ -8,6 +8,7 @@ var pot_value: int = 0
 var current_bet_value: int = 0
 var last_bet_raise_player_id: int = 0
 var board_cards: Array[CardData] = []
+var winner_player_id: int = 0
 # The following fields never get cleared, they are set by networking functions
 var host_player_id: int = 0
 var connected_players: Dictionary[int, ConnectedPlayer] = {}
@@ -24,6 +25,7 @@ func reset_game_state() -> void:
 	current_bet_value = 0
 	last_bet_raise_player_id = 0
 	board_cards = []
+	winner_player_id = 0
 	for player_seat in player_seats.values():
 		player_seat.reset_hand_data()
 
@@ -37,7 +39,8 @@ func to_dict() -> Dictionary:
 		"host_player_id": host_player_id,
 		"connected_players": Serializer.serialize_connected_players(connected_players),
 		"last_bet_raise_player_id": last_bet_raise_player_id,
-		"board_cards": Serializer.serialize_cards(board_cards)
+		"board_cards": Serializer.serialize_cards(board_cards),
+		"winner_player_id": winner_player_id
 	}
 
 static func from_dict(dict: Dictionary) -> GameStateData:
@@ -51,4 +54,5 @@ static func from_dict(dict: Dictionary) -> GameStateData:
 	instance.connected_players = Serializer.deserialize_connected_players(dict.get("connected_players"))
 	instance.last_bet_raise_player_id = dict.get("last_bet_raise_player_id")
 	instance.board_cards = Serializer.deserialize_cards(dict.get("board_cards"))
+	instance.winner_player_id = dict.get("winner_player_id")
 	return instance

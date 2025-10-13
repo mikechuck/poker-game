@@ -214,7 +214,4 @@ func _on_bet_input_changed(value: float) -> void:
 func _on_bet_button_pressed() -> void:
 	server_manager.player_action_taken.rpc_id(1, PlayerTurnAction.Action.Raise, bet_input_value)
 	
-func _on_show_cards_button_pressed() -> void:
-	server_manager.show_player_cards.rpc_id(1)
-	
 ## End button signal methods

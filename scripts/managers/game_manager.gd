@@ -185,8 +185,8 @@ func state_deal_river_card() -> void:
 	step_next_game_state()
 	
 func state_end_step() -> void:
-	print("GAME OVER, CALCULATING WINNER")
-	#var winning_player_seat = find_winning_seat()
+	game_state_data.winner_player_id = game_state_data.connected_players[0].id
+	print("GAME OVER, WINNER: %s", game_state_data.winner_player_id)
 	
 func find_winning_seat() -> PlayerSeat:
 	var highest_hand_value = 0
@@ -358,21 +358,21 @@ func server_get_player_seat() -> PlayerSeat:
 
 ## Debug helpers
 
-func debug_goto_start_game() -> void:
-	reset_hand()
-	
+func debug_assign_player_seats() -> void:
 	for player in game_state_data.connected_players.values():
 		assign_player_to_seat(player.id, 1)
-	for player_seat in game_state_data.player_seats.values():
-		player_seat.is_ready = true
+	for seat in game_state_data.players_seats.values():
+		if seat.player_id != 0:
+			seat.is_ready = true
+
+func debug_goto_start_game() -> void:
+	reset_hand()
+	debug_assign_player_seats()
 	step_next_game_state()
 
 func debug_goto_deal_flop() -> void:
 	reset_hand()
-	for player in game_state_data.connected_players.values():
-		assign_player_to_seat(player.id, 1)
-	for player_seat in game_state_data.player_seats.values():
-		player_seat.is_ready = true
+	debug_assign_player_seats()
 	step_next_game_state()
 	for player_seat in game_state_data.player_seats.values():
 		if player_seat.player_id != 0:

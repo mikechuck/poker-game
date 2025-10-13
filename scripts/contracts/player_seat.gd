@@ -13,7 +13,6 @@ var is_big_blind: bool = false
 var is_small_blind: bool = false
 var sorted_hand_cards: Array[CardData] = []
 var final_hand_score: int = 0
-var show_hand: bool = false
 
 func reset_hand_data() -> void:
 	hole_cards = []
@@ -25,7 +24,6 @@ func reset_hand_data() -> void:
 	final_hand_score = 0
 	player_node = null
 	is_ready = false
-	show_hand = false
 
 func to_dict() -> Dictionary:
 	var cards: Array[Dictionary] = []
@@ -43,8 +41,7 @@ func to_dict() -> Dictionary:
 		"is_small_blind": is_small_blind,
 		"bet_value": bet_value,
 		"is_ready": is_ready,
-		"final_hand_score": final_hand_score,
-		"show_hand": show_hand
+		"final_hand_score": final_hand_score
 	}
 
 static func from_dict(dict: Dictionary) -> PlayerSeat:
@@ -61,6 +58,5 @@ static func from_dict(dict: Dictionary) -> PlayerSeat:
 		instance.bet_value = dict.get("bet_value")
 		instance.is_ready = dict.get("is_ready")
 		instance.final_hand_score = dict.get("final_hand_score")
-		instance.show_hand = dict.get("show_hand")
 	
 	return instance

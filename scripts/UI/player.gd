@@ -66,7 +66,6 @@ func _ready() -> void:
 			card_instance.position = card_back_node.position
 			card_instance.scale = card_back_node.scale * 2
 			player_card_node.add_child(card_instance)
-			print("CREATED new node with scale: %s" % card_instance.scale)
 	else:
 		if (card_front_1 != null): card_front_1.visible = false
 		if (card_front_2 != null): card_front_2.visible = false

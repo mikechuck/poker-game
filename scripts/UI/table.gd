@@ -55,19 +55,25 @@ func handle_player_turn_updated(old_player_turn, new_player_turn):
 	redraw_table_players()
 	
 func handle_board_cards_updated(old_board_cards, new_board_cards):
-	for i in range(5):
-		var card_spot = board_cards_node.get_node("DealerCardSpot" + str(i + 1))
-		if i < new_board_cards.size():
-			var card_data = new_board_cards[i]
-			var card_instance = card_scene.instantiate()
-			card_instance.value = card_data.value
-			card_instance.suit = card_data.suit
-			card_instance.position = card_spot.position
-			card_instance.scale = Vector2(board_card_scale, board_card_scale)
-			board_cards_node.add_child(card_instance)
-			card_spot.visible = false
-		else:
-			card_spot.visible = true
+	if (new_board_cards.size() > 0):
+		for i in range(5):
+			var card_spot = board_cards_node.get_node("DealerCardSpot" + str(i + 1))
+			if i < new_board_cards.size():
+				var card_data = new_board_cards[i]
+				var card_instance = card_scene.instantiate()
+				card_instance.value = card_data.value
+				card_instance.suit = card_data.suit
+				card_instance.position = card_spot.position
+				card_instance.scale = Vector2(board_card_scale, board_card_scale)
+				board_cards_node.add_child(card_instance)
+				card_spot.visible = false
+				card_instance.add_to_group("board_cards")
+			else:
+				card_spot.visible = true
+	else:
+		var card_instances = get_tree().get_nodes_in_group("board_cards")
+		for card in card_instances:
+			board_cards_node.remove_child(card)
 		
 func redraw_table_players():
 	# Set pot value
