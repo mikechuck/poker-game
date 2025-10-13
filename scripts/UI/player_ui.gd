@@ -133,9 +133,11 @@ func update_hole_cards():
 			for i in range(2):
 				var card_data = player_seat.hole_cards[i]
 				var card_instance = card_scene.instantiate()
+				var hole_card_spot = get_node("HoleCards/HoleCardSpot%s" % [i])
 				card_instance.value = card_data.value
 				card_instance.suit = card_data.suit
-				card_instance.position = get_node("HoleCards/HoleCardSpot%s" % [i]).position
+				card_instance.position = hole_card_spot.position
+				card_instance.scale = hole_card_spot.scale
 				hole_cards_node.add_child(card_instance)
 				
 func set_player_data():
@@ -211,5 +213,8 @@ func _on_bet_input_changed(value: float) -> void:
 	
 func _on_bet_button_pressed() -> void:
 	server_manager.player_action_taken.rpc_id(1, PlayerTurnAction.Action.Raise, bet_input_value)
+	
+func _on_show_cards_button_pressed() -> void:
+	server_manager.show_player_cards.rpc_id(1)
 	
 ## End button signal methods

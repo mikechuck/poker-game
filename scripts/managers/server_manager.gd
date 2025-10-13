@@ -64,6 +64,12 @@ func request_seat(seat_number: int):
 func set_ready_status(is_ready: bool):
 	game_manager.server_get_player_seat().is_ready = is_ready
 	client_manager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
+	
+@rpc("reliable", "any_peer")
+func show_player_cards():
+	game_manager.server_get_player_seat().show_hand = true
+	client_manager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
+
 		
 @rpc("reliable", "any_peer")
 func player_action_taken(player_action: int, action_value = null):

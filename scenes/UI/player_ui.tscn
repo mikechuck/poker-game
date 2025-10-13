@@ -377,6 +377,7 @@ offset_bottom = 60.0
 text = "Game State: cdsac"
 
 [node name="StartGame" type="Button" parent="Debug"]
+layout_mode = 0
 offset_top = 60.0
 offset_right = 100.0
 offset_bottom = 91.0

@@ -360,6 +360,7 @@ func server_get_player_seat() -> PlayerSeat:
 
 func debug_goto_start_game() -> void:
 	reset_hand()
+	
 	for player in game_state_data.connected_players.values():
 		assign_player_to_seat(player.id, 1)
 	for player_seat in game_state_data.player_seats.values():
