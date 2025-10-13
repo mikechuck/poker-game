@@ -245,14 +245,15 @@ offset_right = 20.0
 grow_horizontal = 2
 grow_vertical = 0
 
-[node name="BetButton" type="Button" parent="PlayerActionsGame/Bet"]
+[node name="RaiseButton" type="Button" parent="PlayerActionsGame/Bet"]
 layout_mode = 0
 offset_left = -196.0
 offset_top = -27.0
 offset_right = -87.0
 offset_bottom = 23.0
 mouse_default_cursor_shape = 2
-text = "Bet
+disabled = true
+text = "Raise
 "
 
 [node name="SpinBox" type="SpinBox" parent="PlayerActionsGame/Bet"]
@@ -375,21 +376,29 @@ offset_right = 100.0
 offset_bottom = 60.0
 text = "Game State: cdsac"
 
-[node name="DealFlop" type="Button" parent="Debug"]
-layout_mode = 0
+[node name="StartGame" type="Button" parent="Debug"]
 offset_top = 60.0
 offset_right = 100.0
 offset_bottom = 91.0
 mouse_default_cursor_shape = 2
-text = "DealFlop"
+text = "Start"
 
-[node name="EndStep" type="Button" parent="Debug"]
+[node name="DealFlop" type="Button" parent="Debug"]
 layout_mode = 0
 offset_top = 100.0
 offset_right = 100.0
 offset_bottom = 131.0
 mouse_default_cursor_shape = 2
-text = "EndStep
+text = "Deal Flop"
+
+[node name="EndStep" type="Button" parent="Debug"]
+layout_mode = 0
+offset_top = 140.0
+offset_right = 100.0
+offset_bottom = 171.0
+scale = Vector2(1.00427, 1)
+mouse_default_cursor_shape = 2
+text = "End Step
 "
 
 [connection signal="toggled" from="PlayerActionsPreHandHost/Ready/ReadyButton" to="." method="_on_ready_button_toggled"]
@@ -398,9 +407,10 @@ text = "EndStep
 [connection signal="pressed" from="PlayerActionsAnte/Ante/AnteButton" to="." method="_on_ante_button_pressed"]
 [connection signal="pressed" from="PlayerActionsAnte/Fold/FoldButton" to="." method="_on_fold_button_pressed"]
 [connection signal="pressed" from="PlayerActionsGame/Check/CheckButton" to="." method="_on_check_button_pressed"]
-[connection signal="pressed" from="PlayerActionsGame/Bet/BetButton" to="." method="_on_bet_button_pressed"]
+[connection signal="pressed" from="PlayerActionsGame/Bet/RaiseButton" to="." method="_on_bet_button_pressed"]
 [connection signal="value_changed" from="PlayerActionsGame/Bet/SpinBox" to="." method="_on_bet_input_changed"]
 [connection signal="pressed" from="PlayerActionsGame/Call/CallButton" to="." method="_on_call_button_pressed"]
 [connection signal="pressed" from="PlayerActionsGame/Fold/FoldButton" to="." method="_on_fold_button_pressed"]
+[connection signal="pressed" from="Debug/StartGame" to="." method="_on_debug_start_game_pressed"]
 [connection signal="pressed" from="Debug/DealFlop" to="." method="_on_debug_deal_flop_pressed"]
 [connection signal="pressed" from="Debug/EndStep" to="." method="_on_debug_end_step_pressed"]

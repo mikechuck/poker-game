@@ -3,6 +3,11 @@ extends Control
 ### Scenes
 @export var card_scene: PackedScene = preload("res://scenes/UI/card.tscn")
 
+var check_button = null
+var raise_button = null
+var call_button = null
+var fold_button = null
+
 var game_manager = null
 var server_manager = null
 
@@ -15,7 +20,7 @@ var ready_toggle = null
 var status_message = null
 var hole_cards_node = null
 var start_button_node = null
-var bet_input_value = null
+var bet_input_value = 0
 
 func _ready() -> void:
 	game_manager = get_parent().get_node("GameManager")
@@ -28,6 +33,11 @@ func _ready() -> void:
 	status_message = $StatusMessage/Text
 	hole_cards_node = $HoleCards
 	start_button_node = $PlayerActionsPreHandHost/Start/StartButton
+	
+	check_button = player_actions_game_node.get_node("Check/CheckButton")
+	raise_button = player_actions_game_node.get_node("Bet/RaiseButton")
+	call_button = player_actions_game_node.get_node("Call/CallButton")
+	fold_button = player_actions_game_node.get_node("Fold/FoldButton")
 	
 func _on_game_state_data_updated(old_game_state_data, new_game_state_data):
 	set_status_message()
@@ -101,20 +111,21 @@ func set_player_buttons():
 
 func set_bet_buttons():
 	var current_turn_player_seat_data = get_current_turn_seat_data()
-	var check_button = player_actions_game_node.get_node("Check/CheckButton")
-	var bet_button = player_actions_game_node.get_node("Bet/BetButton")
-	var call_button = player_actions_game_node.get_node("Call/CallButton")
-	var fold_button = player_actions_game_node.get_node("Fold/FoldButton")
 	player_actions_game_node.visible = true
 	call_button.disabled = false
-	bet_button.disabled = false
-	call_button.disabled = false
-	bet_button.text = "Bet"
+	check_button.disabled = false
+	if game_manager.game_state_data.current_bet_value == 0:
+		raise_button.text = "Bet"
+	else:
+		raise_button.text = "Raise"
+	# Set the minimum bet input to the difference of player's current bet and the table bet
+	var bet_diff = game_manager.game_state_data.current_bet_value
 	if game_manager.game_state_data.current_bet_value == current_turn_player_seat_data.bet_value:
+		# We can check but not call
 		call_button.disabled = true
 	if game_manager.game_state_data.current_bet_value > current_turn_player_seat_data.bet_value:
+		# We can call but not check
 		check_button.disabled = true
-		bet_button.text = "Raise"
 	
 func update_hole_cards():
 	for player_seat in game_manager.game_state_data.player_seats.values():
@@ -155,6 +166,9 @@ func set_status_text(text: String) -> void:
 
 ### Debug buttons
 
+func _on_debug_start_game_pressed() -> void:
+	server_manager.call_debug_start_game.rpc_id(1)
+
 func _on_debug_deal_flop_pressed() -> void:
 	server_manager.call_debug_deal_flop.rpc_id(1)
 	
@@ -190,8 +204,12 @@ func _on_call_button_pressed() -> void:
 
 func _on_bet_input_changed(value: float) -> void:
 	bet_input_value = value
+	if bet_input_value > 0:
+		raise_button.disabled = false
+	else:
+		raise_button.disabled = true
 	
 func _on_bet_button_pressed() -> void:
-	server_manager.player_action_taken.rpc_id(1, PlayerTurnAction.Action.Bet, bet_input_value)
+	server_manager.player_action_taken.rpc_id(1, PlayerTurnAction.Action.Raise, bet_input_value)
 	
 ## End button signal methods

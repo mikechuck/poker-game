@@ -101,6 +101,7 @@ func redraw_table_players():
 			player_instance.is_folded = seat_data.is_folded
 			player_instance.is_big_blind = seat_data.is_big_blind
 			player_instance.is_small_blind = seat_data.is_small_blind
+			player_instance.hole_cards = seat_data.hole_cards
 			seat_data.player_node = player_instance
 			add_child(player_instance)
 			seat_nodes[seat_id].visible = false

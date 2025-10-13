@@ -80,6 +80,11 @@ func set_player_seats():
 		
 
 ### Debug rpc methods
+
+@rpc("reliable", "any_peer")
+func call_debug_start_game() -> void:
+	game_manager.debug_goto_start_game()
+	
 @rpc("reliable", "any_peer")
 func call_debug_deal_flop() -> void:
 	game_manager.debug_goto_deal_flop()

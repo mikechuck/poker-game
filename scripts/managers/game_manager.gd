@@ -52,15 +52,18 @@ func _ready() -> void:
 func reset_hand() -> void:
 	game_state_data.reset_game_state()
 	deck_manager.shuffle_deck()
+	client_manager.update_game_state_data.rpc(game_state_data.to_dict())
 
 func assign_player_to_seat(client_id, seat_number) -> void:
 	# Check to see if seat is already filled
 	seat_number = get_next_free_seat(seat_number)
 	# First remove them from their current seat then put them in the new seat
 	var desired_seat = game_state_data.player_seats.get(seat_number)
+	#print("Already has ")
 	for seat in game_state_data.player_seats.values():
 		if (seat.player_id == client_id):
 			seat.player_id = 0
+			pass
 	desired_seat.player_id = client_id
 	desired_seat.hand_cash = GameStateData.default_starting_cash
 	game_state_data.player_seats[seat_number] = desired_seat
@@ -69,10 +72,11 @@ func assign_player_to_seat(client_id, seat_number) -> void:
 
 ### Game cycle methods
 func step_next_game_state():
-	print("Stepping to next game state from %s" % GameState.State.find_key(game_state_data.game_state))
+	# Add a timer between states so users have visual separation
+	await get_tree().create_timer(0.5).timeout
 	game_state_data.current_bet_value = 0
 	game_state_data.last_bet_raise_player_id = 0
-	game_state_data.player_turn = 1
+	game_state_data.player_turn = get_next_active_player_seat_number(0)
 	for seat in game_state_data.player_seats.values():
 		seat.bet_value = 0
 	match game_state_data.game_state:
@@ -100,6 +104,7 @@ func step_next_game_state():
 			var next_game_state: GameState.State = GameState.State.BetFlop
 			game_state_data.game_state = next_game_state
 			client_manager.update_game_state_data.rpc(game_state_data.to_dict())
+			check_skip_this_state()
 		GameState.State.BetFlop:
 			var next_game_state: GameState.State = GameState.State.DealTurn
 			game_state_data.game_state = next_game_state
@@ -125,6 +130,7 @@ func step_next_game_state():
 			game_state_data.game_state = next_game_state
 			client_manager.update_game_state_data.rpc(game_state_data.to_dict())
 			state_end_step()
+	
 	
 func state_setup_hand():
 	# New shuffled deck
@@ -154,8 +160,6 @@ func state_deal_hole_cards():
 			var hole_card2: CardData = deck_manager.deal_card()
 			player.hole_cards.append(hole_card1)
 			player.hole_cards.append(hole_card2)
-	# Add a timer between states so users have visual separation
-	await get_tree().create_timer(0.5).timeout
 	client_manager.update_game_state_data.rpc(game_state_data.to_dict())
 	step_next_game_state()
 	
@@ -182,7 +186,7 @@ func state_deal_river_card() -> void:
 	
 func state_end_step() -> void:
 	print("GAME OVER, CALCULATING WINNER")
-	var winning_player_seat = find_winning_seat()
+	#var winning_player_seat = find_winning_seat()
 	
 func find_winning_seat() -> PlayerSeat:
 	var highest_hand_value = 0
@@ -209,16 +213,20 @@ func player_action_taken(player_action: PlayerTurnAction.Action, action_value):
 			player_action_start_game()
 		PlayerTurnAction.Action.Fold:
 			player_action_folded()
+			increment_player_turn()
 		PlayerTurnAction.Action.Ante:
 			player_action_ante()
-		PlayerTurnAction.Action.Bet:
-			player_action_bet(action_value)
+			increment_player_turn()
+		PlayerTurnAction.Action.Raise:
+			player_action_raise(action_value)
+			increment_player_turn()
 		PlayerTurnAction.Action.Check:
 			pass
+			increment_player_turn()
 		PlayerTurnAction.Action.Call:
 			player_action_call()
-	increment_player_turn()
-
+			increment_player_turn()
+			
 func player_action_start_game() -> void:
 	var requestor_id = multiplayer.get_remote_sender_id()
 	# Ensure all players are ready before starting
@@ -250,10 +258,11 @@ func player_action_ante():
 	game_state_data.current_bet_value = bet_value
 	game_state_data.last_bet_raise_player_id = player_seat.player_id
 	
-func player_action_bet(bet_value):
+func player_action_raise(bet_value):
 	var player_seat = server_get_player_seat()
-	player_seat.hand_cash -= bet_value
-	player_seat.bet_value += bet_value
+	var difference_raise = game_state_data.current_bet_value - player_seat.bet_value + bet_value
+	player_seat.hand_cash -= difference_raise
+	player_seat.bet_value += difference_raise
 	game_state_data.pot_value += bet_value
 	if player_seat.bet_value > game_state_data.current_bet_value:
 		game_state_data.last_bet_raise_player_id = player_seat.player_id
@@ -266,6 +275,9 @@ func player_action_call():
 	player_seat.hand_cash -= bet_value_difference
 	player_seat.bet_value += bet_value_difference
 	game_state_data.pot_value += bet_value_difference
+	if player_seat.bet_value > game_state_data.current_bet_value:
+		game_state_data.last_bet_raise_player_id = player_seat.player_id
+		game_state_data.current_bet_value = player_seat.bet_value
 
 		
 ###################################### Helper Functions #############################################
@@ -307,14 +319,14 @@ func get_num_players_in_hand() -> int:
 
 func get_next_player_seat_number(seat_number) -> int:
 	var desired_seat = game_state_data.player_seats.get(seat_number)
-	if (desired_seat.player_id == 0):
+	if (!desired_seat || desired_seat.player_id == 0):
 		seat_number = get_next_seat_number_in_range(seat_number)
-		seat_number = get_next_player_seat_number(seat_number)
+		#seat_number = get_next_player_seat_number(seat_number)
 	return seat_number
 	
 func get_next_active_player_seat_number(seat_number) -> int:
 	var desired_seat = game_state_data.player_seats.get(seat_number)
-	if (desired_seat.player_id == 0 || desired_seat.is_folded || desired_seat.hand_cash == 0):
+	if (desired_seat == null || desired_seat.player_id == 0 || desired_seat.is_folded || desired_seat.hand_cash == 0):
 		seat_number = get_next_seat_number_in_range(seat_number)
 		seat_number = get_next_active_player_seat_number(seat_number)
 	return seat_number
@@ -345,6 +357,14 @@ func server_get_player_seat() -> PlayerSeat:
 
 
 ## Debug helpers
+
+func debug_goto_start_game() -> void:
+	reset_hand()
+	for player in game_state_data.connected_players.values():
+		assign_player_to_seat(player.id, 1)
+	for player_seat in game_state_data.player_seats.values():
+		player_seat.is_ready = true
+	step_next_game_state()
 
 func debug_goto_deal_flop() -> void:
 	reset_hand()
