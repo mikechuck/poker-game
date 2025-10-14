@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://cifi0uxipxmd4" path="res://scripts/UI/select_seat_button.gd" id="2_4n56r"]
 
 [node name="SeatButton" type="Node2D"]
+visible = false
 script = ExtResource("1_33enm")
 
 [node name="SelectSeatButton" type="Button" parent="."]

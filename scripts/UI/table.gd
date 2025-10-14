@@ -26,40 +26,42 @@ func _ready() -> void:
 		seat_nodes[seat_id] = seat
 
 func _on_game_state_data_change(old_game_state_data, new_game_state_data):
+	handle_game_state_updated()
+	handle_player_seats_updated()
+	handle_player_turn_updated()
+	handle_board_cards_updated()
 	if (old_game_state_data.connected_players != new_game_state_data.connected_players):
 		handle_connected_players_updated(old_game_state_data.connected_players, new_game_state_data.connected_players)
-	if (old_game_state_data.player_seats != new_game_state_data.player_seats):
-		handle_player_seats_updated(old_game_state_data.player_seats, new_game_state_data.player_seats)
-	if (old_game_state_data.player_turn != new_game_state_data.player_turn):
-		handle_player_turn_updated(old_game_state_data.player_turn, new_game_state_data.player_turn)
-	if (old_game_state_data.game_state != new_game_state_data.game_state):
-		handle_game_state_updated(old_game_state_data.game_state, new_game_state_data.game_state)
-	if (old_game_state_data.board_cards != new_game_state_data.board_cards):
-		handle_board_cards_updated(old_game_state_data.board_cards, new_game_state_data.board_cards)
 
-func handle_game_state_updated(old_game_state, new_game_state):
-	if new_game_state != GameState.State.PreHand:
-		for seat in seat_nodes.values():
+func handle_game_state_updated():
+	for seat in seat_nodes.values():
+		if game_manager.game_state_data.game_state == GameState.State.PreHand:
+			seat.visible = true
+		else:
 			seat.visible = false
 			
 func handle_connected_players_updated(old_connected_players, new_connected_players):
 	pass
 	
-func handle_player_seats_updated(old_player_seats, new_player_seats):
+func handle_player_seats_updated():
 	for player_seat in game_manager.game_state_data.player_seats.values():
 		if (multiplayer.get_unique_id() == player_seat.player_id && player_seat.player_node):
 			player_seat.player_node.get_node("PlayerCard/CashAmount").text = "$" + str(player_seat.hand_cash)
 	redraw_table_players()
 
-func handle_player_turn_updated(old_player_turn, new_player_turn):
+func handle_player_turn_updated():
 	redraw_table_players()
 	
-func handle_board_cards_updated(old_board_cards, new_board_cards):
-	if (new_board_cards.size() > 0):
+func handle_board_cards_updated():
+	var board_cards = game_manager.game_state_data.board_cards
+	# clear cards first, then redraw
+	for card in get_tree().get_nodes_in_group("board_cards"):
+			board_cards_node.remove_child(card)
+	if (board_cards.size() > 0):
 		for i in range(5):
 			var card_spot = board_cards_node.get_node("DealerCardSpot" + str(i + 1))
-			if i < new_board_cards.size():
-				var card_data = new_board_cards[i]
+			if i < board_cards.size():
+				var card_data = board_cards[i]
 				var card_instance = card_scene.instantiate()
 				card_instance.value = card_data.value
 				card_instance.suit = card_data.suit
@@ -71,14 +73,12 @@ func handle_board_cards_updated(old_board_cards, new_board_cards):
 			else:
 				card_spot.visible = true
 	else:
-		var card_instances = get_tree().get_nodes_in_group("board_cards")
-		for card in card_instances:
-			board_cards_node.remove_child(card)
+		for i in range(5):
+			board_cards_node.get_node("DealerCardSpot" + str(i + 1)).visible = true
 		
 func redraw_table_players():
 	# Set pot value
-	if (game_manager.game_state_data.game_state != GameState.State.PreHand &&
-		game_manager.game_state_data.game_state != GameState.State.PostHand):
+	if (game_manager.game_state_data.game_state != GameState.State.PreHand):
 		pot_value_node.visible = true
 		pot_value_node.text = "Pot: $%s" % [game_manager.game_state_data.pot_value]
 	else:
@@ -89,7 +89,8 @@ func redraw_table_players():
 		if (player_seats[seat_id].player_node != null):
 			remove_child(player_seats[seat_id].player_node)
 			player_seats[seat_id].player_node = null
-		seat_nodes[seat_id].visible = true
+		if (game_manager.game_state_data.game_state == GameState.State.PreHand):
+			seat_nodes[seat_id].visible = true
 	
 	# Then spawn any players and hide seat buttons
 	player_seats = game_manager.game_state_data.player_seats
@@ -108,6 +109,7 @@ func redraw_table_players():
 			player_instance.is_big_blind = seat_data.is_big_blind
 			player_instance.is_small_blind = seat_data.is_small_blind
 			player_instance.hole_cards = seat_data.hole_cards
+			player_instance.is_winner = game_manager.game_state_data.winner_player_id == seat_data.player_id
 			seat_data.player_node = player_instance
 			add_child(player_instance)
 			seat_nodes[seat_id].visible = false

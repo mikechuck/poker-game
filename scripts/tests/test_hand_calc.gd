@@ -81,6 +81,5 @@ var full_house_hand: Array[Dictionary] = [
 func test_hand() -> void:
 	var scene := scene_runner("res://scenes/main.tscn")
 	_dm = scene.find_child("DeckManager")
-	print("_dm: %s" % _dm)
 	
 	

@@ -7,6 +7,15 @@ var is_spectating: bool = true
 var account_total_cash: int = 0
 var table_cash: int = 0
 
+func clone() -> ConnectedPlayer:
+	var player_clone = ConnectedPlayer.new()
+	player_clone.id = id
+	player_clone.is_host = is_host
+	player_clone.is_spectating = is_spectating
+	player_clone.account_total_cash = account_total_cash
+	player_clone.table_cash = table_cash
+	return player_clone
+
 func to_dict() -> Dictionary:
 	return {
 		"id": id,

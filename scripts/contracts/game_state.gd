@@ -12,6 +12,5 @@ enum State {
 	BetTurn,
 	DealRiver,
 	BetRiver,
-	HandOver,
-	PostHand,
+	HandOver
 }

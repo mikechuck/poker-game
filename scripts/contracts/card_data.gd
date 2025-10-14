@@ -5,8 +5,14 @@ var id: String
 var number: int
 var value: String
 var suit: String
-var show: bool = false
-var is_delt: bool = false
+
+func clone() -> CardData:
+	var card_clone = CardData.new()
+	card_clone.id = id
+	card_clone.number = number
+	card_clone.value = value
+	card_clone.suit = suit
+	return card_clone
 
 func to_dict() -> Dictionary:
 	return {
@@ -14,8 +20,6 @@ func to_dict() -> Dictionary:
 		"number": number,
 		"value": value,
 		"suit": suit,
-		"show": show,
-		"is_delt": is_delt
 	}
 	
 static func from_dict(dict: Dictionary) -> CardData:
@@ -24,6 +28,4 @@ static func from_dict(dict: Dictionary) -> CardData:
 	instance.number = dict.get("number")
 	instance.value = dict.get("value")
 	instance.suit = dict.get("suit")
-	instance.show = dict.get("show")
-	instance.is_delt = dict.get("is_delt")
 	return instance

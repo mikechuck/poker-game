@@ -59,7 +59,6 @@ func assign_player_to_seat(client_id, seat_number) -> void:
 	seat_number = get_next_free_seat(seat_number)
 	# First remove them from their current seat then put them in the new seat
 	var desired_seat = game_state_data.player_seats.get(seat_number)
-	#print("Already has ")
 	for seat in game_state_data.player_seats.values():
 		if (seat.player_id == client_id):
 			seat.player_id = 0
@@ -73,7 +72,7 @@ func assign_player_to_seat(client_id, seat_number) -> void:
 ### Game cycle methods
 func step_next_game_state():
 	# Add a timer between states so users have visual separation
-	await get_tree().create_timer(0.5).timeout
+	#await get_tree().create_timer(0.5).timeout
 	game_state_data.current_bet_value = 0
 	game_state_data.last_bet_raise_player_id = 0
 	game_state_data.player_turn = get_next_active_player_seat_number(0)
@@ -130,7 +129,10 @@ func step_next_game_state():
 			game_state_data.game_state = next_game_state
 			client_manager.update_game_state_data.rpc(game_state_data.to_dict())
 			state_end_step()
-	
+		GameState.State.HandOver:
+			var next_game_state: GameState.State = GameState.State.PreHand
+			game_state_data.game_state = next_game_state
+			client_manager.update_game_state_data.rpc(game_state_data.to_dict())
 	
 func state_setup_hand():
 	# New shuffled deck
@@ -141,8 +143,10 @@ func state_setup_hand():
 	# Reset turn and blinds index
 	# Eventually, going to have to decouple first player turn from small blind seat num since those rotate
 	# Rotating blinds can be done by accessing old game state data from previous round
-	var first_player_seat_index = get_next_player_seat_number(1)
-	var second_player_seat_index = get_next_player_seat_number(first_player_seat_index + 1)
+	var first_player_seat_index = get_next_active_player_seat_number(1)
+	print("first active player is %s" % first_player_seat_index)
+	var second_player_seat_index = get_next_active_player_seat_number(first_player_seat_index + 1)
+	print("second active player is %s" % second_player_seat_index)
 	game_state_data.player_seats[first_player_seat_index].is_small_blind = true
 	game_state_data.player_seats[second_player_seat_index].is_big_blind = true
 	# Update all clients with starting game state
@@ -185,8 +189,13 @@ func state_deal_river_card() -> void:
 	step_next_game_state()
 	
 func state_end_step() -> void:
-	game_state_data.winner_player_id = game_state_data.connected_players[0].id
-	print("GAME OVER, WINNER: %s", game_state_data.winner_player_id)
+	game_state_data.winner_player_id = game_state_data.connected_players.values()[0].id
+	# Add the new balance to the winner
+	for seat in game_state_data.player_seats.values():
+		if seat.player_id == game_state_data.winner_player_id:
+			seat.hand_cash += game_state_data.pot_value
+	game_state_data.connected_players[game_state_data.winner_player_id].account_total_cash += game_state_data.pot_value
+	client_manager.update_game_state_data.rpc(game_state_data.to_dict())
 	
 func find_winning_seat() -> PlayerSeat:
 	var highest_hand_value = 0
@@ -221,7 +230,7 @@ func player_action_taken(player_action: PlayerTurnAction.Action, action_value):
 			player_action_raise(action_value)
 			increment_player_turn()
 		PlayerTurnAction.Action.Check:
-			pass
+			player_action_check()
 			increment_player_turn()
 		PlayerTurnAction.Action.Call:
 			player_action_call()
@@ -257,7 +266,11 @@ func player_action_ante():
 	game_state_data.pot_value += bet_value
 	game_state_data.current_bet_value = bet_value
 	game_state_data.last_bet_raise_player_id = player_seat.player_id
-	
+
+func player_action_check() -> void:
+	if (game_state_data.last_bet_raise_player_id == 0):
+		game_state_data.last_bet_raise_player_id = multiplayer.get_remote_sender_id()
+
 func player_action_raise(bet_value):
 	var player_seat = server_get_player_seat()
 	var difference_raise = game_state_data.current_bet_value - player_seat.bet_value + bet_value
@@ -278,6 +291,15 @@ func player_action_call():
 	if player_seat.bet_value > game_state_data.current_bet_value:
 		game_state_data.last_bet_raise_player_id = player_seat.player_id
 		game_state_data.current_bet_value = player_seat.bet_value
+		
+# Called during HandOver from host
+func start_new_hand() -> void:
+	goto_lobby()
+	step_next_game_state()
+	
+# Called during HandOver from host
+func goto_lobby() -> void:
+	reset_hand()
 
 		
 ###################################### Helper Functions #############################################
@@ -290,8 +312,7 @@ func increment_player_turn() -> void:
 	if get_num_active_players_in_hand() <= 1:
 		step_next_game_state()
 	# It's come all around the table without a raise, move onto next game state
-	if next_player_data.player_id == game_state_data.last_bet_raise_player_id:
-		game_state_data.player_turn = 1
+	elif next_player_data.player_id == game_state_data.last_bet_raise_player_id:
 		step_next_game_state()
 	else:
 		game_state_data.player_turn = next_player_turn
@@ -361,7 +382,7 @@ func server_get_player_seat() -> PlayerSeat:
 func debug_assign_player_seats() -> void:
 	for player in game_state_data.connected_players.values():
 		assign_player_to_seat(player.id, 1)
-	for seat in game_state_data.players_seats.values():
+	for seat in game_state_data.player_seats.values():
 		if seat.player_id != 0:
 			seat.is_ready = true
 

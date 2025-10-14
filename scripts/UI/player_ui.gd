@@ -16,7 +16,9 @@ var player_actions_pre_game_host_node = null
 var player_actions_pre_game_guest_node = null
 var player_actions_ante_node = null
 var player_actions_game_node = null
-var ready_toggle = null
+var player_actions_hand_over_node = null
+var ready_toggle_guest = null
+var ready_toggle_host = null
 var status_message = null
 var hole_cards_node = null
 var start_button_node = null
@@ -30,9 +32,12 @@ func _ready() -> void:
 	player_actions_pre_game_guest_node = $PlayerActionsPreHandGuest
 	player_actions_ante_node = $PlayerActionsAnte
 	player_actions_game_node = $PlayerActionsGame
+	player_actions_hand_over_node = $PlayerActionsHandOver
 	status_message = $StatusMessage/Text
 	hole_cards_node = $HoleCards
 	start_button_node = $PlayerActionsPreHandHost/Start/StartButton
+	ready_toggle_guest = $PlayerActionsPreHandGuest/Ready/ReadyButton
+	ready_toggle_host = $PlayerActionsPreHandHost/Ready/ReadyButton
 	
 	check_button = player_actions_game_node.get_node("Check/CheckButton")
 	raise_button = player_actions_game_node.get_node("Bet/RaiseButton")
@@ -58,6 +63,10 @@ func handle_game_state_change(old_game_state, new_game_state) -> void:
 	set_player_buttons()
 
 func handle_player_seats_updated(old_player_seats, new_player_seats) -> void:
+	for seat in new_player_seats.values():
+		if seat.player_id == multiplayer.get_unique_id():
+			ready_toggle_guest.button_pressed = seat.is_ready
+			ready_toggle_host.button_pressed = seat.is_ready
 	update_hole_cards()
 
 func handle_player_turn_updated(old_player_turn, new_player_turn) -> void:
@@ -71,15 +80,18 @@ func set_status_message() -> void:
 				status_message.visible = true
 				set_status_text("Your turn")
 		GameState.State.HandOver:
-			if (true):
+			if (is_client_winner()):
 				status_message.visible = true
 				set_status_text("YOU WON")
+			else:
+				status_message.visible = false
 	
 func set_player_buttons():
 	player_actions_pre_game_host_node.visible = false
 	player_actions_pre_game_guest_node.visible = false
 	player_actions_ante_node.visible = false
 	player_actions_game_node.visible = false
+	player_actions_hand_over_node.visible = false
 	start_button_node.disabled = false
 	# Match on game state to decide which buttons to show
 	match game_manager.game_state_data.game_state:
@@ -108,6 +120,8 @@ func set_player_buttons():
 		GameState.State.BetFlop, GameState.State.BetTurn, GameState.State.BetRiver:
 			if is_client_turn():
 				set_bet_buttons()
+		GameState.State.HandOver:
+			player_actions_hand_over_node.visible = is_client_host()
 
 func set_bet_buttons():
 	var current_turn_player_seat_data = get_current_turn_seat_data()
@@ -129,16 +143,23 @@ func set_bet_buttons():
 	
 func update_hole_cards():
 	for player_seat in game_manager.game_state_data.player_seats.values():
-		if player_seat.player_id == game_manager.client_get_player_data().id && player_seat.hole_cards.size() > 0:
-			for i in range(2):
-				var card_data = player_seat.hole_cards[i]
-				var card_instance = card_scene.instantiate()
-				var hole_card_spot = get_node("HoleCards/HoleCardSpot%s" % [i])
-				card_instance.value = card_data.value
-				card_instance.suit = card_data.suit
-				card_instance.position = hole_card_spot.position
-				card_instance.scale = hole_card_spot.scale
-				hole_cards_node.add_child(card_instance)
+		if player_seat.player_id == game_manager.client_get_player_data().id:
+			if player_seat.hole_cards.size() > 0:
+				print("spawning cards")
+				for i in range(2):
+					var card_data = player_seat.hole_cards[i]
+					var card_instance = card_scene.instantiate()
+					var hole_card_spot = get_node("HoleCards/HoleCardSpot%s" % [i])
+					card_instance.value = card_data.value
+					card_instance.suit = card_data.suit
+					card_instance.position = hole_card_spot.position
+					card_instance.scale = hole_card_spot.scale
+					hole_cards_node.add_child(card_instance)
+					card_instance.add_to_group("hole_cards")
+			else:
+				print("removing cards...")
+				for card in get_tree().get_nodes_in_group("hole_cards"):
+					hole_cards_node.remove_child(card)
 				
 func set_player_data():
 	var player_name_node = $PlayerName/Value
@@ -157,6 +178,12 @@ func is_client_turn() -> bool:
 		return game_manager.game_state_data.player_seats[game_manager.game_state_data.player_turn].player_id == game_manager.client_get_player_data().id
 	else:
 		return false
+		
+func is_client_host() -> bool:
+	return game_manager.game_state_data.connected_players[multiplayer.get_unique_id()].is_host
+		
+func is_client_winner() -> bool:
+	return game_manager.game_state_data.winner_player_id == multiplayer.get_unique_id()
 
 func get_current_turn_seat_data() -> PlayerSeat:
 	return game_manager.game_state_data.player_seats[game_manager.game_state_data.player_turn]
@@ -213,5 +240,11 @@ func _on_bet_input_changed(value: float) -> void:
 	
 func _on_bet_button_pressed() -> void:
 	server_manager.player_action_taken.rpc_id(1, PlayerTurnAction.Action.Raise, bet_input_value)
+	
+func _on_start_new_hand_button_pressed() -> void:
+	server_manager.start_new_hand.rpc_id(1)
+	
+func _on_goto_lobby_button_pressed() -> void:
+	server_manager.goto_lobby.rpc_id(1)
 	
 ## End button signal methods

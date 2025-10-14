@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://dof81yg1jefa"]
 
 [ext_resource type="Script" uid="uid://b1jfi6ws60cfm" path="res://scripts/UI/player_ui.gd" id="1_d6j1s"]
-[ext_resource type="Texture2D" uid="uid://bfr3hsrfkjxys" path="res://assets/HoleCardSpot.png" id="2_50a1s"]
+[ext_resource type="Texture2D" uid="uid://cku43xsg7wffl" path="res://assets/HoleCardSpot.png" id="2_50a1s"]
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -44,6 +44,60 @@ offset_left = 68.0
 offset_right = 239.0
 offset_bottom = 25.0
 
+[node name="PlayerActionsHandOver" type="Control" parent="."]
+visible = false
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -100.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="StartNewHand" type="Control" parent="PlayerActionsHandOver"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_top = -40.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="LobbyButton" type="Button" parent="PlayerActionsHandOver/StartNewHand"]
+layout_mode = 0
+offset_left = 17.0
+offset_top = -50.0
+offset_right = 148.0
+mouse_default_cursor_shape = 2
+text = "Go to Lobby
+"
+
+[node name="GoToLobby" type="Control" parent="PlayerActionsHandOver"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_top = -40.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="StartButton" type="Button" parent="PlayerActionsHandOver/GoToLobby"]
+layout_mode = 0
+offset_left = -150.0
+offset_top = -50.0
+offset_right = -19.0
+mouse_default_cursor_shape = 2
+text = "Start New Hand
+"
+
 [node name="PlayerActionsPreHandHost" type="Control" parent="."]
 visible = false
 custom_minimum_size = Vector2(100, 100)
@@ -68,6 +122,7 @@ offset_top = -40.0
 offset_right = 20.0
 grow_horizontal = 2
 grow_vertical = 0
+mouse_filter = 2
 
 [node name="ReadyButton" type="CheckButton" parent="PlayerActionsPreHandHost/Ready"]
 layout_mode = 0
@@ -93,6 +148,7 @@ offset_top = -40.0
 offset_right = 20.0
 grow_horizontal = 2
 grow_vertical = 0
+mouse_filter = 2
 
 [node name="StartButton" type="Button" parent="PlayerActionsPreHandHost/Start"]
 layout_mode = 0
@@ -126,6 +182,7 @@ offset_top = -40.0
 offset_right = 20.0
 grow_horizontal = 2
 grow_vertical = 0
+mouse_filter = 2
 
 [node name="ReadyButton" type="CheckButton" parent="PlayerActionsPreHandGuest/Ready"]
 layout_mode = 0
@@ -164,6 +221,7 @@ offset_right = -60.0
 offset_bottom = -55.0
 grow_horizontal = 2
 grow_vertical = 0
+mouse_filter = 2
 
 [node name="AnteButton" type="Button" parent="PlayerActionsAnte/Ante"]
 layout_mode = 0
@@ -187,6 +245,7 @@ offset_top = -40.0
 offset_right = 20.0
 grow_horizontal = 2
 grow_vertical = 0
+mouse_filter = 2
 
 [node name="FoldButton" type="Button" parent="PlayerActionsAnte/Fold"]
 layout_mode = 0
@@ -199,6 +258,7 @@ text = "Fold
 "
 
 [node name="PlayerActionsGame" type="Control" parent="."]
+visible = false
 custom_minimum_size = Vector2(100, 100)
 layout_mode = 1
 anchors_preset = 12
@@ -221,6 +281,7 @@ offset_top = -40.0
 offset_right = 20.0
 grow_horizontal = 2
 grow_vertical = 0
+mouse_filter = 2
 
 [node name="CheckButton" type="Button" parent="PlayerActionsGame/Check"]
 layout_mode = 0
@@ -244,6 +305,7 @@ offset_top = -40.0
 offset_right = 20.0
 grow_horizontal = 2
 grow_vertical = 0
+mouse_filter = 2
 
 [node name="RaiseButton" type="Button" parent="PlayerActionsGame/Bet"]
 layout_mode = 0
@@ -277,6 +339,7 @@ offset_top = -40.0
 offset_right = 20.0
 grow_horizontal = 2
 grow_vertical = 0
+mouse_filter = 2
 
 [node name="CallButton" type="Button" parent="PlayerActionsGame/Call"]
 layout_mode = 0
@@ -300,6 +363,7 @@ offset_top = -40.0
 offset_right = 20.0
 grow_horizontal = 2
 grow_vertical = 0
+mouse_filter = 2
 
 [node name="FoldButton" type="Button" parent="PlayerActionsGame/Fold"]
 layout_mode = 0
@@ -402,6 +466,8 @@ mouse_default_cursor_shape = 2
 text = "End Step
 "
 
+[connection signal="pressed" from="PlayerActionsHandOver/StartNewHand/LobbyButton" to="." method="_on_goto_lobby_button_pressed"]
+[connection signal="pressed" from="PlayerActionsHandOver/GoToLobby/StartButton" to="." method="_on_start_new_hand_button_pressed"]
 [connection signal="toggled" from="PlayerActionsPreHandHost/Ready/ReadyButton" to="." method="_on_ready_button_toggled"]
 [connection signal="pressed" from="PlayerActionsPreHandHost/Start/StartButton" to="." method="_on_start_button_pressed"]
 [connection signal="toggled" from="PlayerActionsPreHandGuest/Ready/ReadyButton" to="." method="_on_ready_button_toggled"]

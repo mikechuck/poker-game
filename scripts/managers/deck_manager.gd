@@ -216,7 +216,7 @@ func get_three_kind_score(sorted_cards) -> int:
 	return 0
 	
 func get_two_pair_score(sorted_cards) -> int:
-	var temp_sorted_cards = sorted_cards.duplicate()
+	var temp_sorted_cards = sorted_cards.duplicate(true)
 	var one_pair_number = get_one_pair_score(temp_sorted_cards)
 	var two_pair_number = get_one_pair_score(temp_sorted_cards, one_pair_number)
 	if (one_pair_number != 0 && two_pair_number != 0):

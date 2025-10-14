@@ -28,6 +28,23 @@ func reset_game_state() -> void:
 	winner_player_id = 0
 	for player_seat in player_seats.values():
 		player_seat.reset_hand_data()
+		
+func clone() -> GameStateData:
+	var game_state_clone = GameStateData.new()
+	game_state_clone.game_state = game_state
+	game_state_clone.player_turn = player_turn
+	game_state_clone.pot_value = pot_value
+	game_state_clone.current_bet_value = current_bet_value
+	game_state_clone.last_bet_raise_player_id = last_bet_raise_player_id
+	game_state_clone.winner_player_id = winner_player_id
+	game_state_clone.host_player_id = host_player_id
+	for seat_id in player_seats.keys():
+		game_state_clone.player_seats[seat_id] = player_seats[seat_id].clone()
+	for card in board_cards:
+		game_state_clone.board_cards.append(card.clone())
+	for player_id in connected_players.keys():
+		game_state_clone.connected_players[player_id] = connected_players[player_id].clone()
+	return game_state_clone
 
 func to_dict() -> Dictionary:
 	return {

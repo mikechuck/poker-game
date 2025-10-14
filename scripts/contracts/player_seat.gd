@@ -19,11 +19,28 @@ func reset_hand_data() -> void:
 	is_folded = false
 	is_big_blind = false
 	is_small_blind = false
-	hand_cash = GameStateData.default_starting_cash
 	bet_value = 0
 	final_hand_score = 0
 	player_node = null
 	is_ready = false
+	
+func clone() -> PlayerSeat:
+	var seat_clone = PlayerSeat.new()
+	seat_clone.seat_index = seat_index
+	seat_clone.player_id = player_id
+	seat_clone.player_node = player_node
+	seat_clone.is_ready = is_ready
+	seat_clone.hand_cash = hand_cash
+	seat_clone.bet_value = bet_value
+	seat_clone.is_folded = is_folded
+	seat_clone.is_big_blind = is_big_blind
+	seat_clone.is_small_blind = is_small_blind
+	seat_clone.final_hand_score = final_hand_score
+	for card in hole_cards:
+		seat_clone.hole_cards.append(card.clone())
+	for card in sorted_hand_cards:
+		seat_clone.sorted_hand_cards.append(card.clone())
+	return seat_clone
 
 func to_dict() -> Dictionary:
 	var cards: Array[Dictionary] = []

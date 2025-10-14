@@ -68,6 +68,14 @@ func set_ready_status(is_ready: bool):
 @rpc("reliable", "any_peer")
 func player_action_taken(player_action: int, action_value = null):
 	game_manager.player_action_taken(player_action, action_value)
+	
+@rpc("reliable", "any_peer")
+func start_new_hand() -> void:
+	game_manager.start_new_hand()
+	
+@rpc("reliable", "any_peer")
+func goto_lobby() -> void:
+	game_manager.goto_lobby()
 
 ### Helper functions
 
