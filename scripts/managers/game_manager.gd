@@ -45,7 +45,7 @@ func _ready() -> void:
 		is_server = false
 		screen_origin = get_viewport_rect().size / 2
 		player_ui_instance = get_parent().find_child("PlayerUI")
-		client_manager.connect_to_server()
+		#client_manager.connect_to_server()
 	
 ### End lifecycle methods
 

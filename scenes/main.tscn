@@ -1,145 +1,127 @@
-[gd_scene load_steps=12 format=3 uid="uid://bv78nq7paqs7f"]
+[gd_scene load_steps=2 format=3 uid="uid://b7ckdfv84qrn2"]
 
-[ext_resource type="Script" uid="uid://b7pkboiy8lcrw" path="res://scripts/UI/table.gd" id="1_cfscn"]
-[ext_resource type="Script" uid="uid://t8a0fwy0ry0u" path="res://scripts/managers/game_manager.gd" id="1_h2fnp"]
-[ext_resource type="Texture2D" uid="uid://cwksao8mmy0s6" path="res://assets/PokerTable.png" id="2_sugp2"]
-[ext_resource type="Script" uid="uid://cpie8lnbtl1nm" path="res://scripts/managers/game_state_manager.gd" id="2_tipki"]
-[ext_resource type="Script" uid="uid://cfyo1j7pfknw1" path="res://scripts/managers/client_manager.gd" id="3_85g3d"]
-[ext_resource type="PackedScene" uid="uid://iksy47spcvoa" path="res://scenes/UI/seat_button.tscn" id="3_jyhfs"]
-[ext_resource type="Script" uid="uid://bo8p0yfaaihfo" path="res://scripts/managers/server_manager.gd" id="4_choun"]
-[ext_resource type="Texture2D" uid="uid://bjrnd52egc1if" path="res://assets/PlayerCard/DealerChip.png" id="4_eb6dy"]
-[ext_resource type="Texture2D" uid="uid://cdibtxyl8cvkj" path="res://assets/DealerCardSpot.png" id="4_ya4ey"]
-[ext_resource type="PackedScene" uid="uid://dof81yg1jefa" path="res://scenes/UI/player_ui.tscn" id="5_tbgi4"]
-[ext_resource type="Script" uid="uid://cnawrfbgpgpfu" path="res://scripts/managers/deck_manager.gd" id="8_85g3d"]
+[ext_resource type="Script" uid="uid://dvefjfvnac0ds" path="res://scripts/managers/menu_manager.gd" id="1_o5qli"]
 
-[node name="Root" type="Control"]
+[node name="Main" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_o5qli")
 
-[node name="Table" type="Control" parent="."]
+[node name="Title" type="Control" parent="."]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_top = -20.0
-offset_bottom = -20.0
-grow_horizontal = 2
-grow_vertical = 2
-script = ExtResource("1_cfscn")
-
-[node name="PokerTable" type="Sprite2D" parent="Table"]
-texture = ExtResource("2_sugp2")
-
-[node name="Cards" type="Node2D" parent="Table/PokerTable"]
-position = Vector2(0, 15)
-
-[node name="DealerCardSpot1" type="Sprite2D" parent="Table/PokerTable/Cards"]
-position = Vector2(-228, 0)
-scale = Vector2(0.9, 0.9)
-texture = ExtResource("4_ya4ey")
-
-[node name="DealerCardSpot2" type="Sprite2D" parent="Table/PokerTable/Cards"]
-position = Vector2(-114, 0)
-scale = Vector2(0.9, 0.9)
-texture = ExtResource("4_ya4ey")
-
-[node name="DealerCardSpot3" type="Sprite2D" parent="Table/PokerTable/Cards"]
-scale = Vector2(0.9, 0.9)
-texture = ExtResource("4_ya4ey")
-
-[node name="DealerCardSpot4" type="Sprite2D" parent="Table/PokerTable/Cards"]
-position = Vector2(114, 0)
-scale = Vector2(0.9, 0.9)
-texture = ExtResource("4_ya4ey")
-
-[node name="DealerCardSpot5" type="Sprite2D" parent="Table/PokerTable/Cards"]
-position = Vector2(228, 0)
-scale = Vector2(0.9, 0.9)
-texture = ExtResource("4_ya4ey")
-
-[node name="DealerChip" type="Sprite2D" parent="Table/PokerTable/Cards"]
-position = Vector2(0, 127)
-scale = Vector2(0.5, 0.5)
-texture = ExtResource("4_eb6dy")
-
-[node name="Seats" type="Node2D" parent="Table/PokerTable"]
-
-[node name="SeatButton1" parent="Table/PokerTable/Seats" instance=ExtResource("3_jyhfs")]
-position = Vector2(-202, 175)
-seat_number = 1
-
-[node name="SeatButton2" parent="Table/PokerTable/Seats" instance=ExtResource("3_jyhfs")]
-position = Vector2(-486, 79)
-seat_number = 2
-
-[node name="SeatButton3" parent="Table/PokerTable/Seats" instance=ExtResource("3_jyhfs")]
-position = Vector2(-486, -135)
-seat_number = 3
-
-[node name="SeatButton4" parent="Table/PokerTable/Seats" instance=ExtResource("3_jyhfs")]
-position = Vector2(-202, -225)
-seat_number = 4
-
-[node name="SeatButton5" parent="Table/PokerTable/Seats" instance=ExtResource("3_jyhfs")]
-position = Vector2(94, -225)
-seat_number = 5
-
-[node name="SeatButton6" parent="Table/PokerTable/Seats" instance=ExtResource("3_jyhfs")]
-position = Vector2(380, -135)
-seat_number = 6
-
-[node name="SeatButton7" parent="Table/PokerTable/Seats" instance=ExtResource("3_jyhfs")]
-position = Vector2(380, 79)
-seat_number = 7
-
-[node name="SeatButton8" parent="Table/PokerTable/Seats" instance=ExtResource("3_jyhfs")]
-position = Vector2(94, 175)
-seat_number = 8
-
-[node name="Pot" type="Control" parent="Table/PokerTable"]
-layout_mode = 3
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -553.0
-offset_top = -288.5
-offset_right = -353.0
-offset_bottom = -248.5
+offset_left = -250.0
+offset_top = -50.0
+offset_right = 250.0
+offset_bottom = 50.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Value" type="RichTextLabel" parent="Table/PokerTable/Pot"]
-visible = false
-layout_mode = 0
-offset_right = 200.0
-offset_bottom = 40.0
+[node name="RichTextLabel" type="RichTextLabel" parent="Title"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = -50.0
+offset_bottom = 10.0
+grow_horizontal = 2
+bbcode_enabled = true
+text = "[font_size=40]POKER GAME[/font_size]"
 horizontal_alignment = 1
-vertical_alignment = 1
 
-[node name="Sprite2D" type="Sprite2D" parent="Table/PokerTable/Pot"]
-
-[node name="PlayerUI" parent="." instance=ExtResource("5_tbgi4")]
+[node name="Menu" type="Control" parent="."]
 layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
 
-[node name="GameStateManager" type="Node2D" parent="."]
-script = ExtResource("2_tipki")
+[node name="CreateGame" type="Control" parent="Menu"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = 142.0
+offset_top = -100.0
+offset_right = 542.0
+offset_bottom = -50.0
+grow_horizontal = 2
+grow_vertical = 2
 
-[node name="ClientManager" type="Node2D" parent="."]
-script = ExtResource("3_85g3d")
+[node name="Button" type="Button" parent="Menu/CreateGame"]
+layout_mode = 0
+offset_left = 65.0
+offset_right = 365.0
+offset_bottom = 50.0
+mouse_default_cursor_shape = 2
+text = "Create New Game
+"
 
-[node name="ServerManager" type="Node2D" parent="."]
-script = ExtResource("4_choun")
+[node name="JoinGame" type="Control" parent="Menu"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -500.0
+offset_top = -100.0
+offset_right = 100.0
+offset_bottom = -50.0
+grow_horizontal = 2
+grow_vertical = 2
 
-[node name="DeckManager" type="Node2D" parent="."]
-script = ExtResource("8_85g3d")
+[node name="Button" type="Button" parent="Menu/JoinGame"]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -216.0
+offset_top = -25.0
+offset_right = -16.0
+offset_bottom = 25.0
+grow_horizontal = 0
+grow_vertical = 2
+mouse_default_cursor_shape = 2
+text = "Join Game
+"
 
-[node name="GameManager" type="Node2D" parent="."]
-script = ExtResource("1_h2fnp")
+[node name="IpInput" type="LineEdit" parent="Menu/JoinGame"]
+offset_right = 216.0
+offset_bottom = 50.0
+
+[node name="PortInput" type="LineEdit" parent="Menu/JoinGame"]
+layout_mode = 0
+offset_left = 250.0
+offset_right = 350.0
+offset_bottom = 50.0
+
+[node name="DebugOutput" type="TextEdit" parent="."]
+layout_mode = 0
+offset_right = 209.0
+offset_bottom = 176.0
+theme_override_font_sizes/font_size = 10
+placeholder_text = "Debug connection info"
+editable = false
+wrap_mode = 1
+indent_wrapped_lines = true
+
+[connection signal="pressed" from="Menu/CreateGame/Button" to="." method="_on_create_game_button_pressed"]
+[connection signal="pressed" from="Menu/JoinGame/Button" to="." method="_on_join_game_button_pressed"]
+[connection signal="text_changed" from="Menu/JoinGame/IpInput" to="." method="_on_ip_input_text_changed"]
+[connection signal="text_changed" from="Menu/JoinGame/PortInput" to="." method="_on_port_input_text_changed"]

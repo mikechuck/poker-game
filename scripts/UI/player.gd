@@ -13,7 +13,7 @@ class_name Player
 @onready var bet_badge_node = $PlayerCard/BetBadge
 @onready var card_back_1 = $PlayerCard/CardBack1
 @onready var card_back_2 = $PlayerCard/CardBack2
-@onready var game_manager = get_tree().root.get_node("Root/GameManager")
+@onready var game_manager = get_tree().root.get_node("Game/GameManager")
 
 var card_front_1 = null
 var card_front_2 = null
