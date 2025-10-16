@@ -11,9 +11,13 @@ config_version=5
 [application]
 
 config/name="Poker Game Client"
-run/main_scene="res://scenes/game.tscn"
+run/main_scene="uid://b7ckdfv84qrn2"
 config/features=PackedStringArray("4.4", "GL Compatibility")
 config/icon="res://icon.svg"
+
+[autoload]
+
+Logger="*res://scripts/singletons/logger.gd"
 
 [display]
 

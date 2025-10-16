@@ -14,7 +14,7 @@ mouse_filter = 2
 script = ExtResource("1_d6j1s")
 
 [node name="PlayerName" type="Node2D" parent="."]
-position = Vector2(5, 0)
+position = Vector2(10, 5)
 
 [node name="Label" type="RichTextLabel" parent="PlayerName"]
 clip_contents = false
@@ -30,7 +30,7 @@ offset_right = 239.0
 offset_bottom = 25.0
 
 [node name="IsHost" type="Node2D" parent="."]
-position = Vector2(5, 25)
+position = Vector2(10, 30)
 
 [node name="Label" type="RichTextLabel" parent="IsHost"]
 clip_contents = false
@@ -43,6 +43,15 @@ text = "Is host:"
 offset_left = 68.0
 offset_right = 239.0
 offset_bottom = 25.0
+
+[node name="LeaveGameButton" type="Button" parent="."]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 60.0
+offset_right = 140.0
+offset_bottom = 91.0
+mouse_default_cursor_shape = 2
+text = "Leave Game"
 
 [node name="PlayerActionsHandOver" type="Control" parent="."]
 visible = false
@@ -466,6 +475,7 @@ mouse_default_cursor_shape = 2
 text = "End Step
 "
 
+[connection signal="pressed" from="LeaveGameButton" to="." method="_on_leave_game_button_pressed"]
 [connection signal="pressed" from="PlayerActionsHandOver/StartNewHand/LobbyButton" to="." method="_on_goto_lobby_button_pressed"]
 [connection signal="pressed" from="PlayerActionsHandOver/GoToLobby/StartButton" to="." method="_on_start_new_hand_button_pressed"]
 [connection signal="toggled" from="PlayerActionsPreHandHost/Ready/ReadyButton" to="." method="_on_ready_button_toggled"]

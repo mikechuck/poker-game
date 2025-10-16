@@ -2,8 +2,6 @@ extends Node2D
 
 ### Networking fields
 var is_server = false
-const server_ip_address = "0.0.0.0"
-const server_port = 8083
 
 ### Scenes
 @export var player_scene: PackedScene = preload("res://scenes/player.tscn")
@@ -45,7 +43,7 @@ func _ready() -> void:
 		is_server = false
 		screen_origin = get_viewport_rect().size / 2
 		player_ui_instance = get_parent().find_child("PlayerUI")
-		#client_manager.connect_to_server()
+		server_manager.request_game_state_publish.rpc_id(1)
 	
 ### End lifecycle methods
 
@@ -144,9 +142,7 @@ func state_setup_hand():
 	# Eventually, going to have to decouple first player turn from small blind seat num since those rotate
 	# Rotating blinds can be done by accessing old game state data from previous round
 	var first_player_seat_index = get_next_active_player_seat_number(1)
-	print("first active player is %s" % first_player_seat_index)
 	var second_player_seat_index = get_next_active_player_seat_number(first_player_seat_index + 1)
-	print("second active player is %s" % second_player_seat_index)
 	game_state_data.player_seats[first_player_seat_index].is_small_blind = true
 	game_state_data.player_seats[second_player_seat_index].is_big_blind = true
 	# Update all clients with starting game state
@@ -207,7 +203,7 @@ func find_winning_seat() -> PlayerSeat:
 		var full_cards = seat.hole_cards + game_state_data.board_cards
 		full_cards.sort_custom(func(a, b):
 			return a.number > b.number)
-		print("Player hand: [%s%s, %s%s, %s%s, %s%s, %s%s]" % [full_cards[0].value, full_cards[0].suit, full_cards[1].value, full_cards[1].suit, full_cards[2].value, full_cards[2].suit, full_cards[3].value, full_cards[3].suit, full_cards[4].value, full_cards[4].suit])
+		Logger.log("Player hand: [%s%s, %s%s, %s%s, %s%s, %s%s]" % [full_cards[0].value, full_cards[0].suit, full_cards[1].value, full_cards[1].suit, full_cards[2].value, full_cards[2].suit, full_cards[3].value, full_cards[3].suit, full_cards[4].value, full_cards[4].suit])
 		# Keep track of the remaining cards once we find the players score, might need to evaluate kickers
 		seat.sorted_hand_cards = full_cards
 		# Optimistically get the highest hand score, break once found

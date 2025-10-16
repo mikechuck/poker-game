@@ -9,15 +9,21 @@ func _ready() -> void:
 	client_manager = get_parent().get_node("ClientManager")
 
 func start_server():
+	var args = OS.get_cmdline_args()
+	var server_port = args.find("port")
+	if server_port == -1:
+		server_port = 8083
+	Logger.log("port %s" % server_port)
 	var peer = WebSocketMultiplayerPeer.new()
 	multiplayer.multiplayer_peer = null
-	peer.create_server(game_manager.server_port)
+	peer.create_server(server_port)
 	multiplayer.multiplayer_peer = peer
 	multiplayer.peer_connected.connect(_on_peer_connected)
 	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
-	print("Started server at ws://localhost:%s ..." % [game_manager.server_port])
+	Logger.log("Started server at ws://localhost:%s ..." % [server_port])
 	
 func _on_peer_connected(id):
+	Logger.log("Player %s connected" % id)
 	var connected_player = ConnectedPlayer.new()
 	connected_player.id = id
 	connected_player.account_total_cash = GameStateData.default_starting_cash
@@ -27,7 +33,7 @@ func _on_peer_connected(id):
 		game_manager.game_state_data.host_player_id = connected_player.id
 		connected_player.is_host = true
 	client_manager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
-	print("Number of players connected: %s" % [game_manager.game_state_data.connected_players.size()])
+	Logger.log("Number of players connected: %s" % [game_manager.game_state_data.connected_players.size()])
 	
 func _on_peer_disconnected(id):
 	var disconnecting_player = game_manager.game_state_data.connected_players.get(id)
@@ -51,9 +57,13 @@ func _on_peer_disconnected(id):
 	if game_manager.game_state_data.connected_players.size() == 0:
 		game_manager.reset_hand()
 	client_manager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
-	print("Number of players connected: %s" % [game_manager.game_state_data.connected_players.size()])
+	Logger.log("Number of players connected: %s" % [game_manager.game_state_data.connected_players.size()])
 
 ### RPC Functions
+
+@rpc("reliable", "any_peer")
+func request_game_state_publish():
+	client_manager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
 
 @rpc("reliable", "any_peer")
 func request_seat(seat_number: int):

@@ -9,6 +9,7 @@ var call_button = null
 var fold_button = null
 
 var game_manager = null
+var client_manager = null
 var server_manager = null
 
 ### UI nodes
@@ -27,6 +28,7 @@ var bet_input_value = 0
 func _ready() -> void:
 	game_manager = get_parent().get_node("GameManager")
 	server_manager = get_parent().get_node("ServerManager")
+	client_manager = get_parent().get_node("ClientManager")
 	game_manager.game_state_data_updated_signal.connect(_on_game_state_data_updated)
 	player_actions_pre_game_host_node = $PlayerActionsPreHandHost
 	player_actions_pre_game_guest_node = $PlayerActionsPreHandGuest
@@ -47,19 +49,19 @@ func _ready() -> void:
 func _on_game_state_data_updated(old_game_state_data, new_game_state_data):
 	set_status_message()
 	if (old_game_state_data.connected_players != new_game_state_data.connected_players):
-		handle_connected_players_updated(old_game_state_data.connected_players, new_game_state_data.connected_players)
+		handle_connected_players_updated()
 	if (old_game_state_data.game_state != new_game_state_data.game_state):
-		handle_game_state_change(old_game_state_data.game_state, new_game_state_data.game_state)
+		handle_game_state_change()
 	if (old_game_state_data.player_seats != new_game_state_data.player_seats):
 		handle_player_seats_updated(old_game_state_data.player_seats, new_game_state_data.player_seats)
 	if (old_game_state_data.player_turn != new_game_state_data.player_turn):
-		handle_player_turn_updated(old_game_state_data.player_turn, new_game_state_data.player_turn)
+		handle_player_turn_updated()
 
-func handle_connected_players_updated(old_connected_players, new_connected_players):
+func handle_connected_players_updated():
 	set_player_buttons()
 	set_player_data()
 
-func handle_game_state_change(old_game_state, new_game_state) -> void:
+func handle_game_state_change() -> void:
 	set_player_buttons()
 
 func handle_player_seats_updated(old_player_seats, new_player_seats) -> void:
@@ -69,7 +71,7 @@ func handle_player_seats_updated(old_player_seats, new_player_seats) -> void:
 			ready_toggle_host.button_pressed = seat.is_ready
 	update_hole_cards()
 
-func handle_player_turn_updated(old_player_turn, new_player_turn) -> void:
+func handle_player_turn_updated() -> void:
 	set_player_buttons()
 	
 func set_status_message() -> void:
@@ -133,7 +135,6 @@ func set_bet_buttons():
 	else:
 		raise_button.text = "Raise"
 	# Set the minimum bet input to the difference of player's current bet and the table bet
-	var bet_diff = game_manager.game_state_data.current_bet_value
 	if game_manager.game_state_data.current_bet_value == current_turn_player_seat_data.bet_value:
 		# We can check but not call
 		call_button.disabled = true
@@ -145,7 +146,6 @@ func update_hole_cards():
 	for player_seat in game_manager.game_state_data.player_seats.values():
 		if player_seat.player_id == game_manager.client_get_player_data().id:
 			if player_seat.hole_cards.size() > 0:
-				print("spawning cards")
 				for i in range(2):
 					var card_data = player_seat.hole_cards[i]
 					var card_instance = card_scene.instantiate()
@@ -157,7 +157,6 @@ func update_hole_cards():
 					hole_cards_node.add_child(card_instance)
 					card_instance.add_to_group("hole_cards")
 			else:
-				print("removing cards...")
 				for card in get_tree().get_nodes_in_group("hole_cards"):
 					hole_cards_node.remove_child(card)
 				
@@ -216,11 +215,6 @@ func _on_fold_button_pressed() -> void:
 	server_manager.player_action_taken.rpc_id(1, PlayerTurnAction.Action.Fold)
 	
 func _on_ante_button_pressed() -> void:
-	var bet_amount = 0
-	if (get_current_turn_seat_data().is_small_blind):
-		bet_amount = GameStateData.default_small_blind
-	elif (get_current_turn_seat_data().is_big_blind):
-		bet_amount = GameStateData.default_big_blind
 	server_manager.player_action_taken.rpc_id(1, PlayerTurnAction.Action.Ante)
 	
 ### PlayerActionsGame
@@ -246,5 +240,9 @@ func _on_start_new_hand_button_pressed() -> void:
 	
 func _on_goto_lobby_button_pressed() -> void:
 	server_manager.goto_lobby.rpc_id(1)
+	
+func _on_leave_game_button_pressed() -> void:
+	client_manager.disconnect_from_sever()
+	get_tree().call_deferred("change_scene_to_file", "res://scenes/main.tscn")
 	
 ## End button signal methods

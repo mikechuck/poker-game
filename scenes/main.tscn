@@ -102,14 +102,17 @@ text = "Join Game
 "
 
 [node name="IpInput" type="LineEdit" parent="Menu/JoinGame"]
+layout_mode = 0
 offset_right = 216.0
 offset_bottom = 50.0
+alignment = 1
 
 [node name="PortInput" type="LineEdit" parent="Menu/JoinGame"]
 layout_mode = 0
 offset_left = 250.0
 offset_right = 350.0
 offset_bottom = 50.0
+alignment = 1
 
 [node name="DebugOutput" type="TextEdit" parent="."]
 layout_mode = 0

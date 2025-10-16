@@ -30,8 +30,6 @@ func _on_game_state_data_change(old_game_state_data, new_game_state_data):
 	handle_player_seats_updated()
 	handle_player_turn_updated()
 	handle_board_cards_updated()
-	if (old_game_state_data.connected_players != new_game_state_data.connected_players):
-		handle_connected_players_updated(old_game_state_data.connected_players, new_game_state_data.connected_players)
 
 func handle_game_state_updated():
 	for seat in seat_nodes.values():
@@ -39,9 +37,6 @@ func handle_game_state_updated():
 			seat.visible = true
 		else:
 			seat.visible = false
-			
-func handle_connected_players_updated(old_connected_players, new_connected_players):
-	pass
 	
 func handle_player_seats_updated():
 	for player_seat in game_manager.game_state_data.player_seats.values():
