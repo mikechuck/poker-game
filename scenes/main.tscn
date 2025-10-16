@@ -115,6 +115,7 @@ offset_bottom = 50.0
 alignment = 1
 
 [node name="DebugOutput" type="TextEdit" parent="."]
+visible = false
 layout_mode = 0
 offset_right = 209.0
 offset_bottom = 176.0

@@ -22,12 +22,12 @@ func add_debug_line(text: String) -> void:
 	print(text)
 
 func _on_create_game_button_pressed() -> void:
-	Logger.log("Create button pressed")
+	print("Create button pressed")
 	# Call our orchestration API to request new server startup
 	# On response, set server_url and server_port and connect to the server
 
 func _on_join_game_button_pressed() -> void:
-	Logger.log("Joining server at ws://%s:%s..." % [server_url, server_port])
+	print("Joining server at ws://%s:%s..." % [server_url, server_port])
 	connect_to_server()
 	
 func _on_port_input_text_changed(new_text: String) -> void:
@@ -48,14 +48,14 @@ func connect_to_server():
 	multiplayer.server_disconnected.connect(_on_disconnected)
 	
 func _on_connected():
-	Logger.log("Successfully connected to server!")
+	print("Successfully connected to server!")
 	navigate_to_game_scene()
 
 func _on_connection_failed():
-	Logger.log("Connection to server failed.")
+	print("Connection to server failed.")
 	
 func _on_disconnected():
-	Logger.log("Disconnected from server.")
+	print("Disconnected from server.")
 	
 func navigate_to_game_scene() -> void:
 	get_tree().call_deferred("change_scene_to_file", "res://scenes/game.tscn")
