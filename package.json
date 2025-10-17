@@ -1,0 +1,29 @@
+{
+  "name": "poker-game",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "ec2": "node aws/ec2.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mikechuck/poker-game.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mikechuck/poker-game/issues"
+  },
+  "homepage": "https://github.com/mikechuck/poker-game#readme",
+  "dependencies": {
+    "archiver": "^7.0.1",
+    "aws-sdk": "^2.1692.0",
+    "child_process": "^1.0.2",
+    "fs": "^0.0.1-security"
+  },
+  "devDependencies": {
+    "@types/node": "^24.8.1"
+  }
+}
