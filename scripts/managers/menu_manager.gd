@@ -3,10 +3,10 @@ extends Node
 @onready var debug_output_node = $DebugOutput
 @onready var url_input_node = $Menu/JoinGame/IpInput
 @onready var port_input_node = $Menu/JoinGame/PortInput
-#var game_scene_resource = preload("res://scenes/game.tscn")
 
 var server_url = "localhost"
 var server_port = "8083"
+var mp_peer = null
 
 func _ready() -> void:
 	# Get os args
@@ -16,6 +16,10 @@ func _ready() -> void:
 		navigate_to_game_scene()
 	url_input_node.text = server_url
 	port_input_node.text = server_port
+	
+	multiplayer.connected_to_server.connect(_on_connected)
+	multiplayer.connection_failed.connect(_on_connection_failed)
+	multiplayer.server_disconnected.connect(_on_disconnected)
 		
 func add_debug_line(text: String) -> void:
 	debug_output_node.text += text + "\n"
@@ -41,11 +45,6 @@ func connect_to_server():
 	multiplayer.multiplayer_peer = null
 	peer.create_client("ws://%s:%s" % [server_url, server_port])
 	multiplayer.multiplayer_peer = peer
-	
-	# Events
-	multiplayer.connected_to_server.connect(_on_connected)
-	multiplayer.connection_failed.connect(_on_connection_failed)
-	multiplayer.server_disconnected.connect(_on_disconnected)
 	
 func _on_connected():
 	print("Successfully connected to server!")

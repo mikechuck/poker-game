@@ -20,10 +20,6 @@ config/icon="res://icon.svg"
 window/size/viewport_width=1300
 window/size/viewport_height=800
 
-[editor_plugins]
-
-enabled=PackedStringArray("res://addons/gdUnit4/plugin.cfg")
-
 [gdunit4]
 
 settings/common/update_notification_enabled=false
