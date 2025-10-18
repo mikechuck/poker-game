@@ -4,7 +4,6 @@ const fs = require('fs')
 const archiver = require('archiver')
 var AWS = require('aws-sdk')
 const path = require('path');
-import { IAMClient, CreateInstanceProfileCommand } from "@aws-sdk/client-iam";
 require('aws-sdk/lib/maintenance_mode_message').suppress = true;
 
 AWS.config.update({
@@ -14,7 +13,6 @@ AWS.config.update({
 });
 
 const s3 = new AWS.S3();
-const iamClient = new IAMClient();
 
 const uploadFolderToS3 = async () => {
     const localFolderPath = './exports/server';
@@ -46,27 +44,95 @@ const uploadFolderToS3 = async () => {
     }
 };
 
-async function createIAMInstanceProfile(profileName) {
-  try {
-    const command = new CreateInstanceProfileCommand({
-        InstanceProfileName: profileName
-    });
-    const data = await client.send(command);
-    console.log("Instance Profile created successfully:", data.InstanceProfile);
-    return data.InstanceProfile;
-  } catch (error) {
-    console.error("Error creating instance profile:", error);
-    throw error;
-  }
+
+async function createAndLaunchEC2() {
+    let sgId;
+    const STARTUP_COMMANDS_SCRIPT = `#!/bin/bash
+    sudo apt update
+    sudo apt install -y libxcursor-dev libxinerama-dev libxrandr-dev libxi-dev &
+    # Wait for apt installs to finish (optional, but safer)
+    wait
+    aws s3 cp s3://godot-server-totally-unique-name-987654321/GodotServer . &
+    chmod +x GodotServer &
+    ./GodotServer --server --headless`;
+    const STARTUP_COMMANDS_BASE64 = Buffer.from(USER_DATA_SCRIPT).toString('base64');
+
+    const AMI_ID = "ami-0e3c2921641a4a215"; // Windows server
+    const INSTANCE_TYPE = "t3.micro";
+    const SECURITY_GROUP_NAME = "poker-game-sg";
+    const INSTANCE_PROFILE_NAME = "game-server-ec2-role";
+    const SECURITY_GROUP_ID = "sg-0f27397c21075ecfc";
+
+    // NOTE: You must replace 'YOUR_INSTANCE_PROFILE_ARN' with the actual ARN
+    const INSTANCE_PROFILE_ARN = "arn:aws:iam::072351085675:instance-profile/game-server-ec2-role";
+
+
+    // Authorize Ingress Rules (UDP on 12077-12087)
+    try {
+        console.log("Authorizing Ingress Rules...");
+        const ingressCommand = new AuthorizeSecurityGroupIngressCommand({
+            GroupId: sgId,
+            IpPermissions: [
+                {
+                    IpProtocol: 'tcp',
+                    FromPort: 12077,
+                    ToPort: 12087,
+                    IpRanges: [{ CidrIp: '0.0.0.0/0' }]
+                }
+            ]
+        });
+        await ec2Client.send(ingressCommand);
+        console.log("Ingress Rules Authorized successfully.");
+
+    } catch (e) {
+        if (e.name === 'InvalidPermission.Duplicate') {
+            console.warn("Ingress rules already exist. Skipping authorization.");
+        } else {
+            console.error("Error authorizing ingress:", e);
+        }
+    }
+    
+    // Run/Launch EC2 Instance
+    try {
+        console.log("Launching EC2 Instance...");
+        const runInstancesCommand = new RunInstancesCommand({
+            ImageId: AMI_ID,
+            MinCount: 1,
+            MaxCount: 1,
+            InstanceType: INSTANCE_TYPE,
+            // The IAM Profile is passed as a structure containing ARN and Name
+            IamInstanceProfile: {
+                Arn: INSTANCE_PROFILE_ARN, 
+                Name: INSTANCE_PROFILE_NAME 
+            },
+            // Note: SecurityGroupIds must be an array of IDs
+            SecurityGroupIds: [sgId], 
+            // Specify Network Interface to ensure a Public IP is assigned
+            NetworkInterfaces: [{
+                DeviceIndex: 0, // Primary network interface
+                AssociatePublicIpAddress: true,
+                Groups: [sgId] // Attach the security group to the interface
+            }],
+            UserData: USER_DATA_BASE64,
+        });
+
+        const instanceResponse = await ec2Client.send(runInstancesCommand);
+        const instanceId = instanceResponse.Instances[0].InstanceId;
+        console.log(`EC2 Instance Launched successfully! ID: ${instanceId}`);
+        
+    } catch (e) {
+        console.error("Error launching EC2 instance:", e);
+    }
 }
 
 
 uploadFolderToS3(localFolderToUpload, targetS3Bucket, s3TargetPrefix)
-    .then(() => console.log('Folder upload complete.'))
+    .then(() => {
+        //  Run ec2 instantiation here
+        createAndLaunchEC2().then(() => {
+            console.log("EC2 instance successfully launchhed")
+        }).catch(err => console.error("Failed to launch EC2 instance:", err))
+    })
     .catch(err => console.error('Folder upload failed:', err));
-
-createIAMInstanceProfile("poker-ec2-instance")
-    .then(() => console.log("instance profile created"))
-    .catch(err => console.log("Instance profile failed:", err))
     
 const ec2Client = new AWS.EC2();
