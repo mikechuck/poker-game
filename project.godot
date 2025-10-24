@@ -15,6 +15,10 @@ run/main_scene="uid://b7ckdfv84qrn2"
 config/features=PackedStringArray("4.5", "GL Compatibility")
 config/icon="res://icon.svg"
 
+[autoload]
+
+AccessTokenService="*res://scripts/managers/access_token_service.gd"
+
 [display]
 
 window/size/viewport_width=1300

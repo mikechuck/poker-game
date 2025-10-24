@@ -21,7 +21,7 @@ func _ready() -> void:
 		web_auth_guard.handle_oauth_callback()
 		return
 	
-	if not web_auth_guard.check_auth_status():
+	if not AccessTokenService.has_token():
 		print("User not authenticated, redirecting to auth system...")
 		web_auth_guard.redirect_to_auth()
 		return

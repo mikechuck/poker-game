@@ -1,6 +1,5 @@
 extends Node
 
-var access_token = ""
 var http_request: HTTPRequest
 
 # External auth system configuration
@@ -59,19 +58,6 @@ func encode_url_params(params: Dictionary) -> String:
 		encoded_parts.append(encoded_key + "=" + encoded_value)
 	return "&".join(encoded_parts)
 
-func make_http_request(url: String, body: String, headers: Array = []) -> void:
-	http_request = HTTPRequest.new()
-	add_child(http_request)
-	http_request.request_completed.connect(func(result: int, response_code: int, response_headers: PackedStringArray, response_body: PackedByteArray):
-		var response_text = response_body.get_string_from_utf8()
-		var json = JSON.new()
-		json.parse(response_text)
-		var response_data = json.data
-		access_token = response_data["access_token"]
-		set_cookie("access_token", access_token, 15)
-	)
-	http_request.request(url, headers, HTTPClient.METHOD_POST, body)
-
 func get_url_parameters() -> Dictionary:
 	# Get URL search parameters from JavaScript
 	var js_code = "window.location.search"
@@ -92,13 +78,12 @@ func get_current_path() -> String:
 func get_current_url() -> String:
 	return JavaScriptBridge.eval("window.location.origin + window.location.pathname")
 
+func redirect(url: String):
+	JavaScriptBridge.eval("window.location.href = '%s'" % url)
+
 # main
 func _ready():
 	pass
-
-func check_auth_status() -> bool:
-	var access_token = get_cookie("access_token")
-	return access_token != ""
 
 func handle_oauth_callback():
 	var url_params = get_url_parameters()
@@ -116,7 +101,18 @@ func handle_oauth_callback():
 	}
 	var body = encode_url_params(form_data)
 	var headers = ["Content-Type: application/x-www-form-urlencoded"]
-	make_http_request(token_url, body, headers)
+	http_request = HTTPRequest.new()
+	add_child(http_request)
+	http_request.request_completed.connect(func(result: int, response_code: int, response_headers: PackedStringArray, response_body: PackedByteArray):
+		var response_text = response_body.get_string_from_utf8()
+		var json = JSON.new()
+		json.parse(response_text)
+		var response_data = json.data
+		if response_data.has("access_token"):
+			AccessTokenService.set_token(response_data["access_token"])
+			redirect("/")
+	)
+	http_request.request(token_url, headers, HTTPClient.METHOD_POST, body)
 
 func redirect_to_auth():
 	var return_url = get_current_url()
@@ -134,4 +130,4 @@ func redirect_to_auth():
     }
     var query_string = encode_url_params(params)
     var full_auth_url = auth_server_url + "/api/oauth/authorize?" + query_string
-	return JavaScriptBridge.eval("window.location.href = '%s'" % full_auth_url)
+	return redirect(full_auth_url)
