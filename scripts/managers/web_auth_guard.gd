@@ -42,7 +42,6 @@ func set_cookie(name: String, value: String, minutes: int = 15):
 func get_cookie(name: String) -> String:
     var js_code = "document.cookie"
     var all_cookies = JavaScriptBridge.eval(js_code)
-    # Parse cookies in Godot instead of JavaScript
     var cookies = all_cookies.split(";")
     for cookie in cookies:
         var trimmed = cookie.strip_edges()
@@ -52,6 +51,40 @@ func get_cookie(name: String) -> String:
     return ""
 
 # helper functions for urls
+func encode_url_params(params: Dictionary) -> String:
+	var encoded_parts = []
+	for key in params.keys():
+		var encoded_key = key.uri_encode()
+		var encoded_value = str(params[key]).uri_encode()
+		encoded_parts.append(encoded_key + "=" + encoded_value)
+	return "&".join(encoded_parts)
+
+func make_http_request(url: String, body: String, headers: Array = []) -> void:
+	http_request = HTTPRequest.new()
+	add_child(http_request)
+	http_request.request_completed.connect(func(result: int, response_code: int, response_headers: PackedStringArray, response_body: PackedByteArray):
+		if result != HTTPRequest.RESULT_SUCCESS:
+			return
+		if response_code != 200:
+			return
+
+		var response_text = response_body.get_string_from_utf8()
+		var json = JSON.new()
+		var parse_result = json.parse(response_text)
+		if parse_result != OK:
+			return
+		
+		var response_data = json.data
+		if response_data.has("access_token"):
+			access_token = response_data["access_token"]
+			set_cookie("access_token", access_token, 15) # 15 mins
+		else:
+			var error_msg = response_data.get("error_description", response_data.get("error", "Unknown error"))
+	)
+	var error = http_request.request(url, headers, HTTPClient.METHOD_POST, body)
+	if error != OK:
+		pass
+
 func get_url_parameters() -> Dictionary:
 	# Get URL search parameters from JavaScript
 	var js_code = "window.location.search"
@@ -71,25 +104,20 @@ func get_url_parameters() -> Dictionary:
 	return params
 
 func get_current_path() -> String:
-	var js_code = "window.location.pathname"
-	return JavaScriptBridge.eval(js_code)
+	return JavaScriptBridge.eval("window.location.pathname")
 
 func get_current_url() -> String:
-	var js_code = "window.location.origin + window.location.pathname"
-	return JavaScriptBridge.eval(js_code)
+	return JavaScriptBridge.eval("window.location.origin + window.location.pathname")
 
 # main
 func _ready():
-	print("WebAuthGuard ready")
+	pass
 
 func check_auth_status() -> bool:
 	var access_token = get_cookie("access_token")
-	print("Access token: ", access_token)
 	if access_token != "":
-		print("User is authenticated")
 		return true
 	else:
-		print("User is NOT authenticated")
 		return false
 
 func handle_oauth_callback():
@@ -98,9 +126,7 @@ func handle_oauth_callback():
 	var state = url_params.get("state", "")
 	var stored_state = get_cookie("pkce_state")
 	var verifier = get_cookie("pkce_verifier")
-	# Validate state parameter
 	if state != stored_state:
-		print("ERROR: State mismatch - possible CSRF attack")
 		return
 	var token_url = auth_server_url + "/api/oauth/token"
 	var form_data = {
@@ -110,60 +136,16 @@ func handle_oauth_callback():
 		"client_id": client_id,
 		"code_verifier": verifier
 	}
-	
-	# Convert to URL-encoded form data
-	var form_parts = []
-	for key in form_data.keys():
-		var encoded_key = key.uri_encode()
-		var encoded_value = str(form_data[key]).uri_encode()
-		form_parts.append(encoded_key + "=" + encoded_value)
-	var body = "&".join(form_parts)
-	
-	print("Request body: ", body)
-	
-	# Set headers
+	var body = encode_url_params(form_data)
 	var headers = ["Content-Type: application/x-www-form-urlencoded"]
-	
-	print("Exchanging code for token...")
-	http_request = HTTPRequest.new()
-	add_child(http_request)
-	http_request.request_completed.connect(func(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray):
-		if result != HTTPRequest.RESULT_SUCCESS:
-			print("HTTP request failed: " + str(result))
-			return
-		if response_code != 200:
-			print("HTTP error: " + str(response_code))
-			return
-		# Parse response body
-		var response_text = body.get_string_from_utf8()
-		var json = JSON.new()
-		var parse_result = json.parse(response_text)
-		
-		if parse_result != OK:
-			print("Failed to parse JSON response")
-			return
-		
-		var response_data = json.data
-		if response_data.has("access_token"):
-			access_token = response_data["access_token"]
-			# Store token in cookie for persistence
-			set_cookie("access_token", access_token, 60) # 60 minutes
-			print("Successfully obtained access token")
-		else:
-			var error_msg = response_data.get("error_description", response_data.get("error", "Unknown error"))
-			print("Token exchange failed: " + str(error_msg))
-	)
-	var error = http_request.request(token_url, headers, HTTPClient.METHOD_POST, body)
-	if error != OK:
-		print("Failed to start HTTP request: ", error)
-		print("Failed to start HTTP request")
+	make_http_request(token_url, body, headers)
 
 func redirect_to_auth():
 	var return_url = get_current_url()
 	var pkce = generate_pkce()
 	var state = generate_random_string(32)
 	set_cookie("pkce_verifier", pkce["verifier"])
-	set_cookie("pkce_state", state)	
+	set_cookie("pkce_state", state)
 	var params = {
         "response_type": "code",
         "client_id": client_id,
@@ -172,13 +154,6 @@ func redirect_to_auth():
         "code_challenge": pkce["challenge"],
         "code_challenge_method": "S256"
     }
-    var query_parts = []
-    for key in params.keys():
-        var encoded_key = key.uri_encode()
-        var encoded_value = str(params[key]).uri_encode()
-        query_parts.append(encoded_key + "=" + encoded_value)
-    
-    var query_string = "&".join(query_parts)
+    var query_string = encode_url_params(params)
     var full_auth_url = auth_server_url + "/api/oauth/authorize?" + query_string
-	var js_code = "window.location.href = '%s'" % full_auth_url
-	JavaScriptBridge.eval(js_code)
+	return JavaScriptBridge.eval("window.location.href = '%s'" % full_auth_url)
