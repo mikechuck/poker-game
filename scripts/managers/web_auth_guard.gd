@@ -2,14 +2,12 @@ extends Node
 
 var http_request: HTTPRequest
 
-# External auth system configuration
 var auth_server_url = "http://localhost:8080"
 var redirect_uri = "http://localhost:5173/callback"
 var client_id = "ultralight-default-client"
 
 # helper functions for oauth pkce
 const PKCE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~"
-
 func generate_random_string(length: int) -> String:
     var result = ""
     for i in length:
@@ -33,7 +31,6 @@ func generate_pkce() -> Dictionary:
     var challenge = hash_base64.replace("+", "-").replace("/", "_").replace("=", "")
     return {"verifier": verifier, "challenge": challenge}
 
-# helper functions for cookies
 func set_cookie(name: String, value: String, minutes: int = 15):
     var js_code = "document.cookie = '%s=%s; max-age=%d; path=/; SameSite=Lax'"
     JavaScriptBridge.eval(js_code % [name, value, minutes * 60])
@@ -49,7 +46,6 @@ func get_cookie(name: String) -> String:
             return value
     return ""
 
-# helper functions for urls
 func encode_url_params(params: Dictionary) -> String:
 	var encoded_parts = []
 	for key in params.keys():
@@ -59,7 +55,6 @@ func encode_url_params(params: Dictionary) -> String:
 	return "&".join(encoded_parts)
 
 func get_url_parameters() -> Dictionary:
-	# Get URL search parameters from JavaScript
 	var js_code = "window.location.search"
 	var search_string = JavaScriptBridge.eval(js_code)
 	var params = {}
@@ -81,9 +76,26 @@ func get_current_url() -> String:
 func redirect(url: String):
 	JavaScriptBridge.eval("window.location.href = '%s'" % url)
 
-# main
 func _ready():
 	pass
+
+func redirect_to_auth():
+	var return_url = get_current_url()
+	var pkce = generate_pkce()
+	var state = generate_random_string(32)
+	set_cookie("pkce_verifier", pkce["verifier"])
+	set_cookie("pkce_state", state)
+	var params = {
+        "response_type": "code",
+        "client_id": client_id,
+        "redirect_uri": redirect_uri,
+        "state": state,
+        "code_challenge": pkce["challenge"],
+        "code_challenge_method": "S256"
+    }
+    var query_string = encode_url_params(params)
+    var full_auth_url = auth_server_url + "/api/oauth/authorize?" + query_string
+	return redirect(full_auth_url)
 
 func handle_oauth_callback():
 	var url_params = get_url_parameters()
@@ -113,21 +125,3 @@ func handle_oauth_callback():
 			redirect("/")
 	)
 	http_request.request(token_url, headers, HTTPClient.METHOD_POST, body)
-
-func redirect_to_auth():
-	var return_url = get_current_url()
-	var pkce = generate_pkce()
-	var state = generate_random_string(32)
-	set_cookie("pkce_verifier", pkce["verifier"])
-	set_cookie("pkce_state", state)
-	var params = {
-        "response_type": "code",
-        "client_id": client_id,
-        "redirect_uri": redirect_uri,
-        "state": state,
-        "code_challenge": pkce["challenge"],
-        "code_challenge_method": "S256"
-    }
-    var query_string = encode_url_params(params)
-    var full_auth_url = auth_server_url + "/api/oauth/authorize?" + query_string
-	return redirect(full_auth_url)
