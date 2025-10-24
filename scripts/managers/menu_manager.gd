@@ -3,12 +3,31 @@ extends Node
 @onready var debug_output_node = $DebugOutput
 @onready var url_input_node = $Menu/JoinGame/IpInput
 @onready var port_input_node = $Menu/JoinGame/PortInput
+@onready var web_auth_guard = $WebAuthGuard
 
 var server_url = "localhost"
 var server_port = "8083"
 var mp_peer = null
 
+
+func get_current_path() -> String:
+	# Use JavaScript to get current URL path
+	var js_code = "window.location.pathname"
+	return JavaScriptBridge.eval(js_code)
+
 func _ready() -> void:
+	var current_path = get_current_path()
+	if current_path.ends_with("/callback"):
+		web_auth_guard.handle_oauth_callback()
+		return
+	
+	if not web_auth_guard.check_auth_status():
+		print("User not authenticated, redirecting to auth system...")
+		web_auth_guard.redirect_to_auth()
+		return
+	
+	print("User authenticated, proceeding to game menu")
+	
 	# Get os args
 	# If server, load Game scene (server will start automatically there)
 	var args = OS.get_cmdline_args()

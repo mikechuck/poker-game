@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://b7ckdfv84qrn2"]
+[gd_scene load_steps=3 format=3 uid="uid://b7ckdfv84qrn2"]
 
 [ext_resource type="Script" uid="uid://dvefjfvnac0ds" path="res://scripts/managers/menu_manager.gd" id="1_o5qli"]
+[ext_resource type="Script" path="res://scripts/managers/web_auth_guard.gd" id="2_auth_guard"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -11,6 +12,9 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("1_o5qli")
+
+[node name="WebAuthGuard" type="Node" parent="."]
+script = ExtResource("2_auth_guard")
 
 [node name="Title" type="Control" parent="."]
 layout_mode = 1

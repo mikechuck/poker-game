@@ -2,9 +2,9 @@
 $OS = $PSVersionTable.OS
 
 if ($OS -like "*Windows*") {
-    python -m http.server 8080 --directory exports/web
+    npx http-server exports/web -p 5173 --proxy http://localhost:5173?
 } elseif ($OS -like "*Darwin*") { # macOS
-    python3 -m http.server 8080 --directory exports/web
+    npx http-server exports/web -p 5173 --proxy http://localhost:5173?
 } else {
     Write-Host "Unsupported operating system: $OS"
     exit 1
