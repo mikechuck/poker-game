@@ -63,44 +63,27 @@ func make_http_request(url: String, body: String, headers: Array = []) -> void:
 	http_request = HTTPRequest.new()
 	add_child(http_request)
 	http_request.request_completed.connect(func(result: int, response_code: int, response_headers: PackedStringArray, response_body: PackedByteArray):
-		if result != HTTPRequest.RESULT_SUCCESS:
-			return
-		if response_code != 200:
-			return
-
 		var response_text = response_body.get_string_from_utf8()
 		var json = JSON.new()
-		var parse_result = json.parse(response_text)
-		if parse_result != OK:
-			return
-		
+		json.parse(response_text)
 		var response_data = json.data
-		if response_data.has("access_token"):
-			access_token = response_data["access_token"]
-			set_cookie("access_token", access_token, 15) # 15 mins
-		else:
-			var error_msg = response_data.get("error_description", response_data.get("error", "Unknown error"))
+		access_token = response_data["access_token"]
+		set_cookie("access_token", access_token, 15)
 	)
-	var error = http_request.request(url, headers, HTTPClient.METHOD_POST, body)
-	if error != OK:
-		pass
+	http_request.request(url, headers, HTTPClient.METHOD_POST, body)
 
 func get_url_parameters() -> Dictionary:
 	# Get URL search parameters from JavaScript
 	var js_code = "window.location.search"
 	var search_string = JavaScriptBridge.eval(js_code)
 	var params = {}
-	if search_string.begins_with("?"):
-		# Remove the "?" at the beginning
-		var param_string = search_string.substr(1)
-		if param_string != "":
-			var pairs = param_string.split("&")
-			for pair in pairs:
-				var key_value = pair.split("=")
-				if key_value.size() == 2:
-					var key = key_value[0].uri_decode()
-					var value = key_value[1].uri_decode()
-					params[key] = value
+	var param_string = search_string.substr(1)
+	var pairs = param_string.split("&")
+	for pair in pairs:
+		var key_value = pair.split("=")
+		var key = key_value[0].uri_decode()
+		var value = key_value[1].uri_decode()
+		params[key] = value
 	return params
 
 func get_current_path() -> String:
@@ -115,10 +98,7 @@ func _ready():
 
 func check_auth_status() -> bool:
 	var access_token = get_cookie("access_token")
-	if access_token != "":
-		return true
-	else:
-		return false
+	return access_token != ""
 
 func handle_oauth_callback():
 	var url_params = get_url_parameters()
@@ -126,8 +106,6 @@ func handle_oauth_callback():
 	var state = url_params.get("state", "")
 	var stored_state = get_cookie("pkce_state")
 	var verifier = get_cookie("pkce_verifier")
-	if state != stored_state:
-		return
 	var token_url = auth_server_url + "/api/oauth/token"
 	var form_data = {
 		"grant_type": "authorization_code",
