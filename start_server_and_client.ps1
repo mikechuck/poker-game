@@ -1,5 +1,15 @@
-wt -p "Windows PowerShell" powershell -Command "Godot_v4.4-stable_win64_console.exe --path './' server_mode --headless"
+# Detect operating system
+$OS = $PSVersionTable.OS
 
-Start-Sleep -Seconds 3
-
-wt -p "Windows PowerShell" powershell -Command "Godot_v4.4-stable_win64.exe --path './' "
+if ($OS -like "*Windows*") {
+    wt -p "Windows PowerShell" powershell -Command "Godot_v4.4-stable_win64_console.exe --path './' server_mode --headless"
+    Start-Sleep -Seconds 3
+    wt -p "Windows PowerShell" powershell -Command "Godot_v4.4-stable_win64.exe --path './' "
+} elseif ($OS -like "*Darwin*") { # macOS
+    Start-Process -FilePath "godot" -ArgumentList "--path", "./", "server_mode", "--headless"
+    Start-Sleep -Seconds 3
+    Start-Process -FilePath "godot" -ArgumentList "--path", "./"
+} else {
+    Write-Host "Unsupported operating system: $OS"
+    exit 1
+}
