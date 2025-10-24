@@ -111,11 +111,7 @@ func handle_oauth_callback():
 		"client_id": client_id,
 		"code_verifier": verifier
 	}
-	var body = encode_url_params(form_data)
-	var headers = ["Content-Type: application/x-www-form-urlencoded"]
-	http_request = HTTPRequest.new()
-	add_child(http_request)
-	http_request.request_completed.connect(func(result: int, response_code: int, response_headers: PackedStringArray, response_body: PackedByteArray):
+	http_request = HTTPUtils.post_form_request(token_url, form_data, func(result: int, response_code: int, response_headers: PackedStringArray, response_body: PackedByteArray):
 		var response_text = response_body.get_string_from_utf8()
 		var json = JSON.new()
 		json.parse(response_text)
@@ -124,4 +120,4 @@ func handle_oauth_callback():
 			AccessTokenService.set_token(response_data["access_token"])
 			redirect("/")
 	)
-	http_request.request(token_url, headers, HTTPClient.METHOD_POST, body)
+	add_child(http_request)
