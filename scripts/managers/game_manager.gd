@@ -30,21 +30,9 @@ var game_state_data: GameStateData = GameStateData.new()
 
 func _ready() -> void:
 	var parent = get_parent()
-	if parent == null:
-		print("ERROR: GameManager has no parent node!")
-		return
-	
 	server_manager = parent.get_node_or_null("ServerManager")
 	client_manager = parent.get_node_or_null("ClientManager")
 	deck_manager = parent.get_node_or_null("DeckManager")
-	
-	if server_manager == null:
-		print("ERROR: ServerManager node not found!")
-		return
-	
-	if not server_manager.has_method("start_server"):
-		print("ERROR: ServerManager node found but doesn't have start_server method!")
-		return
 	
 	var args = OS.get_cmdline_args()
 	if (args.find("server_mode") >= 0):
@@ -74,24 +62,14 @@ func reset_hand() -> void:
 	client_manager.update_game_state_data.rpc(game_state_data.to_dict())
 
 func assign_player_to_seat(client_id, seat_number) -> void:
-	# Check to see if seat is already filled
 	seat_number = get_next_free_seat(seat_number)
-	# First remove them from their current seat then put them in the new seat
 	var desired_seat = game_state_data.player_seats.get(seat_number)
 	for seat in game_state_data.player_seats.values():
 		if (seat.player_id == client_id):
 			seat.player_id = 0
-			pass
 	desired_seat.player_id = client_id
 	
-	# Initialize from account balance - error if balance not loaded
 	var player = game_state_data.connected_players[client_id]
-	if player.account_total_cash < 0:
-		print("ERROR: Cannot assign player to seat - balance not loaded yet (account_total_cash: %s)" % player.account_total_cash)
-		# Revert seat assignment
-		desired_seat.player_id = 0
-		return
-	
 	desired_seat.hand_cash = player.account_total_cash
 	
 	game_state_data.player_seats[seat_number] = desired_seat
@@ -230,57 +208,19 @@ func state_end_step() -> void:
 			if player != null:
 				player.account_total_cash = seat.hand_cash
 	
-	# Persist updated balances to chips-api for all players who participated
 	var chips_api_service = get_node("/root/Game/ChipsApiService")
-	var server_manager = get_parent().get_node("ServerManager")
 	
 	for seat in game_state_data.player_seats.values():
-		if seat.player_id != 0:  # Only update for players who are seated
+		if seat.player_id != 0:
 			var player = game_state_data.connected_players.get(seat.player_id)
-			if player != null and not player.user_id.is_empty() and not player.jwt_token.is_empty():
+			if player != null:
 				var client_id = seat.player_id
-				
-				# Ensure token is valid before updating balance
-				server_manager.ensure_token_valid(client_id, func(valid: bool, token: String):
-					if not valid:
-						print("WARNING: Cannot update balance - token invalid for player %s" % client_id)
-						return
-					
-					chips_api_service.update_chips(player.user_id, player.account_total_cash, token, func(result: int, response_code: int):
-						if result == 0 and response_code == 200:
-							pass  # Balance updated successfully
-						elif response_code == 401:
-							# Token expired during update, renew and retry once
-							print("Token expired during balance update (401), renewing and retrying for player %s" % client_id)
-							server_manager.renew_player_token(client_id, func(renew_success: bool, new_token: String):
-								if renew_success:
-									chips_api_service.update_chips(player.user_id, player.account_total_cash, new_token, func(retry_result: int, retry_code: int):
-										if retry_result == 0 and retry_code == 200:
-											pass  # Balance updated successfully after token renewal
-										else:
-											print("Failed to update balance in API for player %s after token renewal (HTTP %s)" % [client_id, retry_code])
-									)
-								else:
-									print("Failed to renew token for player %s during balance update" % client_id)
-							)
-						else:
-							print("Failed to update balance in API for player %s (HTTP %s)" % [client_id, response_code])
-					)
+				chips_api_service.update_chips(client_id, player.account_total_cash, func(result: int, response_code: int):
+					pass
 				)
-			else:
-				if player == null:
-					print("WARNING: Cannot update balance - player %s not found in connected_players" % seat.player_id)
-				else:
-					print("WARNING: Cannot update balance for player %s - missing user_id or JWT token" % seat.player_id)
 	
 	client_manager.update_game_state_data.rpc(game_state_data.to_dict())
 
-func _on_balance_updated(result: int, response_code: int):
-	"""Callback when chips balance is updated in API"""
-	if result == 0 and response_code == 200:
-		pass  # Balance updated successfully
-	else:
-		print("Failed to update balance in API (HTTP %s)" % response_code)
 	
 func find_winning_seat() -> PlayerSeat:
 	var highest_hand_value = 0

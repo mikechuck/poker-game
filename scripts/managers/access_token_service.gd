@@ -11,15 +11,11 @@ var auth_server_url = "https://ultralight.dev"
 var client_id = "ultralight-default-client"
 
 func _load_token() -> void:
-	# Only try to load from browser storage if running in web
+	# try to load from browser storage if running in web
 	if OS.has_feature("web"):
 		var result = JavaScriptBridge.eval("sessionStorage.getItem('%s')" % [key])
 		if result != null:
 			_token = result
-		else:
-			_token = ""
-	else:
-		_token = ""
 
 func _ready() -> void:
 	_load_token()
@@ -34,21 +30,10 @@ func has_token() -> bool:
 
 func set_token(token: String) -> void:
 	_token = token
-	# Only save to browser storage if running in web
+	# save to browser storage if running in web
 	if OS.has_feature("web"):
 		var js_code = "sessionStorage.setItem('%s', '%s')" % [key, _token]
 		var result = JavaScriptBridge.eval(js_code)
-		print("DEBUG: set_token() - sessionStorage.setItem result: ", result)
-		
-		# Verify it was saved
-		var verify_code = "sessionStorage.getItem('%s')" % key
-		var verify_result = JavaScriptBridge.eval(verify_code)
-		if verify_result == null or verify_result.is_empty():
-			print("ERROR: Token was not saved to sessionStorage!")
-		else:
-			print("DEBUG: Token verified in sessionStorage, length: ", verify_result.length())
-	else:
-		print("DEBUG: Not running in web, token stored in memory only")
 
 func renew_token() -> void:
 	var token_url = auth_server_url + "/api/oauth/token"
@@ -60,7 +45,7 @@ func renew_token() -> void:
 	var http_request = HTTPUtils.post_form_request(token_url, form_data, func (result: int, response_code: int, response_headers: PackedStringArray, response_body: PackedByteArray): 
 		set_token(JSON.new().data["access_token"])
 	)
-	# AccessTokenService is an autoload singleton - use scene tree from current scene
+
 	var scene_tree = Engine.get_main_loop()
 	if scene_tree is SceneTree:
 		_add_http_request_to_tree(http_request, scene_tree)
@@ -92,23 +77,15 @@ func get_user_id() -> String:
 	"""
 	if _user_id.is_empty():
 		_extract_user_id_from_token()
-	if _user_id.is_empty():
-		print("WARNING: get_user_id() returned empty - token may be missing or invalid")
-		print("Token available: %s" % not _token.is_empty())
 	return _user_id
 
 func _extract_user_id_from_token() -> void:
 	"""Extract user_id from the JWT token payload"""
 	var token = get_token()
 	if token.is_empty():
-		print("DEBUG: Token is empty, cannot extract user_id")
 		return
 
 	var parts = token.split(".")
-	if parts.size() != 3:
-		print("DEBUG: Invalid JWT token format (expected 3 parts, got %s)" % parts.size())
-		return
-	
 	var payload_b64 = parts[1]
 	
 	# Convert base64url to base64 (need to handle padding)
@@ -123,16 +100,7 @@ func _extract_user_id_from_token() -> void:
 	
 	var json = JSON.new()
 	var parse_result = json.parse(payload_str)
-	if parse_result != OK:
-		print("DEBUG: Failed to parse JWT payload JSON: ", parse_result)
-		print("DEBUG: Payload string (first 100 chars): ", payload_str.substr(0, 100))
-		return
-	
 	var payload = json.data
 
 	if payload.has("sub"):
 		_user_id = payload["sub"]
-		print("DEBUG: Extracted user_id from token: ", _user_id)
-	else:
-		print("DEBUG: JWT payload does not contain 'sub' field")
-		print("DEBUG: Available keys: ", payload.keys())

@@ -22,14 +22,13 @@ func clone() -> ConnectedPlayer:
 	return player_clone
 
 func to_dict() -> Dictionary:
-	# Note: jwt_token is NOT included for security (never send token to clients)
 	return {
 		"id": id,
 		"is_host": is_host,
 		"is_spectating": is_spectating,
 		"account_total_cash": account_total_cash,
 		"table_cash": table_cash,
-		"user_id": user_id  # user_id is safe to send to clients
+		"user_id": user_id 
 	}
 	
 static func from_dict(dict: Dictionary) -> ConnectedPlayer:
@@ -39,6 +38,5 @@ static func from_dict(dict: Dictionary) -> ConnectedPlayer:
 	instance.is_spectating = dict.get("is_spectating")
 	instance.account_total_cash = dict.get("account_total_cash")
 	instance.table_cash = dict.get("table_cash")
-	instance.user_id = dict.get("user_id", "")  # Optional - may not be in dict
-	# jwt_token is never in dict (security - only stored server-side)
+	instance.user_id = dict.get("user_id", "")  
 	return instance

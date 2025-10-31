@@ -46,8 +46,6 @@ func _register_player_auth():
 func _handle_auth_error(error_message: String):
 	"""Handle authentication errors - show error and disconnect"""
 	print("ERROR: %s" % error_message)
-	# TODO: Show error to user in UI
-	# For now, just disconnect from server
 	if multiplayer.multiplayer_peer != null:
 		print("Disconnecting from server due to auth error")
 		disconnect_from_sever()
