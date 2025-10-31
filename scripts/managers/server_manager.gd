@@ -26,74 +26,15 @@ func _on_peer_connected(id):
 	print("Player %s connected" % id)
 	var connected_player = ConnectedPlayer.new()
 	connected_player.id = id
-	
-	var user_id = AccessTokenService.get_user_id()
-	if user_id != "":
-		print("Fetching chips for user_id: ", user_id)
-		var chips_api_service = get_node("/root/Game/ChipsApiService")
-		chips_api_service.get_chips(user_id, _on_balance_loaded.bind(connected_player, id, user_id))
-	else:
-		print("No user_id found, using default balance")
-		connected_player.account_total_cash = GameStateData.default_starting_cash
-		_finalize_player_connection(connected_player, id)
-	
-func _on_balance_loaded(connected_player: ConnectedPlayer, player_id: int, user_id: String, result: int, response_code: int, chips: int):
-	"""
-	Callback when chips balance is loaded from API.
-	
-	Args:
-		connected_player: The ConnectedPlayer object
-		player_id: The multiplayer ID
-		user_id: The user's UUID
-		result: HTTPRequest result (0 = success)
-		response_code: HTTP status code
-		chips: The player's chips balance
-	"""
-	if result == 0 and response_code == 200:
-		connected_player.account_total_cash = chips
-		print("Loaded chips for player %s: %s" % [player_id, chips])
-		_finalize_player_connection(connected_player, player_id)
-	elif response_code == 404:
-		# User doesn't exist yet, create them in the API with default balance
-		print("User not found in API, creating user: %s" % user_id)
-		var chips_api_service = get_node("/root/Game/ChipsApiService")
-		chips_api_service.update_chips(user_id, GameStateData.default_starting_cash, _on_user_created.bind(connected_player, player_id))
-	else:
-		# API error, use default
-		connected_player.account_total_cash = GameStateData.default_starting_cash
-		print("Error loading chips (HTTP %s), using default balance: %s" % [response_code, GameStateData.default_starting_cash])
-		_finalize_player_connection(connected_player, player_id)
-
-func _on_user_created(connected_player: ConnectedPlayer, player_id: int, result: int, response_code: int):
-	"""
-	Callback when user is created in the API with default balance.
-	
-	Args:
-		connected_player: The ConnectedPlayer object
-		player_id: The multiplayer ID
-		result: HTTPRequest result (0 = success)
-		response_code: HTTP status code
-	"""
-	if result == 0 and response_code == 200:
-		connected_player.account_total_cash = GameStateData.default_starting_cash
-		print("Created user in API with default balance: %s" % GameStateData.default_starting_cash)
-	else:
-		# API error, use default anyway
-		connected_player.account_total_cash = GameStateData.default_starting_cash
-		print("Error creating user (HTTP %s), using default balance: %s" % [response_code, GameStateData.default_starting_cash])
-	
-	_finalize_player_connection(connected_player, player_id)
-
-func _finalize_player_connection(connected_player: ConnectedPlayer, player_id: int):
-	"""Complete the player connection after balance is loaded"""
-	game_manager.game_state_data.connected_players[player_id] = connected_player
+	# Set default balance initially - client will update it when they send their user_id
+	connected_player.account_total_cash = GameStateData.default_starting_cash
+	game_manager.game_state_data.connected_players[id] = connected_player
 	# If this was the first player to connect, set it as host player
 	if (game_manager.game_state_data.host_player_id == 0):
 		game_manager.game_state_data.host_player_id = connected_player.id
 		connected_player.is_host = true
-	# Don't send RPC here - the client will request it when ready via request_game_state_publish
-	# client_manager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
 	print("Number of players connected: %s" % [game_manager.game_state_data.connected_players.size()])
+	# Client will call register_player_with_balance RPC to update their balance
 	
 func _on_peer_disconnected(id):
 	var disconnecting_player = game_manager.game_state_data.connected_players.get(id)
@@ -120,6 +61,23 @@ func _on_peer_disconnected(id):
 	print("Number of players connected: %s" % [game_manager.game_state_data.connected_players.size()])
 
 ### RPC Functions
+
+@rpc("reliable", "any_peer")
+func register_player_with_balance(user_id: String, balance: int):
+	"""
+	RPC called by client to register their user_id and balance.
+	This allows the client (which has the token) to fetch their balance
+	and send it to the server.
+	"""
+	var client_id = multiplayer.get_remote_sender_id()
+	var connected_player = game_manager.game_state_data.connected_players.get(client_id)
+	if connected_player != null:
+		connected_player.account_total_cash = balance
+		print("Registered player %s with user_id %s and balance %s" % [client_id, user_id, balance])
+		# Update all clients with the new balance
+		client_manager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
+	else:
+		print("Error: Could not find connected player with id %s" % client_id)
 
 @rpc("reliable", "any_peer")
 func request_game_state_publish():

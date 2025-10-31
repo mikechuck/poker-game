@@ -62,7 +62,11 @@ func assign_player_to_seat(client_id, seat_number) -> void:
 			seat.player_id = 0
 			pass
 	desired_seat.player_id = client_id
-	desired_seat.hand_cash = GameStateData.default_starting_cash
+	
+	# Initialize from account balance instead of default
+	var player = game_state_data.connected_players[client_id]
+	desired_seat.hand_cash = player.account_total_cash
+	
 	game_state_data.player_seats[seat_number] = desired_seat
 	game_state_data.connected_players[client_id].is_spectating = false
 	client_manager.update_game_state_data.rpc(game_state_data.to_dict())
@@ -191,7 +195,22 @@ func state_end_step() -> void:
 		if seat.player_id == game_state_data.winner_player_id:
 			seat.hand_cash += game_state_data.pot_value
 	game_state_data.connected_players[game_state_data.winner_player_id].account_total_cash += game_state_data.pot_value
+	
+	# Persist updated balance to chips-api
+	var winner = game_state_data.connected_players[game_state_data.winner_player_id]
+	var user_id = AccessTokenService.get_user_id()
+	if user_id != "":
+		var chips_api_service = get_node("/root/Game/ChipsApiService")
+		chips_api_service.update_chips(user_id, winner.account_total_cash, _on_balance_updated)
+	
 	client_manager.update_game_state_data.rpc(game_state_data.to_dict())
+
+func _on_balance_updated(result: int, response_code: int):
+	"""Callback when chips balance is updated in API"""
+	if result == 0 and response_code == 200:
+		print("Balance updated successfully in API")
+	else:
+		print("Failed to update balance in API (HTTP %s)" % response_code)
 	
 func find_winning_seat() -> PlayerSeat:
 	var highest_hand_value = 0

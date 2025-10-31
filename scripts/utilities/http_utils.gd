@@ -20,8 +20,14 @@ static func post_form_request(url: String, form_data: Dictionary, callback: Call
 	# Connect the callback
 	http_request.request_completed.connect(callback)
 	
-	# Make the request
-	http_request.request(url, headers, HTTPClient.METHOD_POST, body)
+	# Note: request() will be called after the node is added to the tree
+	# Store request parameters for deferred execution
+	http_request.set_meta("_pending_request", {
+		"url": url,
+		"headers": headers,
+		"method": HTTPClient.METHOD_POST,
+		"body": body
+	})
 	
 	return http_request
 
@@ -33,8 +39,14 @@ static func get_request_with_auth(url: String, auth_token: String, callback: Cal
 	# Connect the callback
 	http_request.request_completed.connect(callback)
 	
-	# Make the request
-	http_request.request(url, headers, HTTPClient.METHOD_GET)
+	# Note: request() will be called after the node is added to the tree
+	# Store request parameters for deferred execution
+	http_request.set_meta("_pending_request", {
+		"url": url,
+		"headers": headers,
+		"method": HTTPClient.METHOD_GET,
+		"body": ""
+	})
 	
 	return http_request
 
@@ -49,7 +61,13 @@ static func put_json_request_with_auth(url: String, auth_token: String, json_bod
 	# Connect the callback
 	http_request.request_completed.connect(callback)
 	
-	# Make the request
-	http_request.request(url, headers, HTTPClient.METHOD_PUT, json_body)
+	# Note: request() will be called after the node is added to the tree
+	# Store request parameters for deferred execution
+	http_request.set_meta("_pending_request", {
+		"url": url,
+		"headers": headers,
+		"method": HTTPClient.METHOD_PUT,
+		"body": json_body
+	})
 	
 	return http_request

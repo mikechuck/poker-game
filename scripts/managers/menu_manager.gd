@@ -33,9 +33,23 @@ func _ready() -> void:
 	# All code below is client-side only
 	var current_path = get_current_path()
 	if current_path.ends_with("/callback"):
-		web_auth_guard.handle_oauth_callback()
+		# Defer callback handling to ensure scene is fully loaded
+		call_deferred("_handle_oauth_callback_deferred")
 		return
 	
+	# Normal flow: check for token and setup menu
+	_setup_menu()
+
+func _handle_oauth_callback_deferred():
+	"""Handle OAuth callback after scene is fully loaded"""
+	print("Deferred OAuth callback handling...")
+	web_auth_guard.handle_oauth_callback()
+	# Note: Token will be set asynchronously, then redirect to "/" happens
+	# When redirected, _ready() will run again and call _setup_menu()
+	# which will check for the token
+
+func _setup_menu():
+	"""Setup the game menu - called from _ready() or after redirect"""
 	if not AccessTokenService.has_token():
 		print("User not authenticated, redirecting to auth system...")
 		web_auth_guard.redirect_to_auth()

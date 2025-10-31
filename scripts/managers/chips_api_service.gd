@@ -58,7 +58,25 @@ func get_chips(user_id: String, callback: Callable) -> void:
 			print("Network error fetching chips: ", result)
 			callback.call(1, 0, -1)
 	)
+	_add_http_request_to_tree(http_request)
+
+func _add_http_request_to_tree(http_request: HTTPRequest):
+	"""Add HTTPRequest to tree and execute pending request"""
 	add_child(http_request)
+	
+	# Wait one frame to ensure node is fully in tree
+	await get_tree().process_frame
+	
+	# Execute pending request if one exists
+	var pending = http_request.get_meta("_pending_request", null)
+	if pending != null:
+		var method = pending.get("method", HTTPClient.METHOD_GET)
+		var body = pending.get("body", "")
+		if body != "":
+			http_request.request(pending.url, pending.headers, method, body)
+		else:
+			http_request.request(pending.url, pending.headers, method)
+		http_request.remove_meta("_pending_request")
 
 ## Update player chips balance
 func update_chips(user_id: String, chips_balance: int, callback: Callable) -> void:
@@ -114,5 +132,5 @@ func update_chips(user_id: String, chips_balance: int, callback: Callable) -> vo
 			print("Network error updating chips: ", result)
 			callback.call(1, 0)
 	)
-	add_child(http_request)
+	_add_http_request_to_tree(http_request)
 
