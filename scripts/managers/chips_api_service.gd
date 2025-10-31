@@ -1,0 +1,118 @@
+extends Node
+
+## ChipsApiService - Service for interacting with chips-api backend
+
+const HTTPUtils = preload("res://scripts/utilities/http_utils.gd")
+
+const CHIPS_API_BASE_URL = "https://y27u211sxl.execute-api.us-east-1.amazonaws.com"
+const GET_CHIPS_ENDPOINT = "/chips/"
+const PUT_CHIPS_ENDPOINT = "/chips"
+
+func get_chips_url(user_id: String) -> String:
+	return CHIPS_API_BASE_URL + GET_CHIPS_ENDPOINT + user_id
+
+func put_chips_url() -> String:
+	return CHIPS_API_BASE_URL + PUT_CHIPS_ENDPOINT
+
+## Get player chips balance
+func get_chips(user_id: String, callback: Callable) -> void:
+	"""
+	Get player's chips balance from the API.
+	
+	Args:
+		user_id: The user's UUID
+		callback: Callable that receives (result: int, response_code: int, chips: int)
+		
+	Callback parameters:
+		result: HTTPRequest result (0 = success)
+		response_code: HTTP status code
+		chips: Player's chips balance (-1 on error)
+	"""
+	if user_id.is_empty():
+		callback.call(1, 400, -1)
+		return
+	
+	var token = AccessTokenService.get_token()
+	if token.is_empty():
+		print("Error: No access token available for chips API")
+		callback.call(1, 401, -1)
+		return
+	
+	var url = get_chips_url(user_id)
+	var http_request = HTTPUtils.get_request_with_auth(url, token, func(result: int, response_code: int, response_headers: PackedStringArray, response_body: PackedByteArray):
+		if result == HTTPRequest.RESULT_SUCCESS:
+			if response_code == 200:
+				var json = JSON.new()
+				var parse_result = json.parse(response_body.get_string_from_utf8())
+				if parse_result == OK:
+					var data = json.data
+					var chips = data.get("chips_balance", -1)
+					callback.call(0, response_code, chips)
+				else:
+					print("Error parsing chips response: ", response_body.get_string_from_utf8())
+					callback.call(1, response_code, -1)
+			else:
+				print("Error fetching chips: HTTP %s" % response_code)
+				callback.call(1, response_code, -1)
+		else:
+			print("Network error fetching chips: ", result)
+			callback.call(1, 0, -1)
+	)
+	add_child(http_request)
+
+## Update player chips balance
+func update_chips(user_id: String, chips_balance: int, callback: Callable) -> void:
+	"""
+	Update player's chips balance in the API.
+	
+	Args:
+		user_id: The user's UUID
+		chips_balance: The new chips balance
+		callback: Callable that receives (result: int, response_code: int)
+		
+	Callback parameters:
+		result: HTTPRequest result (0 = success)
+		response_code: HTTP status code
+	"""
+	if user_id.is_empty():
+		callback.call(1, 400)
+		return
+	
+	var token = AccessTokenService.get_token()
+	if token.is_empty():
+		print("Error: No access token available for chips API")
+		callback.call(1, 401)
+		return
+	
+	if chips_balance < 0:
+		print("Error: chips_balance cannot be negative")
+		callback.call(1, 400)
+		return
+	
+	# Create JSON body
+	var now = Time.get_datetime_dict_from_system()
+	var datetime_str = "%04d-%02d-%02dT%02d:%02d:%02dZ" % [now.year, now.month, now.day, now.hour, now.minute, now.second]
+	
+	var json_data = {
+		"user_id": user_id,
+		"chips_balance": chips_balance,
+		"created_at": datetime_str,
+		"updated_at": datetime_str
+	}
+	
+	var json_string = JSON.stringify(json_data)
+	
+	var url = put_chips_url()
+	var http_request = HTTPUtils.put_json_request_with_auth(url, token, json_string, func(result: int, response_code: int, response_headers: PackedStringArray, response_body: PackedByteArray):
+		if result == HTTPRequest.RESULT_SUCCESS:
+			if response_code == 200:
+				callback.call(0, response_code)
+			else:
+				print("Error updating chips: HTTP %s - %s" % [response_code, response_body.get_string_from_utf8()])
+				callback.call(1, response_code)
+		else:
+			print("Network error updating chips: ", result)
+			callback.call(1, 0)
+	)
+	add_child(http_request)
+

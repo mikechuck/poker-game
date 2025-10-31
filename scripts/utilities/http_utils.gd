@@ -24,3 +24,32 @@ static func post_form_request(url: String, form_data: Dictionary, callback: Call
 	http_request.request(url, headers, HTTPClient.METHOD_POST, body)
 	
 	return http_request
+
+## Make a GET request with Authorization header
+static func get_request_with_auth(url: String, auth_token: String, callback: Callable) -> HTTPRequest:
+	var http_request = HTTPRequest.new()
+	var headers = ["Authorization: Bearer %s" % auth_token]
+	
+	# Connect the callback
+	http_request.request_completed.connect(callback)
+	
+	# Make the request
+	http_request.request(url, headers, HTTPClient.METHOD_GET)
+	
+	return http_request
+
+## Make a PUT request with JSON body and Authorization header
+static func put_json_request_with_auth(url: String, auth_token: String, json_body: String, callback: Callable) -> HTTPRequest:
+	var http_request = HTTPRequest.new()
+	var headers = [
+		"Authorization: Bearer %s" % auth_token,
+		"Content-Type: application/json"
+	]
+	
+	# Connect the callback
+	http_request.request_completed.connect(callback)
+	
+	# Make the request
+	http_request.request(url, headers, HTTPClient.METHOD_PUT, json_body)
+	
+	return http_request
