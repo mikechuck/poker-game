@@ -15,12 +15,13 @@ func put_chips_url() -> String:
 	return CHIPS_API_BASE_URL + PUT_CHIPS_ENDPOINT
 
 ## Get player chips balance
-func get_chips(user_id: String, callback: Callable) -> void:
+func get_chips(user_id: String, jwt_token: String, callback: Callable) -> void:
 	"""
 	Get player's chips balance from the API.
 	
 	Args:
 		user_id: The user's UUID
+		jwt_token: The JWT token for authentication
 		callback: Callable that receives (result: int, response_code: int, chips: int)
 		
 	Callback parameters:
@@ -32,22 +33,44 @@ func get_chips(user_id: String, callback: Callable) -> void:
 		callback.call(1, 400, -1)
 		return
 	
-	var token = AccessTokenService.get_token()
-	if token.is_empty():
-		print("Error: No access token available for chips API")
+	if jwt_token.is_empty():
+		print("Error: No JWT token provided for chips API")
 		callback.call(1, 401, -1)
 		return
 	
 	var url = get_chips_url(user_id)
-	var http_request = HTTPUtils.get_request_with_auth(url, token, func(result: int, response_code: int, response_headers: PackedStringArray, response_body: PackedByteArray):
+	var http_request = HTTPUtils.get_request_with_auth(url, jwt_token, func(result: int, response_code: int, response_headers: PackedStringArray, response_body: PackedByteArray):
 		if result == HTTPRequest.RESULT_SUCCESS:
 			if response_code == 200:
 				var json = JSON.new()
 				var parse_result = json.parse(response_body.get_string_from_utf8())
 				if parse_result == OK:
 					var data = json.data
-					var chips = data.get("chips_balance", -1)
-					callback.call(0, response_code, chips)
+					var chips_raw = data.get("chips_balance", -1)
+					print("DEBUG: chips_api_service - parsed chips_balance: %s from data: %s" % [chips_raw, data])
+					
+					# Convert to int (API may return float)
+					var chips = -1
+					if chips_raw != -1:
+						if chips_raw is float:
+							chips = int(chips_raw)
+						elif chips_raw is int:
+							chips = chips_raw
+						else:
+							chips = int(chips_raw)
+					
+					if chips == -1:
+						print("ERROR: chips_balance not found in response data! Available keys: %s" % data.keys())
+						callback.call(1, response_code, -1)
+					else:
+						print("DEBUG: Successfully extracted chips_balance: %s (converted from %s)" % [chips, chips_raw])
+						print("DEBUG: About to invoke callback with result=0, response_code=%s, chips=%s" % [response_code, chips])
+						print("DEBUG: Callback is valid: %s" % callback.is_valid())
+						if callback.is_valid():
+							callback.call(0, response_code, chips)
+							print("DEBUG: Callback invoked successfully")
+						else:
+							print("ERROR: Callback is not valid!")
 				else:
 					print("Error parsing chips response: ", response_body.get_string_from_utf8())
 					callback.call(1, response_code, -1)
@@ -79,13 +102,14 @@ func _add_http_request_to_tree(http_request: HTTPRequest):
 		http_request.remove_meta("_pending_request")
 
 ## Update player chips balance
-func update_chips(user_id: String, chips_balance: int, callback: Callable) -> void:
+func update_chips(user_id: String, chips_balance: int, jwt_token: String, callback: Callable) -> void:
 	"""
 	Update player's chips balance in the API.
 	
 	Args:
 		user_id: The user's UUID
 		chips_balance: The new chips balance
+		jwt_token: The JWT token for authentication
 		callback: Callable that receives (result: int, response_code: int)
 		
 	Callback parameters:
@@ -96,9 +120,8 @@ func update_chips(user_id: String, chips_balance: int, callback: Callable) -> vo
 		callback.call(1, 400)
 		return
 	
-	var token = AccessTokenService.get_token()
-	if token.is_empty():
-		print("Error: No access token available for chips API")
+	if jwt_token.is_empty():
+		print("Error: No JWT token provided for chips API")
 		callback.call(1, 401)
 		return
 	
@@ -121,7 +144,7 @@ func update_chips(user_id: String, chips_balance: int, callback: Callable) -> vo
 	var json_string = JSON.stringify(json_data)
 	
 	var url = put_chips_url()
-	var http_request = HTTPUtils.put_json_request_with_auth(url, token, json_string, func(result: int, response_code: int, response_headers: PackedStringArray, response_body: PackedByteArray):
+	var http_request = HTTPUtils.put_json_request_with_auth(url, jwt_token, json_string, func(result: int, response_code: int, response_headers: PackedStringArray, response_body: PackedByteArray):
 		if result == HTTPRequest.RESULT_SUCCESS:
 			if response_code == 200:
 				callback.call(0, response_code)

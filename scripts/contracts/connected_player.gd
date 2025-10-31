@@ -6,6 +6,9 @@ var is_host: bool = false
 var is_spectating: bool = true
 var account_total_cash: int = 0
 var table_cash: int = 0
+# Server-side only: JWT token and user_id (not serialized/sent to clients)
+var jwt_token: String = ""
+var user_id: String = ""
 
 func clone() -> ConnectedPlayer:
 	var player_clone = ConnectedPlayer.new()
@@ -14,15 +17,19 @@ func clone() -> ConnectedPlayer:
 	player_clone.is_spectating = is_spectating
 	player_clone.account_total_cash = account_total_cash
 	player_clone.table_cash = table_cash
+	player_clone.jwt_token = jwt_token
+	player_clone.user_id = user_id
 	return player_clone
 
 func to_dict() -> Dictionary:
+	# Note: jwt_token is NOT included for security (never send token to clients)
 	return {
 		"id": id,
 		"is_host": is_host,
 		"is_spectating": is_spectating,
 		"account_total_cash": account_total_cash,
-		"table_cash": table_cash
+		"table_cash": table_cash,
+		"user_id": user_id  # user_id is safe to send to clients
 	}
 	
 static func from_dict(dict: Dictionary) -> ConnectedPlayer:
@@ -32,4 +39,6 @@ static func from_dict(dict: Dictionary) -> ConnectedPlayer:
 	instance.is_spectating = dict.get("is_spectating")
 	instance.account_total_cash = dict.get("account_total_cash")
 	instance.table_cash = dict.get("table_cash")
+	instance.user_id = dict.get("user_id", "")  # Optional - may not be in dict
+	# jwt_token is never in dict (security - only stored server-side)
 	return instance

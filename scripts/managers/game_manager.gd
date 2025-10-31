@@ -63,8 +63,14 @@ func assign_player_to_seat(client_id, seat_number) -> void:
 			pass
 	desired_seat.player_id = client_id
 	
-	# Initialize from account balance instead of default
+	# Initialize from account balance - error if balance not loaded
 	var player = game_state_data.connected_players[client_id]
+	if player.account_total_cash < 0:
+		print("ERROR: Cannot assign player to seat - balance not loaded yet (account_total_cash: %s)" % player.account_total_cash)
+		# Revert seat assignment
+		desired_seat.player_id = 0
+		return
+	
 	desired_seat.hand_cash = player.account_total_cash
 	
 	game_state_data.player_seats[seat_number] = desired_seat
@@ -190,18 +196,41 @@ func state_deal_river_card() -> void:
 	
 func state_end_step() -> void:
 	game_state_data.winner_player_id = game_state_data.connected_players.values()[0].id
-	# Add the new balance to the winner
+	# Add the pot to the winner's hand_cash
 	for seat in game_state_data.player_seats.values():
 		if seat.player_id == game_state_data.winner_player_id:
 			seat.hand_cash += game_state_data.pot_value
-	game_state_data.connected_players[game_state_data.winner_player_id].account_total_cash += game_state_data.pot_value
 	
-	# Persist updated balance to chips-api
-	var winner = game_state_data.connected_players[game_state_data.winner_player_id]
-	var user_id = AccessTokenService.get_user_id()
-	if user_id != "":
-		var chips_api_service = get_node("/root/Game/ChipsApiService")
-		chips_api_service.update_chips(user_id, winner.account_total_cash, _on_balance_updated)
+	# CRITICAL FIX: Sync account_total_cash to hand_cash for ALL players
+	# This ensures the database matches what's displayed on screen.
+	# During betting, hand_cash decreases but account_total_cash doesn't.
+	# So we need to sync them at the end of each hand.
+	for seat in game_state_data.player_seats.values():
+		if seat.player_id != 0:  # Only update for players who are seated
+			var player = game_state_data.connected_players.get(seat.player_id)
+			if player != null:
+				var old_account_cash = player.account_total_cash
+				player.account_total_cash = seat.hand_cash
+				print("Synced account_total_cash to hand_cash for player %s: %s -> %s" % [seat.player_id, old_account_cash, seat.hand_cash])
+	
+	# Persist updated balances to chips-api for all players who participated
+	var chips_api_service = get_node("/root/Game/ChipsApiService")
+	for seat in game_state_data.player_seats.values():
+		if seat.player_id != 0:  # Only update for players who are seated
+			var player = game_state_data.connected_players.get(seat.player_id)
+			if player != null and not player.user_id.is_empty() and not player.jwt_token.is_empty():
+				print("Updating balance in API for player %s (user_id: %s, balance: %s)" % [seat.player_id, player.user_id, player.account_total_cash])
+				chips_api_service.update_chips(player.user_id, player.account_total_cash, player.jwt_token, func(result: int, response_code: int):
+					if result == 0 and response_code == 200:
+						print("Balance updated successfully in API for player %s" % seat.player_id)
+					else:
+						print("Failed to update balance in API for player %s (HTTP %s)" % [seat.player_id, response_code])
+				)
+			else:
+				if player == null:
+					print("WARNING: Cannot update balance - player %s not found in connected_players" % seat.player_id)
+				else:
+					print("WARNING: Cannot update balance for player %s - missing user_id or JWT token" % seat.player_id)
 	
 	client_manager.update_game_state_data.rpc(game_state_data.to_dict())
 
