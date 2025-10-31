@@ -195,29 +195,24 @@ func state_deal_river_card() -> void:
 	
 func state_end_step() -> void:
 	game_state_data.winner_player_id = game_state_data.connected_players.values()[0].id
-	# Add the pot to the winner's hand_cash
+	
 	for seat in game_state_data.player_seats.values():
 		if seat.player_id == game_state_data.winner_player_id:
 			seat.hand_cash += game_state_data.pot_value
 	
-	# Sync account_total_cash to hand_cash for ALL players
-	# This ensures the database matches what's displayed on screen
 	for seat in game_state_data.player_seats.values():
-		if seat.player_id != 0:  # Only update for players who are seated
+		if seat.player_id != 0:
 			var player = game_state_data.connected_players.get(seat.player_id)
-			if player != null:
-				player.account_total_cash = seat.hand_cash
+			player.account_total_cash = seat.hand_cash
 	
 	var chips_api_service = get_node("/root/Game/ChipsApiService")
 	
 	for seat in game_state_data.player_seats.values():
 		if seat.player_id != 0:
 			var player = game_state_data.connected_players.get(seat.player_id)
-			if player != null:
-				var client_id = seat.player_id
-				chips_api_service.update_chips(client_id, player.account_total_cash, func(result: int, response_code: int):
-					pass
-				)
+			chips_api_service.update_chips(seat.player_id, player.account_total_cash, func(result: int, response_code: int):
+				pass
+			)
 	
 	client_manager.update_game_state_data.rpc(game_state_data.to_dict())
 
