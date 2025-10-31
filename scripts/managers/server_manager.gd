@@ -1,7 +1,13 @@
 extends Node
 
+const HTTPUtils = preload("res://scripts/utilities/http_utils.gd")
+
 var game_manager
 var client_manager
+
+# OAuth configuration for token renewal
+const AUTH_SERVER_URL = "https://ultralight.dev"
+const CLIENT_ID = "ultralight-default-client"
 
 func _ready() -> void:
 	# Don't call managers that are lower on the stack from _ready(), they won't exist yet
@@ -117,62 +123,124 @@ func _fetch_player_balance_from_api(client_id: int):
 		_disconnect_player_with_error(client_id, "Authentication data missing")
 		return
 	
-	var chips_api_service = get_parent().get_node("ChipsApiService")
-	print("Fetching balance from chips-api for player %s (user_id: %s)" % [client_id, connected_player.user_id])
-	
-	chips_api_service.get_chips(connected_player.user_id, connected_player.jwt_token, func(result: int, response_code: int, chips: int):
-		if result == 0 and response_code == 200:
-			if chips >= 0:
-				# Success - update player balance
-				var old_balance = connected_player.account_total_cash
-				connected_player.account_total_cash = chips
-				print("Fetched balance for player %s: %s (was %s)" % [client_id, chips, old_balance])
-				
-				# If player is already seated, update their hand_cash too
-				for seat in game_manager.game_state_data.player_seats.values():
-					if seat.player_id == client_id:
-						if old_balance == -1:
-							seat.hand_cash = chips
-							print("Set seat hand_cash to %s for player %s (initial balance)" % [chips, client_id])
-						else:
-							var balance_diff = chips - old_balance
-							seat.hand_cash += balance_diff
-							print("Adjusted seat hand_cash by %s for player %s" % [balance_diff, client_id])
-						break
-				
-				# Update all clients with the new balance
-				client_manager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
-			else:
-				print("ERROR: Invalid chips balance returned from API: %s" % chips)
-				_disconnect_player_with_error(client_id, "Invalid balance from API")
-		elif response_code == 404:
-			# User doesn't exist yet, create them with 0 balance
-			print("User %s not found in API, creating user record with 0 balance" % connected_player.user_id)
-			var initial_balance = 0
-			chips_api_service.update_chips(connected_player.user_id, initial_balance, connected_player.jwt_token, func(update_result: int, update_code: int):
-				if update_result == 0 and update_code == 200:
-					print("Created user in API with balance 0")
+	# Ensure token is valid before making API call
+	ensure_token_valid(client_id, func(valid: bool, token: String):
+		if not valid:
+			print("ERROR: Cannot fetch balance - token invalid and renewal failed for player %s" % client_id)
+			_disconnect_player_with_error(client_id, "Token renewal failed")
+			return
+		
+		var chips_api_service = get_parent().get_node("ChipsApiService")
+		
+		chips_api_service.get_chips(connected_player.user_id, token, func(result: int, response_code: int, chips: int):
+			if result == 0 and response_code == 200:
+				if chips >= 0:
 					var old_balance = connected_player.account_total_cash
-					connected_player.account_total_cash = initial_balance
+					connected_player.account_total_cash = chips
 					
 					# If player is already seated, update their hand_cash too
 					for seat in game_manager.game_state_data.player_seats.values():
 						if seat.player_id == client_id:
 							if old_balance == -1:
-								seat.hand_cash = initial_balance
+								seat.hand_cash = chips
 							else:
-								var balance_diff = initial_balance - old_balance
+								var balance_diff = chips - old_balance
 								seat.hand_cash += balance_diff
 							break
 					
+					# Update all clients with the new balance
 					client_manager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
 				else:
-					print("ERROR: Failed to create user in API (HTTP %s)" % update_code)
-					_disconnect_player_with_error(client_id, "Failed to create user account")
-			)
-		else:
-			print("ERROR: Failed to fetch balance from API (HTTP %s, result: %s)" % [response_code, result])
-			_disconnect_player_with_error(client_id, "Failed to fetch balance from API")
+					print("ERROR: Invalid chips balance returned from API: %s" % chips)
+					_disconnect_player_with_error(client_id, "Invalid balance from API")
+			elif response_code == 401:
+				# Token expired during API call, try renewing and retry once
+				renew_player_token(client_id, func(renew_success: bool, new_token: String):
+					if renew_success:
+						# Retry the API call with new token
+						chips_api_service.get_chips(connected_player.user_id, new_token, func(retry_result: int, retry_code: int, retry_chips: int):
+							if retry_result == 0 and retry_code == 200:
+								if retry_chips >= 0:
+									var old_balance = connected_player.account_total_cash
+									connected_player.account_total_cash = retry_chips
+									
+									for seat in game_manager.game_state_data.player_seats.values():
+										if seat.player_id == client_id:
+											if old_balance == -1:
+												seat.hand_cash = retry_chips
+											else:
+												var balance_diff = retry_chips - old_balance
+												seat.hand_cash += balance_diff
+											break
+									
+									client_manager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
+								else:
+									print("ERROR: Invalid chips balance after retry: %s" % retry_chips)
+									_disconnect_player_with_error(client_id, "Invalid balance from API")
+							elif retry_code == 404:
+								# User doesn't exist, create with 0 balance
+								var initial_balance = 0
+								chips_api_service.update_chips(connected_player.user_id, initial_balance, new_token, func(update_result: int, update_code: int):
+									if update_result == 0 and update_code == 200:
+										var old_balance = connected_player.account_total_cash
+										connected_player.account_total_cash = initial_balance
+										
+										for seat in game_manager.game_state_data.player_seats.values():
+											if seat.player_id == client_id:
+												if old_balance == -1:
+													seat.hand_cash = initial_balance
+												else:
+													var balance_diff = initial_balance - old_balance
+													seat.hand_cash += balance_diff
+												break
+										
+										client_manager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
+									else:
+										print("ERROR: Failed to create user after token renewal (HTTP %s)" % update_code)
+										_disconnect_player_with_error(client_id, "Failed to create user account")
+								)
+							else:
+								print("ERROR: Failed to fetch balance after token renewal (HTTP %s)" % retry_code)
+								_disconnect_player_with_error(client_id, "Failed to fetch balance from API after token renewal")
+						)
+					else:
+						print("ERROR: Token renewal failed for player %s" % client_id)
+						_disconnect_player_with_error(client_id, "Token renewal failed")
+				)
+			elif response_code == 404:
+				# User doesn't exist yet, create them with 0 balance
+				var initial_balance = 0
+				ensure_token_valid(client_id, func(valid: bool, token: String):
+					if not valid:
+						print("ERROR: Cannot create user - token invalid for player %s" % client_id)
+						_disconnect_player_with_error(client_id, "Token renewal failed")
+						return
+					
+					chips_api_service.update_chips(connected_player.user_id, initial_balance, token, func(update_result: int, update_code: int):
+						if update_result == 0 and update_code == 200:
+							var old_balance = connected_player.account_total_cash
+							connected_player.account_total_cash = initial_balance
+							
+							# If player is already seated, update their hand_cash too
+							for seat in game_manager.game_state_data.player_seats.values():
+								if seat.player_id == client_id:
+									if old_balance == -1:
+										seat.hand_cash = initial_balance
+									else:
+										var balance_diff = initial_balance - old_balance
+										seat.hand_cash += balance_diff
+									break
+							
+							client_manager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
+						else:
+							print("ERROR: Failed to create user in API (HTTP %s)" % update_code)
+							_disconnect_player_with_error(client_id, "Failed to create user account")
+					)
+				)
+			else:
+				print("ERROR: Failed to fetch balance from API (HTTP %s, result: %s)" % [response_code, result])
+				_disconnect_player_with_error(client_id, "Failed to fetch balance from API")
+		)
 	)
 
 func _disconnect_player_with_error(client_id: int, error_message: String):
@@ -194,6 +262,114 @@ func _disconnect_player_with_error(client_id: int, error_message: String):
 	# Close the peer connection
 	if multiplayer.multiplayer_peer != null:
 		multiplayer.multiplayer_peer.disconnect_peer(client_id)
+
+func renew_player_token(client_id: int, callback: Callable) -> void:
+	"""
+	Renew a player's JWT token via the renew grant.
+	
+	Args:
+		client_id: The multiplayer peer ID of the connected player
+		callback: Callable that receives (success: bool, new_token: String)
+		          success: true if renewal succeeded, false otherwise
+		          new_token: The new JWT token if successful, empty string otherwise
+	"""
+	var connected_player = game_manager.game_state_data.connected_players.get(client_id)
+	if connected_player == null:
+		print("ERROR: Could not find connected player with id %s for token renewal" % client_id)
+		callback.call(false, "")
+		return
+	
+	if connected_player.jwt_token.is_empty():
+		print("ERROR: Cannot renew token - player %s has no existing token" % client_id)
+		callback.call(false, "")
+		return
+	
+	var token_url = AUTH_SERVER_URL + "/api/oauth/token"
+	var form_data = {
+		"grant_type": "renew",
+		"token": connected_player.jwt_token,
+		"client_id": CLIENT_ID
+	}
+	
+	var http_request = HTTPUtils.post_form_request(token_url, form_data, func(result: int, response_code: int, response_headers: PackedStringArray, response_body: PackedByteArray):
+		if result == HTTPRequest.RESULT_SUCCESS:
+			if response_code == 200:
+				var json = JSON.new()
+				var parse_result = json.parse(response_body.get_string_from_utf8())
+				if parse_result == OK:
+					var data = json.data
+					if data.has("access_token"):
+						var new_token = str(data["access_token"])
+						connected_player.jwt_token = new_token
+						print("Successfully renewed token for player %s" % client_id)
+						callback.call(true, new_token)
+					else:
+						print("ERROR: Renew response missing access_token")
+						callback.call(false, "")
+				else:
+					print("ERROR: Failed to parse token renewal response: %s" % response_body.get_string_from_utf8())
+					callback.call(false, "")
+			else:
+				print("ERROR: Token renewal failed with HTTP %s: %s" % [response_code, response_body.get_string_from_utf8()])
+				callback.call(false, "")
+		else:
+			print("ERROR: Network error during token renewal: %s" % result)
+			callback.call(false, "")
+	)
+	_add_http_request_to_tree(http_request)
+
+func _add_http_request_to_tree(http_request: HTTPRequest):
+	"""Add HTTPRequest to tree and execute pending request"""
+	add_child(http_request)
+	
+	# Wait one frame to ensure node is fully in tree
+	await get_tree().process_frame
+	
+	# Execute pending request if one exists
+	var pending = http_request.get_meta("_pending_request", null)
+	if pending != null:
+		var method = pending.get("method", HTTPClient.METHOD_POST)
+		var body = pending.get("body", "")
+		if body != "":
+			http_request.request(pending.url, pending.headers, method, body)
+		else:
+			http_request.request(pending.url, pending.headers, method)
+		http_request.remove_meta("_pending_request")
+
+func ensure_token_valid(client_id: int, callback: Callable) -> void:
+	"""
+	Ensure a player's JWT token is valid (not expired).
+	If expired, renew it before proceeding.
+	
+	Args:
+		client_id: The multiplayer peer ID of the connected player
+		callback: Callable that receives (valid: bool, token: String)
+		          valid: true if token is valid (or was successfully renewed), false otherwise
+		          token: The valid JWT token to use
+	"""
+	var connected_player = game_manager.game_state_data.connected_players.get(client_id)
+	if connected_player == null:
+		callback.call(false, "")
+		return
+	
+	if connected_player.jwt_token.is_empty():
+		callback.call(false, "")
+		return
+	
+	# Check if token is expired or expiring soon
+	if not JWTUtils.is_token_expired(connected_player.jwt_token):
+		# Token is still valid
+		callback.call(true, connected_player.jwt_token)
+		return
+	
+	# Token is expired or expiring soon, renew it
+	renew_player_token(client_id, func(success: bool, new_token: String):
+		if success:
+			callback.call(true, new_token)
+		else:
+			print("ERROR: Failed to renew token for player %s" % client_id)
+			callback.call(false, "")
+	)
 
 @rpc("reliable", "any_peer")
 func request_game_state_publish():

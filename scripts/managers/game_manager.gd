@@ -29,21 +29,42 @@ var game_state_data: GameStateData = GameStateData.new()
 ### Start lifecycle methods
 
 func _ready() -> void:
-	server_manager = get_parent().get_node("ServerManager")
-	client_manager = get_parent().get_node("ClientManager")
-	deck_manager = get_parent().get_node("DeckManager")
+	var parent = get_parent()
+	if parent == null:
+		print("ERROR: GameManager has no parent node!")
+		return
+	
+	server_manager = parent.get_node_or_null("ServerManager")
+	client_manager = parent.get_node_or_null("ClientManager")
+	deck_manager = parent.get_node_or_null("DeckManager")
+	
+	if server_manager == null:
+		print("ERROR: ServerManager node not found!")
+		return
+	
+	if not server_manager.has_method("start_server"):
+		print("ERROR: ServerManager node found but doesn't have start_server method!")
+		return
 	
 	var args = OS.get_cmdline_args()
 	if (args.find("server_mode") >= 0):
 		is_server = true
 		screen_origin = Vector2.ZERO # Adjust for screen size on client only
-		server_manager.start_server()
-		server_manager.set_player_seats()
+		# Use call_deferred to ensure script is fully loaded
+		call_deferred("_start_server_deferred")
 	else:
 		is_server = false
 		screen_origin = get_viewport_rect().size / 2
 		player_ui_instance = get_parent().find_child("PlayerUI")
 		server_manager.request_game_state_publish.rpc_id(1)
+
+func _start_server_deferred():
+	"""Deferred server startup to ensure scripts are fully loaded"""
+	if server_manager != null and server_manager.has_method("start_server"):
+		server_manager.start_server()
+		server_manager.set_player_seats()
+	else:
+		print("ERROR: Failed to start server - ServerManager script not ready")
 	
 ### End lifecycle methods
 
@@ -201,30 +222,50 @@ func state_end_step() -> void:
 		if seat.player_id == game_state_data.winner_player_id:
 			seat.hand_cash += game_state_data.pot_value
 	
-	# CRITICAL FIX: Sync account_total_cash to hand_cash for ALL players
-	# This ensures the database matches what's displayed on screen.
-	# During betting, hand_cash decreases but account_total_cash doesn't.
-	# So we need to sync them at the end of each hand.
+	# Sync account_total_cash to hand_cash for ALL players
+	# This ensures the database matches what's displayed on screen
 	for seat in game_state_data.player_seats.values():
 		if seat.player_id != 0:  # Only update for players who are seated
 			var player = game_state_data.connected_players.get(seat.player_id)
 			if player != null:
-				var old_account_cash = player.account_total_cash
 				player.account_total_cash = seat.hand_cash
-				print("Synced account_total_cash to hand_cash for player %s: %s -> %s" % [seat.player_id, old_account_cash, seat.hand_cash])
 	
 	# Persist updated balances to chips-api for all players who participated
 	var chips_api_service = get_node("/root/Game/ChipsApiService")
+	var server_manager = get_parent().get_node("ServerManager")
+	
 	for seat in game_state_data.player_seats.values():
 		if seat.player_id != 0:  # Only update for players who are seated
 			var player = game_state_data.connected_players.get(seat.player_id)
 			if player != null and not player.user_id.is_empty() and not player.jwt_token.is_empty():
-				print("Updating balance in API for player %s (user_id: %s, balance: %s)" % [seat.player_id, player.user_id, player.account_total_cash])
-				chips_api_service.update_chips(player.user_id, player.account_total_cash, player.jwt_token, func(result: int, response_code: int):
-					if result == 0 and response_code == 200:
-						print("Balance updated successfully in API for player %s" % seat.player_id)
-					else:
-						print("Failed to update balance in API for player %s (HTTP %s)" % [seat.player_id, response_code])
+				var client_id = seat.player_id
+				
+				# Ensure token is valid before updating balance
+				server_manager.ensure_token_valid(client_id, func(valid: bool, token: String):
+					if not valid:
+						print("WARNING: Cannot update balance - token invalid for player %s" % client_id)
+						return
+					
+					chips_api_service.update_chips(player.user_id, player.account_total_cash, token, func(result: int, response_code: int):
+						if result == 0 and response_code == 200:
+							pass  # Balance updated successfully
+						elif response_code == 401:
+							# Token expired during update, renew and retry once
+							print("Token expired during balance update (401), renewing and retrying for player %s" % client_id)
+							server_manager.renew_player_token(client_id, func(renew_success: bool, new_token: String):
+								if renew_success:
+									chips_api_service.update_chips(player.user_id, player.account_total_cash, new_token, func(retry_result: int, retry_code: int):
+										if retry_result == 0 and retry_code == 200:
+											pass  # Balance updated successfully after token renewal
+										else:
+											print("Failed to update balance in API for player %s after token renewal (HTTP %s)" % [client_id, retry_code])
+									)
+								else:
+									print("Failed to renew token for player %s during balance update" % client_id)
+							)
+						else:
+							print("Failed to update balance in API for player %s (HTTP %s)" % [client_id, response_code])
+					)
 				)
 			else:
 				if player == null:
@@ -237,7 +278,7 @@ func state_end_step() -> void:
 func _on_balance_updated(result: int, response_code: int):
 	"""Callback when chips balance is updated in API"""
 	if result == 0 and response_code == 200:
-		print("Balance updated successfully in API")
+		pass  # Balance updated successfully
 	else:
 		print("Failed to update balance in API (HTTP %s)" % response_code)
 	

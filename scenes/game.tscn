@@ -136,7 +136,7 @@ script = ExtResource("2_tipki")
 [node name="ClientManager" type="Node2D" parent="."]
 script = ExtResource("3_85g3d")
 
-[node name="ServerManager" type="Node2D" parent="."]
+[node name="ServerManager" type="Node" parent="."]
 script = ExtResource("4_choun")
 
 [node name="DeckManager" type="Node2D" parent="."]

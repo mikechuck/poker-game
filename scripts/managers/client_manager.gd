@@ -42,8 +42,6 @@ func _register_player_auth():
 		has_registered_auth = true
 		print("Sending JWT token to server for authentication...")
 		server_manager.register_player_auth.rpc_id(1, jwt_token)
-	else:
-		print("DEBUG: Already registered auth, skipping")
 
 func _handle_auth_error(error_message: String):
 	"""Handle authentication errors - show error and disconnect"""

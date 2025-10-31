@@ -47,7 +47,6 @@ func get_chips(user_id: String, jwt_token: String, callback: Callable) -> void:
 				if parse_result == OK:
 					var data = json.data
 					var chips_raw = data.get("chips_balance", -1)
-					print("DEBUG: chips_api_service - parsed chips_balance: %s from data: %s" % [chips_raw, data])
 					
 					# Convert to int (API may return float)
 					var chips = -1
@@ -63,14 +62,7 @@ func get_chips(user_id: String, jwt_token: String, callback: Callable) -> void:
 						print("ERROR: chips_balance not found in response data! Available keys: %s" % data.keys())
 						callback.call(1, response_code, -1)
 					else:
-						print("DEBUG: Successfully extracted chips_balance: %s (converted from %s)" % [chips, chips_raw])
-						print("DEBUG: About to invoke callback with result=0, response_code=%s, chips=%s" % [response_code, chips])
-						print("DEBUG: Callback is valid: %s" % callback.is_valid())
-						if callback.is_valid():
-							callback.call(0, response_code, chips)
-							print("DEBUG: Callback invoked successfully")
-						else:
-							print("ERROR: Callback is not valid!")
+						callback.call(0, response_code, chips)
 				else:
 					print("Error parsing chips response: ", response_body.get_string_from_utf8())
 					callback.call(1, response_code, -1)
