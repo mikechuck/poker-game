@@ -34,7 +34,7 @@ func _ready() -> void:
 	deck_manager = get_parent().get_node("DeckManager")
 	
 	var args = OS.get_cmdline_args()
-	if (args.find("server_mode") >= 0):
+	if (args.find("--server") >= 0):
 		is_server = true
 		screen_origin = Vector2.ZERO # Adjust for screen size on client only
 		server_manager.start_server()

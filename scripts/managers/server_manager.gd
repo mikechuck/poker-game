@@ -10,10 +10,10 @@ func _ready() -> void:
 
 func start_server():
 	var args = OS.get_cmdline_args()
-	var server_port = args.find("port")
-	if server_port == -1:
-		server_port = 8083
-	print("port %s" % server_port)
+	var server_port = 12000
+	for arg in args:
+		if arg.begins_with("--port="):
+			server_port = int(arg.split("=")[1])
 	var peer = WebSocketMultiplayerPeer.new()
 	multiplayer.multiplayer_peer = null
 	peer.create_server(server_port)

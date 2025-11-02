@@ -5,14 +5,14 @@ extends Node
 @onready var port_input_node = $Menu/JoinGame/PortInput
 
 var server_url = "localhost"
-var server_port = "8083"
+var server_port = "12001"
 var mp_peer = null
 
 func _ready() -> void:
 	# Get os args
 	# If server, load Game scene (server will start automatically there)
 	var args = OS.get_cmdline_args()
-	if (args.find("server_mode") >= 0):
+	if (args.find("--server") >= 0):
 		navigate_to_game_scene()
 	url_input_node.text = server_url
 	port_input_node.text = server_port

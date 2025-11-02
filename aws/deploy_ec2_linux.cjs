@@ -1,23 +1,27 @@
 var credentials = require('../../credentials.json')
-const spawn = require('child_process')
 const fs = require('fs')
-const archiver = require('archiver')
 var AWS = require('aws-sdk')
+const { EC2Client, AuthorizeSecurityGroupIngressCommand, RunInstancesCommand } = require('@aws-sdk/client-ec2');
 const path = require('path');
 require('aws-sdk/lib/maintenance_mode_message').suppress = true;
 
-AWS.config.update({
-	region: "us-east-1",
-	accessKeyId: credentials.key,
-	secretAccessKey: credentials.secret
-});
+const region = "us-east-1";
+const bucketName = 'chuckycodes-games';
+const s3Prefix = 'poker-game/server/linux';
+
+// AWS.config.update({
+// 	region,
+// 	accessKeyId: credentials.key,
+// 	secretAccessKey: credentials.secret
+// });
+
+// console.log("awsconfig: ", awsConfig)
 
 const s3 = new AWS.S3();
+const ec2Client = new EC2Client();
 
 const uploadFolderToS3 = async () => {
-    const localFolderPath = './exports/server';
-    const bucketName = 'chuckycodes-games';
-    const s3Prefix = 'poker-game/server';
+    const localFolderPath = './exports/server/linux';
     const files = fs.readdirSync(localFolderPath, { recursive: true, withFileTypes: true });
 
     for (const file of files) {
@@ -46,24 +50,22 @@ const uploadFolderToS3 = async () => {
 
 
 async function createAndLaunchEC2() {
-    let sgId;
-    const STARTUP_COMMANDS_SCRIPT = `#!/bin/bash
+    const STARTUP_COMMANDS_SCRIPT = `
+    set -e
     sudo apt update
-    sudo apt install -y libxcursor-dev libxinerama-dev libxrandr-dev libxi-dev &
-    # Wait for apt installs to finish (optional, but safer)
-    wait
-    aws s3 cp s3://godot-server-totally-unique-name-987654321/GodotServer . &
-    chmod +x GodotServer &
-    ./GodotServer --server --headless`;
-    const STARTUP_COMMANDS_BASE64 = Buffer.from(USER_DATA_SCRIPT).toString('base64');
+    sudo apt install -y libxcursor-dev libxinerama-dev libxrandr-dev libxi-dev
+    aws s3 cp s3://${bucketName}/${s3Prefix} .
+    chmod +x ./poker_server.x86_64
+    ./poker_server.x86_64 --server --headless --port=12001
+    `;
+    const STARTUP_COMMANDS_BASE64 = Buffer.from(STARTUP_COMMANDS_SCRIPT).toString('base64');
 
-    const AMI_ID = "ami-0e3c2921641a4a215"; // Windows server
+    const AMI_ID = "ami-0341d95f75f311023"; // Linux server ami
     const INSTANCE_TYPE = "t3.micro";
     const SECURITY_GROUP_NAME = "poker-game-sg";
     const INSTANCE_PROFILE_NAME = "game-server-ec2-role";
     const SECURITY_GROUP_ID = "sg-0f27397c21075ecfc";
 
-    // NOTE: You must replace 'YOUR_INSTANCE_PROFILE_ARN' with the actual ARN
     const INSTANCE_PROFILE_ARN = "arn:aws:iam::072351085675:instance-profile/game-server-ec2-role";
 
 
@@ -71,12 +73,12 @@ async function createAndLaunchEC2() {
     try {
         console.log("Authorizing Ingress Rules...");
         const ingressCommand = new AuthorizeSecurityGroupIngressCommand({
-            GroupId: sgId,
+            GroupId: SECURITY_GROUP_ID,
             IpPermissions: [
                 {
                     IpProtocol: 'tcp',
-                    FromPort: 12077,
-                    ToPort: 12087,
+                    FromPort: 12000,
+                    ToPort: 13000,
                     IpRanges: [{ CidrIp: '0.0.0.0/0' }]
                 }
             ]
@@ -102,18 +104,15 @@ async function createAndLaunchEC2() {
             InstanceType: INSTANCE_TYPE,
             // The IAM Profile is passed as a structure containing ARN and Name
             IamInstanceProfile: {
-                Arn: INSTANCE_PROFILE_ARN, 
-                Name: INSTANCE_PROFILE_NAME 
+                Arn: INSTANCE_PROFILE_ARN,
             },
-            // Note: SecurityGroupIds must be an array of IDs
-            SecurityGroupIds: [sgId], 
             // Specify Network Interface to ensure a Public IP is assigned
             NetworkInterfaces: [{
                 DeviceIndex: 0, // Primary network interface
                 AssociatePublicIpAddress: true,
-                Groups: [sgId] // Attach the security group to the interface
+                Groups: [SECURITY_GROUP_ID] // Attach the security group to the interface
             }],
-            UserData: USER_DATA_BASE64,
+            UserData: STARTUP_COMMANDS_BASE64,
         });
 
         const instanceResponse = await ec2Client.send(runInstancesCommand);
@@ -126,7 +125,7 @@ async function createAndLaunchEC2() {
 }
 
 
-uploadFolderToS3(localFolderToUpload, targetS3Bucket, s3TargetPrefix)
+uploadFolderToS3()
     .then(() => {
         //  Run ec2 instantiation here
         createAndLaunchEC2().then(() => {
@@ -134,5 +133,3 @@ uploadFolderToS3(localFolderToUpload, targetS3Bucket, s3TargetPrefix)
         }).catch(err => console.error("Failed to launch EC2 instance:", err))
     })
     .catch(err => console.error('Folder upload failed:', err));
-    
-const ec2Client = new AWS.EC2();

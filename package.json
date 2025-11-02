@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "ec2": "node aws/ec2.js"
+    "deploy_launch_server": "node aws/deploy_ec2_linux.cjs"
   },
   "repository": {
     "type": "git",
@@ -21,6 +21,7 @@
     "archiver": "^7.0.1",
     "aws-sdk": "^2.1692.0",
     "child_process": "^1.0.2",
+    "client-ec2": "github:aws-sdk/client-ec2",
     "fs": "^0.0.1-security"
   },
   "devDependencies": {
