@@ -50,15 +50,18 @@ const uploadFolderToS3 = async () => {
 
 
 async function createAndLaunchEC2() {
-    const STARTUP_COMMANDS_SCRIPT = `
-    set -e
-    sudo apt update
-    sudo apt install -y libxcursor-dev libxinerama-dev libxrandr-dev libxi-dev
-    aws s3 cp s3://${bucketName}/${s3Prefix} .
-    chmod +x ./poker_server.x86_64
-    ./poker_server.x86_64 --server --headless --port=12001
-    `;
-    const STARTUP_COMMANDS_BASE64 = Buffer.from(STARTUP_COMMANDS_SCRIPT).toString('base64');
+    // NOTE: Keep the script flush with the left margin inside the template literal
+    // to prevent unwanted leading spaces in the encoded string.
+    const STARTUP_COMMANDS_SCRIPT = `#!/bin/bash
+set -e
+sudo dnf update -y
+sudo dnf install -y libXcursor libXinerama libXrandr libXi
+aws s3 cp s3://${bucketName}/${s3Prefix} . --recursive
+chmod +x ./poker_server.x86_64
+./poker_server.x86_64 --server --headless --port=12001 > /var/log/poker_server.log 2>&1 &`;
+
+    const cleanScript = STARTUP_COMMANDS_SCRIPT.trim();
+    const STARTUP_COMMANDS_BASE64 = Buffer.from(cleanScript).toString('base64');
 
     const AMI_ID = "ami-0341d95f75f311023"; // Linux server ami
     const INSTANCE_TYPE = "t3.micro";

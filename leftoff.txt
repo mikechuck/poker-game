@@ -1,5 +1,7 @@
 leftoff: 
-	- continue with player hand calculations
+	- Now that ALB is created, figure out how to best setup websocket requests to ALB using subdomain and /game path
+	- Do we ned to set up origins and behaviors in cloudfront (poker.mct.net), or is it fine to request alb directly using server.*?
+
 Todo:
 	- add "is host" crown to player card for host
 	- Add "is server" checks to rpc functions
@@ -36,3 +38,11 @@ Game state logic
 	- calculate winner, tell all clients who won
 	- make sure to kep track of side pots and pot calculations
 	
+
+Helpful linux commands:
+- Read startup log: sudo cat /var/log/cloud-init-output.log
+- Read game server process log: sudo tail -f /var/log/poker_server.log
+
+
+Todo for server setup:
+- Need to enable https for EC2 *without* using load balancer...

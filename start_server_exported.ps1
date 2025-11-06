@@ -1,4 +1,4 @@
-./exports/server/poker_server.exe --headless server_mode
+./exports/server/windows/poker_server.exe --headless server_mode
 
 Read-Host -Prompt "Press enter to shutdown the server"
 

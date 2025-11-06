@@ -20,7 +20,7 @@ func start_server():
 	multiplayer.multiplayer_peer = peer
 	multiplayer.peer_connected.connect(_on_peer_connected)
 	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
-	print("Started server at ws://localhost:%s ..." % [server_port])
+	print("Started server at wss://localhost:%s ..." % [server_port])
 	
 func _on_peer_connected(id):
 	print("Player %s connected" % id)
