@@ -23,7 +23,7 @@ Game state logic
 	- loop through player seats in order and tell them to make a decision (bet, fold, call)
 	- keep looping until betting is done (one full loop without increase in pot)
 5. DealFlop
-	- server deals cards, tell all clients what cards were dealt
+	- server deals cards, tell all clients what cards were dealtxcs
 6. BetPostFlop
 	- keep looping until betting is done
 7. DealTurn
