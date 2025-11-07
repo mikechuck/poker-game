@@ -54,17 +54,16 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = 142.0
+offset_left = 50.0
 offset_top = -100.0
-offset_right = 542.0
+offset_right = 350.0
 offset_bottom = -50.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Button" type="Button" parent="Menu/CreateGame"]
 layout_mode = 0
-offset_left = 65.0
-offset_right = 365.0
+offset_right = 300.0
 offset_bottom = 50.0
 mouse_default_cursor_shape = 2
 text = "Create New Game
@@ -77,9 +76,8 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -500.0
+offset_left = -350.0
 offset_top = -100.0
-offset_right = 100.0
 offset_bottom = -50.0
 grow_horizontal = 2
 grow_vertical = 2
@@ -91,9 +89,8 @@ anchor_left = 1.0
 anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
-offset_left = -216.0
+offset_left = -200.0
 offset_top = -25.0
-offset_right = -16.0
 offset_bottom = 25.0
 grow_horizontal = 0
 grow_vertical = 2
@@ -101,16 +98,16 @@ mouse_default_cursor_shape = 2
 text = "Join Game
 "
 
-[node name="IpInput" type="LineEdit" parent="Menu/JoinGame"]
+[node name="PortInput" type="LineEdit" parent="Menu/JoinGame"]
 layout_mode = 0
-offset_right = 216.0
+offset_right = 100.0
 offset_bottom = 50.0
 alignment = 1
 
-[node name="PortInput" type="LineEdit" parent="Menu/JoinGame"]
+[node name="IpInput" type="LineEdit" parent="Menu/JoinGame"]
+visible = false
 layout_mode = 0
-offset_left = 250.0
-offset_right = 350.0
+offset_right = 216.0
 offset_bottom = 50.0
 alignment = 1
 
@@ -127,5 +124,5 @@ indent_wrapped_lines = true
 
 [connection signal="pressed" from="Menu/CreateGame/Button" to="." method="_on_create_game_button_pressed"]
 [connection signal="pressed" from="Menu/JoinGame/Button" to="." method="_on_join_game_button_pressed"]
-[connection signal="text_changed" from="Menu/JoinGame/IpInput" to="." method="_on_ip_input_text_changed"]
 [connection signal="text_changed" from="Menu/JoinGame/PortInput" to="." method="_on_port_input_text_changed"]
+[connection signal="text_changed" from="Menu/JoinGame/IpInput" to="." method="_on_ip_input_text_changed"]

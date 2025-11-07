@@ -38,14 +38,23 @@ const uploadFolderToS3 = async () => {
                 Body: fileContent,
             };
 
-            try {
-                await s3.upload(params).promise();
-                console.log(`Successfully uploaded ${fullLocalPath} to s3://${bucketName}/${s3Key}`);
-            } catch (error) {
-                console.error(`Error uploading ${fullLocalPath}:`, error);
-            }
+            await s3.upload(params).promise();
+            console.log(`Successfully uploaded ${fullLocalPath} to s3://${bucketName}/${s3Key}`);
         }
     }
+
+    // Then upload the nginx config to the s3 folder as well
+    const filePath = "./server_nginx.conf";
+    const fileContent = fs.readFileSync(filePath);
+
+    const params = {
+        Bucket: bucketName,
+        Key: path.posix.join(s3Prefix, filePath),
+        Body: fileContent,
+    };
+
+    await s3.upload(params).promise();
+    console.log(`Successfully uploaded server_nginx.conf to s3://${bucketName}/`);
 };
 
 
@@ -54,10 +63,34 @@ async function createAndLaunchEC2() {
     // to prevent unwanted leading spaces in the encoded string.
     const STARTUP_COMMANDS_SCRIPT = `#!/bin/bash
 set -e
+
+# --- 1. System Update and Dependencies ---
 sudo dnf update -y
-sudo dnf install -y libXcursor libXinerama libXrandr libXi
-aws s3 cp s3://${bucketName}/${s3Prefix} . --recursive
+# Install Nginx and other required libs
+sudo dnf install -y nginx libXcursor libXinerama libXrandr libXi
+
+# --- 2. Download Files (Including the Nginx config) ---
+aws s3 cp s3://${bucketName}/${s3Prefix} /home/ec2-user/ --recursive
+cd /home/ec2-user
+
+# --- 3. Configure and Start Nginx ---
+NGINX_CONF_PATH="/etc/nginx/conf.d/server.conf"
+
+# Copy the downloaded configuration file to the Nginx conf.d directory
+sudo cp server_nginx.conf $NGINX_CONF_PATH
+
+# Test Nginx configuration file for syntax errors
+sudo nginx -t
+
+# Enable Nginx to start on boot and start the service now
+sudo systemctl enable nginx
+sudo systemctl start nginx
+
+# --- 4. Start Godot Game Server (Example) ---
 chmod +x ./poker_server.x86_64
+
+# Start the first Godot server instance (port 12001) in the background
+# The NLB/Nginx setup will use this as a health check target and game entry point
 ./poker_server.x86_64 --server --headless --port=12001 > /var/log/poker_server.log 2>&1 &`;
 
     const cleanScript = STARTUP_COMMANDS_SCRIPT.trim();
@@ -65,24 +98,36 @@ chmod +x ./poker_server.x86_64
 
     const AMI_ID = "ami-0341d95f75f311023"; // Linux server ami
     const INSTANCE_TYPE = "t3.micro";
-    const SECURITY_GROUP_NAME = "poker-game-sg";
-    const INSTANCE_PROFILE_NAME = "game-server-ec2-role";
     const SECURITY_GROUP_ID = "sg-0f27397c21075ecfc";
+    const NLB_SECURITY_GROUP_ID = "sg-08910acd8a0aa5cb2";
 
     const INSTANCE_PROFILE_ARN = "arn:aws:iam::072351085675:instance-profile/game-server-ec2-role";
 
-
-    // Authorize Ingress Rules (UDP on 12077-12087)
+    // Authorize Ingress Rules
     try {
         console.log("Authorizing Ingress Rules...");
+        // const ingressCommand = new AuthorizeSecurityGroupIngressCommand({
+        //     GroupId: SECURITY_GROUP_ID,
+        //     IpPermissions: [
+        //         {
+        //             IpProtocol: 'tcp',
+        //             FromPort: 12000,
+        //             ToPort: 13000,
+        //             IpRanges: [{ CidrIp: '0.0.0.0/0' }]
+        //         }
+        //     ]
+        // });
+
         const ingressCommand = new AuthorizeSecurityGroupIngressCommand({
             GroupId: SECURITY_GROUP_ID,
             IpPermissions: [
                 {
                     IpProtocol: 'tcp',
-                    FromPort: 12000,
-                    ToPort: 13000,
-                    IpRanges: [{ CidrIp: '0.0.0.0/0' }]
+                    FromPort: 8000, // The specific port Nginx is listening on
+                    ToPort: 8000,
+                    
+                    // Restrict source to ONLY the NLB/VPC
+                    UserIdGroupPairs: [{ GroupId: NLB_SECURITY_GROUP_ID }]
                 }
             ]
         });
