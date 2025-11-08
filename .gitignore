@@ -10,7 +10,9 @@
 # Build artifacts
 bin/
 build/
-exports/
+exports/web/*
+exports/server/linux/*
+exports/server/windows/*
 /node_modules/
 package-lock.json
 

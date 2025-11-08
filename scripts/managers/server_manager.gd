@@ -10,17 +10,17 @@ func _ready() -> void:
 
 func start_server():
 	var args = OS.get_cmdline_args()
-	var server_port = args.find("port")
-	if server_port == -1:
-		server_port = 8083
-	print("port %s" % server_port)
+	var server_port = 12000
+	for arg in args:
+		if arg.begins_with("--port="):
+			server_port = int(arg.split("=")[1])
 	var peer = WebSocketMultiplayerPeer.new()
 	multiplayer.multiplayer_peer = null
 	peer.create_server(server_port)
 	multiplayer.multiplayer_peer = peer
 	multiplayer.peer_connected.connect(_on_peer_connected)
 	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
-	print("Started server at ws://localhost:%s ..." % [server_port])
+	print("Started server at wss://localhost:%s ..." % [server_port])
 	
 func _on_peer_connected(id):
 	print("Player %s connected" % id)

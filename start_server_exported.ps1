@@ -2,7 +2,7 @@
 $OS = $PSVersionTable.OS
 
 if ($OS -like "*Windows*") {
-    ./exports/server/poker_server.exe --headless server_mode
+    ./exports/server/windows/poker_server.exe --headless server_mode
 } elseif ($OS -like "*Darwin*") { # macOS
     ./exports/server/poker_server --headless server_mode
 } else {

@@ -35,7 +35,7 @@ func _ready() -> void:
 	deck_manager = parent.get_node_or_null("DeckManager")
 	
 	var args = OS.get_cmdline_args()
-	if (args.find("server_mode") >= 0):
+	if (args.find("--server") >= 0):
 		is_server = true
 		screen_origin = Vector2.ZERO # Adjust for screen size on client only
 		# Use call_deferred to ensure script is fully loaded

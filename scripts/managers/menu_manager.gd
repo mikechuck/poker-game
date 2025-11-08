@@ -5,21 +5,21 @@ extends Node
 @onready var port_input_node = $Menu/JoinGame/PortInput
 @onready var web_auth_guard = $WebAuthGuard
 
-var server_url = "localhost"
-var server_port = "8083"
-var is_navigating = false
-
-
 func get_current_path() -> String:
 	var js_code = "window.location.pathname"
 	var result = JavaScriptBridge.eval(js_code)
 	if result == null:
 		return ""
-	return str(result)
+	return str(re
+
+var is_navigating = false
+var server_url = "poker.mikechucktingle.net/game"
+var server_port = "12001"
+var mp_peer = null
 
 func _ready() -> void:
 	var args = OS.get_cmdline_args()
-	if (args.find("server_mode") >= 0):
+	if (args.find("--server") >= 0):
 		navigate_to_game_scene()
 		return
 	var current_path = get_current_path()
@@ -48,6 +48,7 @@ func _on_create_game_button_pressed() -> void:
 	pass
 
 func _on_join_game_button_pressed() -> void:
+	print("Joining server at wss://%s/%s..." % [server_url, server_port])
 	connect_to_server()
 	
 func _on_port_input_text_changed(new_text: String) -> void:
@@ -59,7 +60,7 @@ func _on_ip_input_text_changed(new_text: String) -> void:
 func connect_to_server():
 	var peer = WebSocketMultiplayerPeer.new()
 	multiplayer.multiplayer_peer = null
-	peer.create_client("ws://%s:%s" % [server_url, server_port])
+	peer.create_client("wss://%s/%s" % [server_url, server_port])
 	multiplayer.multiplayer_peer = peer
 
 func _on_connected():
