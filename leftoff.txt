@@ -42,6 +42,8 @@ Game state logic
 Helpful linux commands:
 - Read startup log: sudo cat /var/log/cloud-init-output.log
 - Read game server process log: sudo tail -f /var/log/poker_server.log
+- Start game server instance: sudo sh -c 'sudo -u ec2-user /home/ec2-user/poker_server.x86_64 --server --headless --port=12001 > /home/ec2-user/poker_server.log 2>&1 & '
+- Kill server: sudo pkill -9 -f poker_server.x86_64
 
 
 Todo for server setup:

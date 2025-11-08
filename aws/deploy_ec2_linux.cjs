@@ -44,7 +44,7 @@ const uploadFolderToS3 = async () => {
     }
 
     // Then upload the nginx config to the s3 folder as well
-    const filePath = "./server_nginx.conf";
+    const filePath = "./poker.conf";
     const fileContent = fs.readFileSync(filePath);
 
     const params = {
@@ -54,30 +54,61 @@ const uploadFolderToS3 = async () => {
     };
 
     await s3.upload(params).promise();
-    console.log(`Successfully uploaded server_nginx.conf to s3://${bucketName}/`);
+    console.log(`Successfully uploaded poker.conf to s3://${bucketName}/`);
 };
 
 
 async function createAndLaunchEC2() {
     // NOTE: Keep the script flush with the left margin inside the template literal
     // to prevent unwanted leading spaces in the encoded string.
+//     const STARTUP_COMMANDS_SCRIPT = `#!/bin/bash
+// set -e
+
+// # --- 1. System Update and Dependencies ---
+// sudo dnf update -y
+// # Install Nginx and other required libs
+// sudo dnf install -y nginx libXcursor libXinerama libXrandr libXi fontconfig
+
+// # --- 2. Download Files (Including the Nginx config) ---
+// aws s3 cp s3://${bucketName}/${s3Prefix} /home/ec2-user/ --recursive
+// cd /home/ec2-user
+
+// # --- 3. Configure and Start Nginx ---
+// NGINX_CONF_PATH="/etc/nginx/conf.d/poker.conf"
+
+// # Copy the downloaded configuration file to the Nginx conf.d directory
+// sudo cp server_nginx.conf $NGINX_CONF_PATH
+
+// # Test Nginx configuration file for syntax errors
+// sudo nginx -t
+
+// # Enable Nginx to start on boot and start the service now
+// sudo systemctl enable nginx
+// sudo systemctl start nginx
+
+// # --- 4. Start Godot Game Server (Example) ---
+// chmod +x ./poker_server.x86_64
+
+// # Start the first Godot server instance (port 12001) in the background
+// ./poker_server.x86_64 --server --headless --port=12001 > /var/log/poker_server.log 2>&1 &`;
+
     const STARTUP_COMMANDS_SCRIPT = `#!/bin/bash
 set -e
 
 # --- 1. System Update and Dependencies ---
 sudo dnf update -y
-# Install Nginx and other required libs
-sudo dnf install -y nginx libXcursor libXinerama libXrandr libXi
+sudo dnf install -y nginx libXcursor libXinerama libXrandr libXi fontconfig nmap-ncat
 
 # --- 2. Download Files (Including the Nginx config) ---
 aws s3 cp s3://${bucketName}/${s3Prefix} /home/ec2-user/ --recursive
 cd /home/ec2-user
 
-# --- 3. Configure and Start Nginx ---
-NGINX_CONF_PATH="/etc/nginx/conf.d/server.conf"
+# --- 3. FIX: Ensure Nginx loads custom config and set up services ---
+NGINX_CONF_D_PATH="/etc/nginx/conf.d/poker.conf"
 
 # Copy the downloaded configuration file to the Nginx conf.d directory
-sudo cp server_nginx.conf $NGINX_CONF_PATH
+sudo cp poker.conf $NGINX_CONF_D_PATH
+sudo sed -i '/include \/etc\/nginx\/default.d\/\*\.conf;/a include \/etc\/nginx\/conf\.d\/\*\.conf;' /etc/nginx/nginx.conf
 
 # Test Nginx configuration file for syntax errors
 sudo nginx -t
@@ -86,13 +117,12 @@ sudo nginx -t
 sudo systemctl enable nginx
 sudo systemctl start nginx
 
-# --- 4. Start Godot Game Server (Example) ---
+# --- 4. Start Godot Game Server Safely (Port 12001) ---
 chmod +x ./poker_server.x86_64
 
-# Start the first Godot server instance (port 12001) in the background
-# The NLB/Nginx setup will use this as a health check target and game entry point
-./poker_server.x86_64 --server --headless --port=12001 > /var/log/poker_server.log 2>&1 &`;
-
+# Start the Godot server as the standard 'ec2-user' to avoid root warnings/issues.
+sudo -u ec2-user ./poker_server.x86_64 --server --headless --port=12001 > /home/ec2-user/poker_server.log 2>&1 &
+`;
     const cleanScript = STARTUP_COMMANDS_SCRIPT.trim();
     const STARTUP_COMMANDS_BASE64 = Buffer.from(cleanScript).toString('base64');
 
@@ -106,18 +136,6 @@ chmod +x ./poker_server.x86_64
     // Authorize Ingress Rules
     try {
         console.log("Authorizing Ingress Rules...");
-        // const ingressCommand = new AuthorizeSecurityGroupIngressCommand({
-        //     GroupId: SECURITY_GROUP_ID,
-        //     IpPermissions: [
-        //         {
-        //             IpProtocol: 'tcp',
-        //             FromPort: 12000,
-        //             ToPort: 13000,
-        //             IpRanges: [{ CidrIp: '0.0.0.0/0' }]
-        //         }
-        //     ]
-        // });
-
         const ingressCommand = new AuthorizeSecurityGroupIngressCommand({
             GroupId: SECURITY_GROUP_ID,
             IpPermissions: [
