@@ -3,11 +3,11 @@ extends Node
 const HTTPUtils = preload("res://scripts/utilities/http_utils.gd")
 const JWTUtils = preload("res://scripts/utilities/jwt_utils.gd")
 
-const CHIPS_API_BASE_URL = "https://y27u211sxl.execute-api.us-east-1.amazonaws.com"
+const CHIPS_API_BASE_URL = "https://api.ultralight.dev"
 const GET_CHIPS_ENDPOINT = "/chips/"
 const PUT_CHIPS_ENDPOINT = "/chips"
 
-const AUTH_SERVER_URL = "https://ultralight.dev"
+const AUTH_SERVER_URL = "https://api.ultralight.dev/auth"
 const CLIENT_ID = "ultralight-default-client"
 
 func get_chips_url(user_id: String) -> String:
@@ -135,7 +135,7 @@ func _renew_player_token(client_id: int, callback: Callable) -> void:
 	if connected_player.jwt_token.is_empty():
 		return
 	
-	var token_url = AUTH_SERVER_URL + "/api/oauth/token"
+	var token_url = AUTH_SERVER_URL + "/oauth/token"
 	var form_data = {
 		"grant_type": "renew",
 		"token": connected_player.jwt_token,

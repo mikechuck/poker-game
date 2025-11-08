@@ -7,7 +7,7 @@ const HTTPUtils = preload("res://scripts/utilities/http_utils.gd")
 var key = "access_token"
 var _token: String = ""
 var _user_id: String = ""
-var auth_server_url = "https://ultralight.dev"
+var auth_server_url = "https://api.ultralight.dev/auth"
 var client_id = "ultralight-default-client"
 
 func _load_token() -> void:
@@ -36,7 +36,7 @@ func set_token(token: String) -> void:
 		var result = JavaScriptBridge.eval(js_code)
 
 func renew_token() -> void:
-	var token_url = auth_server_url + "/api/oauth/token"
+	var token_url = auth_server_url + "/oauth/token"
 	var form_data = {
 		"grant_type": "renew",
 		"token": _token,

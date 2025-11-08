@@ -4,7 +4,7 @@ const HTTPUtils = preload("res://scripts/utilities/http_utils.gd")
 
 var http_request: HTTPRequest
 
-var auth_server_url = "https://ultralight.dev"
+var auth_server_url = "https://api.ultralight.dev/auth"
 var client_id = "ultralight-default-client"
 
 func get_redirect_uri() -> String:
@@ -98,7 +98,7 @@ func redirect_to_auth():
 		"code_challenge_method": "S256"
 	}
 	var query_string = encode_url_params(params)
-	var full_auth_url = auth_server_url + "/api/oauth/authorize?" + query_string
+	var full_auth_url = auth_server_url + "/oauth/authorize?" + query_string
 	redirect(full_auth_url)
 
 func handle_oauth_callback():
@@ -106,7 +106,7 @@ func handle_oauth_callback():
 	var code = url_params.get("code", "")
 	var verifier = get_cookie("pkce_verifier")
 	var redirect_uri = get_redirect_uri()
-	var token_url = auth_server_url + "/api/oauth/token"
+	var token_url = auth_server_url + "/oauth/token"
 	var form_data = {
 		"grant_type": "authorization_code",
 		"code": code,
