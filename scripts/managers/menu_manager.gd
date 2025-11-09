@@ -30,7 +30,7 @@ func _on_create_game_button_pressed() -> void:
 	# On response, set server_url and server_port and connect to the server
 
 func _on_join_game_button_pressed() -> void:
-	print("Joining server at wss://%s/%s..." % [server_url, server_port])
+	print("Joining server at ws://%s/%s..." % [server_url, server_port])
 	connect_to_server()
 	
 func _on_port_input_text_changed(new_text: String) -> void:
@@ -42,7 +42,7 @@ func _on_ip_input_text_changed(new_text: String) -> void:
 func connect_to_server():
 	var peer = WebSocketMultiplayerPeer.new()
 	multiplayer.multiplayer_peer = null
-	peer.create_client("wss://%s/%s" % [server_url, server_port])
+	peer.create_client("ws://%s/%s" % ["localhost", server_port])
 	multiplayer.multiplayer_peer = peer
 	
 func _on_connected():

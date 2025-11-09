@@ -130,26 +130,40 @@ sudo -u ec2-user ./poker_server.x86_64 --server --headless --port=12001 > /home/
     const INSTANCE_TYPE = "t3.micro";
     const SECURITY_GROUP_ID = "sg-0f27397c21075ecfc";
     const NLB_SECURITY_GROUP_ID = "sg-08910acd8a0aa5cb2";
+    const CLOUDFRONT_ID = "pl-3b927c52";
 
     const INSTANCE_PROFILE_ARN = "arn:aws:iam::072351085675:instance-profile/game-server-ec2-role";
 
     // Authorize Ingress Rules
     try {
         console.log("Authorizing Ingress Rules...");
-        const ingressCommand = new AuthorizeSecurityGroupIngressCommand({
-            GroupId: SECURITY_GROUP_ID,
-            IpPermissions: [
-                {
-                    IpProtocol: 'tcp',
-                    FromPort: 8000, // The specific port Nginx is listening on
-                    ToPort: 8000,
+        // const ingressCommand = new AuthorizeSecurityGroupIngressCommand({
+        //     GroupId: SECURITY_GROUP_ID,
+        //     IpPermissions: [
+        //         {
+        //             IpProtocol: 'tcp',
+        //             FromPort: 8000, // The specific port Nginx is listening on
+        //             ToPort: 8000,
                     
-                    // Restrict source to ONLY the NLB/VPC
-                    UserIdGroupPairs: [{ GroupId: NLB_SECURITY_GROUP_ID }]
-                }
-            ]
-        });
-        await ec2Client.send(ingressCommand);
+        //             // Restrict source to ONLY the NLB/VPC
+        //             UserIdGroupPairs: [{ GroupId:  CLOUDFRONT_ID}]
+        //         }
+        //     ]
+        // });
+        // const ingressCommand = new AuthorizeSecurityGroupIngressCommand({
+        //     GroupId: SECURITY_GROUP_ID,
+        //     IpPermissions: [
+        //         {
+        //             IpProtocol: 'tcp',
+        //             FromPort: 12001, // The specific port Nginx is listening on
+        //             ToPort: 12001,
+                    
+        //             // Restrict source to ONLY the NLB/VPC
+        //             UserIdGroupPairs: [{ GroupId:  "0.0.0.0/0"}]
+        //         }
+        //     ]
+        // });
+        // await ec2Client.send(ingressCommand);
         console.log("Ingress Rules Authorized successfully.");
 
     } catch (e) {
