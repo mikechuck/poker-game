@@ -117,7 +117,7 @@ sudo nginx -t
 sudo systemctl enable nginx
 sudo systemctl start nginx
 
-# --- 4. Start Godot Game Server Safely (Port 12001) ---
+# --- 4. Start Godot Game Server ---
 chmod +x ./poker_server.x86_64
 
 # Start the Godot server as the standard 'ec2-user' to avoid root warnings/issues.
