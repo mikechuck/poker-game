@@ -26,13 +26,10 @@ func _on_peer_connected(id):
 	print("Player %s connected" % id)
 	var connected_player = ConnectedPlayer.new()
 	connected_player.id = id
-	connected_player.account_total_cash = GameStateData.default_starting_cash
 	game_manager.game_state_data.connected_players[id] = connected_player
-	# If this was the first player to connect, set it as host player
 	if (game_manager.game_state_data.host_player_id == 0):
 		game_manager.game_state_data.host_player_id = connected_player.id
 		connected_player.is_host = true
-	client_manager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
 	print("Number of players connected: %s" % [game_manager.game_state_data.connected_players.size()])
 	
 func _on_peer_disconnected(id):
@@ -60,6 +57,44 @@ func _on_peer_disconnected(id):
 	print("Number of players connected: %s" % [game_manager.game_state_data.connected_players.size()])
 
 ### RPC Functions
+
+@rpc("reliable", "any_peer")
+func register_player_auth(jwt_token: String):
+	var client_id = multiplayer.get_remote_sender_id()
+	var connected_player = game_manager.game_state_data.connected_players.get(client_id)
+	var user_id = JWTUtils.extract_user_id_from_token(jwt_token)
+	connected_player.jwt_token = jwt_token
+	connected_player.user_id = user_id
+	_fetch_player_balance_from_api(client_id)
+
+func _fetch_player_balance_from_api(client_id: int):
+	var connected_player = game_manager.game_state_data.connected_players.get(client_id)
+	var chips_api_service = get_parent().get_node("ChipsApiService")
+	
+	chips_api_service.get_chips(client_id, func(result: int, response_code: int, chips: int):
+		if result == 0 and response_code == 200:
+			connected_player.account_total_cash = chips
+			
+			for seat in game_manager.game_state_data.player_seats.values():
+				if seat.player_id == client_id:
+					seat.hand_cash = chips
+					break
+			
+			client_manager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
+		elif response_code == 404:
+			var initial_balance = 0
+			chips_api_service.update_chips(client_id, initial_balance, func(update_result: int, update_code: int):
+				connected_player.account_total_cash = initial_balance
+				
+				for seat in game_manager.game_state_data.player_seats.values():
+					if seat.player_id == client_id:
+						seat.hand_cash = initial_balance
+						break
+				
+				client_manager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
+			)
+	)
+
 
 @rpc("reliable", "any_peer")
 func request_game_state_publish():

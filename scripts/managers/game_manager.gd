@@ -29,21 +29,30 @@ var game_state_data: GameStateData = GameStateData.new()
 ### Start lifecycle methods
 
 func _ready() -> void:
-	server_manager = get_parent().get_node("ServerManager")
-	client_manager = get_parent().get_node("ClientManager")
-	deck_manager = get_parent().get_node("DeckManager")
+	var parent = get_parent()
+	server_manager = parent.get_node_or_null("ServerManager")
+	client_manager = parent.get_node_or_null("ClientManager")
+	deck_manager = parent.get_node_or_null("DeckManager")
 	
 	var args = OS.get_cmdline_args()
 	if (args.find("--server") >= 0):
 		is_server = true
 		screen_origin = Vector2.ZERO # Adjust for screen size on client only
-		server_manager.start_server()
-		server_manager.set_player_seats()
+		# Use call_deferred to ensure script is fully loaded
+		call_deferred("_start_server_deferred")
 	else:
 		is_server = false
 		screen_origin = get_viewport_rect().size / 2
 		player_ui_instance = get_parent().find_child("PlayerUI")
 		server_manager.request_game_state_publish.rpc_id(1)
+
+func _start_server_deferred():
+	"""Deferred server startup to ensure scripts are fully loaded"""
+	if server_manager != null and server_manager.has_method("start_server"):
+		server_manager.start_server()
+		server_manager.set_player_seats()
+	else:
+		print("ERROR: Failed to start server - ServerManager script not ready")
 	
 ### End lifecycle methods
 
@@ -53,16 +62,16 @@ func reset_hand() -> void:
 	client_manager.update_game_state_data.rpc(game_state_data.to_dict())
 
 func assign_player_to_seat(client_id, seat_number) -> void:
-	# Check to see if seat is already filled
 	seat_number = get_next_free_seat(seat_number)
-	# First remove them from their current seat then put them in the new seat
 	var desired_seat = game_state_data.player_seats.get(seat_number)
 	for seat in game_state_data.player_seats.values():
 		if (seat.player_id == client_id):
 			seat.player_id = 0
-			pass
 	desired_seat.player_id = client_id
-	desired_seat.hand_cash = GameStateData.default_starting_cash
+	
+	var player = game_state_data.connected_players[client_id]
+	desired_seat.hand_cash = player.account_total_cash
+	
 	game_state_data.player_seats[seat_number] = desired_seat
 	game_state_data.connected_players[client_id].is_spectating = false
 	client_manager.update_game_state_data.rpc(game_state_data.to_dict())
@@ -186,12 +195,27 @@ func state_deal_river_card() -> void:
 	
 func state_end_step() -> void:
 	game_state_data.winner_player_id = game_state_data.connected_players.values()[0].id
-	# Add the new balance to the winner
+	
 	for seat in game_state_data.player_seats.values():
 		if seat.player_id == game_state_data.winner_player_id:
 			seat.hand_cash += game_state_data.pot_value
-	game_state_data.connected_players[game_state_data.winner_player_id].account_total_cash += game_state_data.pot_value
+	
+	for seat in game_state_data.player_seats.values():
+		if seat.player_id != 0:
+			var player = game_state_data.connected_players.get(seat.player_id)
+			player.account_total_cash = seat.hand_cash
+	
+	var chips_api_service = get_node("/root/Game/ChipsApiService")
+	
+	for seat in game_state_data.player_seats.values():
+		if seat.player_id != 0:
+			var player = game_state_data.connected_players.get(seat.player_id)
+			chips_api_service.update_chips(seat.player_id, player.account_total_cash, func(result: int, response_code: int):
+				pass
+			)
+	
 	client_manager.update_game_state_data.rpc(game_state_data.to_dict())
+
 	
 func find_winning_seat() -> PlayerSeat:
 	var highest_hand_value = 0

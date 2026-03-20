@@ -2,9 +2,9 @@
 $OS = $PSVersionTable.OS
 
 if ($OS -like "*Windows*") {
-    Godot_v4.5.1-stable_win64_console.exe --path "./" --server --headless --port=12001
+    npx http-server exports/web -p 5173 --proxy http://localhost:5173?
 } elseif ($OS -like "*Darwin*") { # macOS
-    godot --path "./" --server server_mode --headless --port=12001
+    npx http-server exports/web -p 5173 --proxy http://localhost:5173?
 } else {
     Write-Host "Unsupported operating system: $OS"
     exit 1

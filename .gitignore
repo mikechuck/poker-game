@@ -36,3 +36,8 @@ package-lock.json
 *.dds.converted
 *.hdr.converted
 *.exr.converted
+
+# Godot temporary and cache files
+*.tmp
+*.uid
+.godot/

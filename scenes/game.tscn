@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://bv78nq7paqs7f"]
+[gd_scene load_steps=13 format=3 uid="uid://bv78nq7paqs7f"]
 
 [ext_resource type="Script" uid="uid://b7pkboiy8lcrw" path="res://scripts/UI/table.gd" id="1_cfscn"]
 [ext_resource type="Script" uid="uid://t8a0fwy0ry0u" path="res://scripts/managers/game_manager.gd" id="1_h2fnp"]
@@ -11,6 +11,7 @@
 [ext_resource type="Texture2D" uid="uid://cdibtxyl8cvkj" path="res://assets/DealerCardSpot.png" id="4_ya4ey"]
 [ext_resource type="PackedScene" uid="uid://dof81yg1jefa" path="res://scenes/UI/player_ui.tscn" id="5_tbgi4"]
 [ext_resource type="Script" uid="uid://cnawrfbgpgpfu" path="res://scripts/managers/deck_manager.gd" id="8_85g3d"]
+[ext_resource type="Script" path="res://scripts/managers/chips_api_service.gd" id="9_chips"]
 
 [node name="Game" type="Control"]
 layout_mode = 3
@@ -135,7 +136,7 @@ script = ExtResource("2_tipki")
 [node name="ClientManager" type="Node2D" parent="."]
 script = ExtResource("3_85g3d")
 
-[node name="ServerManager" type="Node2D" parent="."]
+[node name="ServerManager" type="Node" parent="."]
 script = ExtResource("4_choun")
 
 [node name="DeckManager" type="Node2D" parent="."]
@@ -143,3 +144,6 @@ script = ExtResource("8_85g3d")
 
 [node name="GameManager" type="Node2D" parent="."]
 script = ExtResource("1_h2fnp")
+
+[node name="ChipsApiService" type="Node" parent="."]
+script = ExtResource("9_chips")

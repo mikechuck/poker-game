@@ -1,7 +1,7 @@
-[gd_scene load_steps=3 format=3 uid="uid://iksy47spcvoa"]
+[gd_scene load_steps=3 format=3]
 
-[ext_resource type="Script" uid="uid://b7tklp2c7mnkj" path="res://scripts/UI/seat_button.gd" id="1_33enm"]
-[ext_resource type="Script" uid="uid://cifi0uxipxmd4" path="res://scripts/UI/select_seat_button.gd" id="2_4n56r"]
+[ext_resource type="Script" path="res://scripts/UI/seat_button.gd" id="1_33enm"]
+[ext_resource type="Script" path="res://scripts/UI/select_seat_button.gd" id="2_4n56r"]
 
 [node name="SeatButton" type="Node2D"]
 visible = false
