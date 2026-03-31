@@ -1,0 +1,36 @@
+[gd_scene load_steps=2 format=3 uid="uid://cp36jy3j67uj0"]
+
+[ext_resource type="Script" uid="uid://1ntwluepprb8" path="res://scripts/managers/landing_manager.gd" id="1_mfct4"]
+
+[node name="MenuContainer" type="Control"]
+layout_mode = 3
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 0
+script = ExtResource("1_mfct4")
+
+[node name="LoginButton" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -100.0
+offset_top = -100.0
+offset_right = 100.0
+offset_bottom = -50.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_default_cursor_shape = 2
+text = "Join Game
+"
+
+[node name="HTTPRequest" type="HTTPRequest" parent="LoginButton"]
+
+[connection signal="pressed" from="LoginButton" to="." method="_on_login_button_pressed"]
+[connection signal="request_completed" from="LoginButton/HTTPRequest" to="." method="_on_http_request_request_completed"]

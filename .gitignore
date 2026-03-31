@@ -2,6 +2,8 @@
 .godot/
 /android/
 *.import
+*.tmp
+*.uid
 
 # Editor specific files
 .vs/

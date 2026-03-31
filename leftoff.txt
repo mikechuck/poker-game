@@ -1,4 +1,7 @@
 leftoff: 
+	- Added landing page and new cognito auth code, now need to test powershell scripts and see how login flow is going
+
+
 	- Now that ALB is created, figure out how to best setup websocket requests to ALB using subdomain and /game path
 	- Do we ned to set up origins and behaviors in cloudfront (poker.mct.net), or is it fine to request alb directly using server.*?
 
