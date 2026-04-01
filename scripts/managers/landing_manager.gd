@@ -1,19 +1,30 @@
 extends Control
 
-@onready var http_request = $HTTPRequest
+@onready var http_request = $LoginButton/HTTPRequest
 
 const CLIENT_ID = "2m5tvbn5p6po69bi8blouda9sc"
-const REDIRECT_URI = "https://poker.mikechucktingle.net/"
+const REDIRECT_URI_PROD = "https://poker.mikechucktingle.net"
+const REDIRECT_URI_DEV = "http://localhost:5173/"
+var REDIRECT_URI = ""
 const COGNITO_DOMAIN = "login.mikechucktingle.net"
 
 func _ready() -> void:
+	var user_args = OS.get_cmdline_user_args()
+	if "--dev" in user_args:
+		REDIRECT_URI = REDIRECT_URI_DEV
+	else:
+		REDIRECT_URI = REDIRECT_URI_PROD
+		
+	print("using redirect uri %s" % REDIRECT_URI)
+		
 	# check url for "code" parameter.
 	# 	- if present, send POST to cognito's auth endpoint (/oauth2/token)
 	# 	- if valid values from response, add to local storage, clear code from url, and navigate to "main" scene
 	# 	- if invalid, just remove from url and stay on landing page. Clear any tokens in localstorage
 	var auth_code = get_url_parameter("code")
 	if auth_code != "":
-		exchange_code_for_tokens(auth_code)
+		print("We have an auth code, attempt to turn it into tokens!")
+		#exchange_code_for_tokens(auth_code)
 	else:
 		print("Waiting for login...")
 		
@@ -57,9 +68,14 @@ func navigate_to_main():
 	get_tree().call_deferred("change_scene_to_file", "res://scenes/main.tscn")
 
 func _on_login_button_pressed() -> void:
-	pass # Replace with function body.
+	if OS.has_feature("web"):
+		var login_url = "https://%s/login?client_id=%s&response_type=code&scope=email+openid&redirect_uri=%s" % [COGNITO_DOMAIN, CLIENT_ID, REDIRECT_URI]
+		JavaScriptBridge.eval("window.location.href = '" + login_url + "';")
+	else:
+		print("Can't redirect to login url, user is not on web environment")
 
 func _on_http_request_request_completed(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray) -> void:
+	print("Got network response from Cognito")
 	clean_url() # Remove anything from the url so we don't re-trigger the token exchange
 	
 	if result != HTTPRequest.RESULT_SUCCESS || response_code != 200:
@@ -75,5 +91,5 @@ func _on_http_request_request_completed(result: int, response_code: int, headers
 	JavaScriptBridge.eval("localStorage.setItem('access_token', '%s')" % access_token)
 	JavaScriptBridge.eval("localStorage.setItem('id_token', '%s')" % id_token)
 	JavaScriptBridge.eval("localStorage.setItem('refresh_token', '%s')" % refresh_token)
-	print("Login succes")
+	print("Login succes! Check local storage for tokens")
 	navigate_to_main()

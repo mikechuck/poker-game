@@ -1,9 +1,6 @@
-# Detect operating system
-$OS = $PSVersionTable.OS
-
-if ($OS -like "*Windows*") {
+if ($IsWindows) {
     ./exports/server/windows/poker_server.exe --headless server_mode
-} elseif ($OS -like "*Darwin*") { # macOS
+} elseif ($IsMacOS) {
     ./exports/server/poker_server --headless server_mode
 } else {
     Write-Host "Unsupported operating system: $OS"

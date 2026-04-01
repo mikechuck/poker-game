@@ -1,6 +1,12 @@
 leftoff: 
-	- Added landing page and new cognito auth code, now need to test powershell scripts and see how login flow is going
-
+	- Redirect and login works, now finalize reading dev flag as a "feature"
+	In Godot, go to Project > Export.
+	Select your "Web" preset.
+	Look for the Features tab.
+	In the "Custom" box, type: dev.
+	In your GDScript, check for the tag like this:
+	//if OS.has_feature("dev"):
+   	//	print("Dev mode active via feature tag!")
 
 	- Now that ALB is created, figure out how to best setup websocket requests to ALB using subdomain and /game path
 	- Do we ned to set up origins and behaviors in cloudfront (poker.mct.net), or is it fine to request alb directly using server.*?
@@ -10,6 +16,10 @@ Todo:
 	- Add "is server" checks to rpc functions
 	- show list of connected players in room
 
+Test login credentials:
+username: Mikechuck
+password: Test123!
+email: mcjoy465+user2@gmail.com
 
 
 Game state logic
