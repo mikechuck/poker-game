@@ -14,8 +14,9 @@ func _ready() -> void:
 	var args = OS.get_cmdline_args()
 	if (args.find("--server") >= 0):
 		navigate_to_game_scene()
+		
+	# If not the server, then we should bounce the user the landing if they don't have
 	port_input_node.text = server_port
-	
 	multiplayer.connected_to_server.connect(_on_connected)
 	multiplayer.connection_failed.connect(_on_connection_failed)
 	multiplayer.server_disconnected.connect(_on_disconnected)

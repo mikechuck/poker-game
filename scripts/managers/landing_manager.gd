@@ -9,36 +9,24 @@ var REDIRECT_URI = ""
 const COGNITO_DOMAIN = "login.mikechucktingle.net"
 
 func _ready() -> void:
-	var user_args = OS.get_cmdline_user_args()
-	if "--dev" in user_args:
+	if OS.has_feature("dev"):
 		REDIRECT_URI = REDIRECT_URI_DEV
 	else:
 		REDIRECT_URI = REDIRECT_URI_PROD
-		
-	print("using redirect uri %s" % REDIRECT_URI)
-		
-	# check url for "code" parameter.
-	# 	- if present, send POST to cognito's auth endpoint (/oauth2/token)
-	# 	- if valid values from response, add to local storage, clear code from url, and navigate to "main" scene
-	# 	- if invalid, just remove from url and stay on landing page. Clear any tokens in localstorage
-	var auth_code = get_url_parameter("code")
-	if auth_code != "":
-		print("We have an auth code, attempt to turn it into tokens!")
-		#exchange_code_for_tokens(auth_code)
+	
+	var auth_code = AuthManager.get_url_parameter("code")
+	if (AuthManager.has_auth_tokens()):
+		navigate_to_main()
+	elif auth_code != "":
+		exchange_code_for_tokens(auth_code)
 	else:
-		print("Waiting for login...")
+		AuthManager.clean_url()
+		AuthManager.clear_local_storage()
+		print("No auth, waiting for login")
 		
 	# if no "code" parameter, check localstorage if there are tokens present
 	# 	- if tokens, navigate to "main" scene
 	# if no tokens, clear everything from localstorage and stay on landing page
-
-func get_url_parameter(param_name: String) -> String:
-	if OS.has_feature("web"):
-		var js_code = "new URLSearchParams(window.location.search).get('%s')" % param_name
-		var result = JavaScriptBridge.eval(js_code)
-		if result != null:
-			return str(result)
-	return ""
 	
 func exchange_code_for_tokens(code: String):
 	var url = "https://%s/oauth2/token" % COGNITO_DOMAIN
@@ -54,17 +42,9 @@ func exchange_code_for_tokens(code: String):
 	var response = http_request.request(url, headers, HTTPClient.METHOD_POST, body)
 	if response != OK:
 		print("An error occurred in the HTTP request, check logs for more details")
-	
-func clean_url():
-	if OS.has_feature("web"):
-		JavaScriptBridge.eval("window.history.replaceState({}, document.title, '/');")
-	
-func clear_local_storage():
-	JavaScriptBridge.eval("localStorage.removeItem('access_token')")
-	JavaScriptBridge.eval("localStorage.removeItem('id_token')")
-	JavaScriptBridge.eval("localStorage.removeItem('refresh_token')")
 		
 func navigate_to_main():
+	print("navigating to main scene")
 	get_tree().call_deferred("change_scene_to_file", "res://scenes/main.tscn")
 
 func _on_login_button_pressed() -> void:
@@ -76,20 +56,14 @@ func _on_login_button_pressed() -> void:
 
 func _on_http_request_request_completed(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray) -> void:
 	print("Got network response from Cognito")
-	clean_url() # Remove anything from the url so we don't re-trigger the token exchange
+	AuthManager.clean_url() # Remove anything from the url so we don't re-trigger the token exchange
 	
 	if result != HTTPRequest.RESULT_SUCCESS || response_code != 200:
 		print("Error signing into account. Result: %s | ResponseCode: %s" % [result, response_code])
-		clear_local_storage()
+		AuthManager.clear_local_storage()
 		return
 		
 	# Handle success
-	var json = JSON.parse_string(body.get_string_from_utf8())
-	var access_token = json["access_token"]
-	var id_token = json["id_token"]
-	var refresh_token = json["refresh_token"]
-	JavaScriptBridge.eval("localStorage.setItem('access_token', '%s')" % access_token)
-	JavaScriptBridge.eval("localStorage.setItem('id_token', '%s')" % id_token)
-	JavaScriptBridge.eval("localStorage.setItem('refresh_token', '%s')" % refresh_token)
+	AuthManager.set_auth_tokens_from_auth_response(body)
 	print("Login succes! Check local storage for tokens")
 	navigate_to_main()

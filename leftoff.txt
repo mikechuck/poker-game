@@ -1,12 +1,8 @@
 leftoff: 
-	- Redirect and login works, now finalize reading dev flag as a "feature"
-	In Godot, go to Project > Export.
-	Select your "Web" preset.
-	Look for the Features tab.
-	In the "Custom" box, type: dev.
-	In your GDScript, check for the tag like this:
-	//if OS.has_feature("dev"):
-   	//	print("Dev mode active via feature tag!")
+	- Finished login and auth mgmt flow. Now need to call Accounts and Debts endpoints and display some data on the Main scene (before getting into a game)
+	- TODO:
+		- make sure auth works properly in Accounts call
+		- make UI to display any account data and debts data
 
 	- Now that ALB is created, figure out how to best setup websocket requests to ALB using subdomain and /game path
 	- Do we ned to set up origins and behaviors in cloudfront (poker.mct.net), or is it fine to request alb directly using server.*?
