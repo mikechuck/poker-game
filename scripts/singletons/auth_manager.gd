@@ -1,5 +1,17 @@
 extends Node
 
+const CLIENT_ID = "2m5tvbn5p6po69bi8blouda9sc"
+const REDIRECT_URI_PROD = "https://poker.mikechucktingle.net"
+const REDIRECT_URI_DEV = "http://localhost:5173/"
+var REDIRECT_URI = ""
+const COGNITO_DOMAIN = "login.mikechucktingle.net"
+
+func ready() -> void:
+	if OS.has_feature("dev"):
+		REDIRECT_URI = REDIRECT_URI_DEV
+	else:
+		REDIRECT_URI = REDIRECT_URI_PROD
+
 func get_url_parameter(param_name: String) -> String:
 	if OS.has_feature("web"):
 		var js_code = "new URLSearchParams(window.location.search).get('%s')" % param_name

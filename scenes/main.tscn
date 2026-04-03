@@ -122,6 +122,10 @@ editable = false
 wrap_mode = 1
 indent_wrapped_lines = true
 
+[node name="HttpRequests" type="Node" parent="."]
+
+[node name="GetAccount" type="HTTPRequest" parent="HttpRequests"]
+
 [connection signal="pressed" from="Menu/CreateGame/Button" to="." method="_on_create_game_button_pressed"]
 [connection signal="pressed" from="Menu/JoinGame/Button" to="." method="_on_join_game_button_pressed"]
 [connection signal="text_changed" from="Menu/JoinGame/PortInput" to="." method="_on_port_input_text_changed"]
