@@ -1,6 +1,6 @@
 extends Node
 
-@onready var http_request = $HttpRequest/GetAccount
+@onready var http_request_manager = $HttpRequests
 @onready var debug_output_node = $DebugOutput
 @onready var url_input_node = $Menu/JoinGame/IpInput
 @onready var port_input_node = $Menu/JoinGame/PortInput
@@ -15,26 +15,14 @@ func _ready() -> void:
 	var args = OS.get_cmdline_args()
 	if (args.find("--server") >= 0):
 		navigate_to_game_scene()
-		
-	get_account_data()
+
+	http_request_manager.get_account_data()
 		
 	# If not the server, then we should bounce the user the landing if they don't have
 	port_input_node.text = server_port
 	multiplayer.connected_to_server.connect(_on_connected)
 	multiplayer.connection_failed.connect(_on_connection_failed)
 	multiplayer.server_disconnected.connect(_on_disconnected)
-
-func get_account_data() -> void:
-	var url = "https://955u5dri7h.execute-api.us-east-1.amazonaws.com/account"
-	var headers = [
-		"Content-Type: application/x-www-form-urlencoded",
-		"Authorization: Bearer <YOUR_ID_TOKEN_HERE>"
-	]
-	
-	var response = http_request.request(url, headers, HTTPClient.METHOD_GET)
-	if response != OK:
-		print("An error occurred in the HTTP request, check logs for more details")
-
 		
 func add_debug_line(text: String) -> void:
 	debug_output_node.text += text + "\n"

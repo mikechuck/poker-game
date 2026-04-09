@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://cp36jy3j67uj0"]
 
-[ext_resource type="Script" uid="uid://1ntwluepprb8" path="res://scripts/managers/landing_manager.gd" id="1_mfct4"]
+[ext_resource type="Script" uid="uid://1ntwluepprb8" path="res://scripts/managers/landing_scene_manager.gd" id="1_mfct4"]
 
 [node name="MenuContainer" type="Control"]
 layout_mode = 3

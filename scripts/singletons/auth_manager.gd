@@ -1,16 +1,19 @@
 extends Node
 
 const CLIENT_ID = "2m5tvbn5p6po69bi8blouda9sc"
-const REDIRECT_URI_PROD = "https://poker.mikechucktingle.net"
+const REDIRECT_URI_PROD = "https://poker.mikechucktingle.net/"
 const REDIRECT_URI_DEV = "http://localhost:5173/"
 var REDIRECT_URI = ""
+var API_URL = "https://api.mikechucktingle.net"
 const COGNITO_DOMAIN = "login.mikechucktingle.net"
 
-func ready() -> void:
+func _init() -> void:
 	if OS.has_feature("dev"):
 		REDIRECT_URI = REDIRECT_URI_DEV
+		API_URL += "/dev"
 	else:
 		REDIRECT_URI = REDIRECT_URI_PROD
+		API_URL += "/prod"
 
 func get_url_parameter(param_name: String) -> String:
 	if OS.has_feature("web"):
@@ -20,6 +23,15 @@ func get_url_parameter(param_name: String) -> String:
 			return str(result)
 	return ""
 	
+func get_id_token():
+	return JavaScriptBridge.eval("localStorage.getItem('id_token)")
+	
+func get_access_token():
+	return JavaScriptBridge.eval("localStorage.getItem('access_token)")
+	
+func get_refresh_token():
+	return JavaScriptBridge.eval("localStorage.getItem('refresh_token)")
+
 func set_auth_tokens_from_auth_response(body):
 	var json = JSON.parse_string(body.get_string_from_utf8())
 	var access_token = json["access_token"]

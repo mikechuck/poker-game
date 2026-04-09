@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://b7ckdfv84qrn2"]
+[gd_scene load_steps=3 format=3 uid="uid://b7ckdfv84qrn2"]
 
-[ext_resource type="Script" uid="uid://dvefjfvnac0ds" path="res://scripts/managers/menu_manager.gd" id="1_o5qli"]
+[ext_resource type="Script" uid="uid://dvefjfvnac0ds" path="res://scripts/managers/main_scene_manager.gd" id="1_o5qli"]
+[ext_resource type="Script" uid="uid://c2cyo161ww6p8" path="res://scripts/managers/http_requests_manager_main.gd" id="2_0wfyh"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -123,6 +124,7 @@ wrap_mode = 1
 indent_wrapped_lines = true
 
 [node name="HttpRequests" type="Node" parent="."]
+script = ExtResource("2_0wfyh")
 
 [node name="GetAccount" type="HTTPRequest" parent="HttpRequests"]
 
@@ -130,3 +132,4 @@ indent_wrapped_lines = true
 [connection signal="pressed" from="Menu/JoinGame/Button" to="." method="_on_join_game_button_pressed"]
 [connection signal="text_changed" from="Menu/JoinGame/PortInput" to="." method="_on_port_input_text_changed"]
 [connection signal="text_changed" from="Menu/JoinGame/IpInput" to="." method="_on_ip_input_text_changed"]
+[connection signal="request_completed" from="HttpRequests/GetAccount" to="HttpRequests" method="_on_get_account_request_completed"]
