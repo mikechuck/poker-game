@@ -1,21 +1,28 @@
 extends Node
 
 @onready var get_account_http_request = $GetAccount
+@onready var auth_manager = $"../AuthManager"
 
 func get_headers():
+	var id_token = auth_manager.get_id_token()
+	print("id token:", id_token)
 	return [
-		"Content-Type: application/x-www-form-urlencoded",
-		"Authorization: Bearer %s" % AuthManager.get_id_token()
+		"Content-Type: application/json",
+		"Authorization: Bearer %s" % id_token
 	]
 	
-func get_account_data():
-	print("Getting account data...")
-	var response = get_account_http_request.request(AuthManager.API_URL, get_headers(), HTTPClient.METHOD_GET)
-	if response != OK:
-		print("An error occurred in the HTTP request, check logs for more details")
-		
-
-##### HTTP request callbacks
-
-func _on_get_account_request_completed(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray) -> void:
-	print("GetAccount result code: %s" % result)
+func get_account_data(callback: Callable):
+	var url = auth_manager.API_URL + "/account"
+	print("getting account data")
+	get_account_http_request.request_completed.connect(
+		func(result, response_code, headers, body):
+			print("got back account data")
+			if (result == 401):
+				auth_manager.refresh_tokens(func(refresh_response_code):
+					if refresh_response_code == 200:
+						get_account_data(callback)
+					)
+			else:
+				callback.call(JSON.parse_string(body.get_string_from_utf8()))
+	)
+	get_account_http_request.request(url, get_headers(), HTTPClient.METHOD_GET)

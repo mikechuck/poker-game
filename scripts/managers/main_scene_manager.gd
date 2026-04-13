@@ -4,6 +4,7 @@ extends Node
 @onready var debug_output_node = $DebugOutput
 @onready var url_input_node = $Menu/JoinGame/IpInput
 @onready var port_input_node = $Menu/JoinGame/PortInput
+@onready var account_section = $AccountSection
 
 var server_url = "poker.mikechucktingle.net/game"
 var server_port = "12001"
@@ -16,7 +17,11 @@ func _ready() -> void:
 	if (args.find("--server") >= 0):
 		navigate_to_game_scene()
 
-	http_request_manager.get_account_data()
+	http_request_manager.get_account_data(func(data):
+		print("inside callback %s" % account_section)
+		print("Is inside tree: ", account_section.is_inside_tree())
+		account_section.display_account_data(data)
+	)
 		
 	# If not the server, then we should bounce the user the landing if they don't have
 	port_input_node.text = server_port

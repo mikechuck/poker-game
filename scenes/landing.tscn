@@ -1,8 +1,9 @@
-[gd_scene load_steps=2 format=3 uid="uid://cp36jy3j67uj0"]
+[gd_scene load_steps=3 format=3 uid="uid://cp36jy3j67uj0"]
 
 [ext_resource type="Script" uid="uid://1ntwluepprb8" path="res://scripts/managers/landing_scene_manager.gd" id="1_mfct4"]
+[ext_resource type="PackedScene" uid="uid://077b5tafbax5" path="res://scenes/networking/auth_manager.tscn" id="2_b236o"]
 
-[node name="MenuContainer" type="Control"]
+[node name="Landing" type="Control"]
 layout_mode = 3
 anchors_preset = 7
 anchor_left = 0.5
@@ -30,6 +31,8 @@ mouse_default_cursor_shape = 2
 text = "Login"
 
 [node name="HTTPRequest" type="HTTPRequest" parent="LoginButton"]
+
+[node name="AuthManager" parent="." instance=ExtResource("2_b236o")]
 
 [connection signal="pressed" from="LoginButton" to="." method="_on_login_button_pressed"]
 [connection signal="request_completed" from="LoginButton/HTTPRequest" to="." method="_on_http_request_request_completed"]

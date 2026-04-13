@@ -1,0 +1,13 @@
+[gd_scene load_steps=2 format=3 uid="uid://077b5tafbax5"]
+
+[ext_resource type="Script" uid="uid://dg5bkja5qd8a" path="res://scripts/singletons/auth_manager.gd" id="1_y8fr4"]
+
+[node name="AuthManager" type="Node"]
+script = ExtResource("1_y8fr4")
+
+[node name="GetTokens" type="HTTPRequest" parent="."]
+
+[node name="RefreshToken" type="HTTPRequest" parent="."]
+
+[connection signal="request_completed" from="GetTokens" to="." method="_on_get_tokens_request_completed"]
+[connection signal="request_completed" from="RefreshToken" to="." method="_on_refresh_token_request_completed"]
