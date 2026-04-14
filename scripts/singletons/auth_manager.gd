@@ -9,7 +9,7 @@ const REDIRECT_URI_DEV = "http://localhost:5173/"
 const LOGIN_URL = "https://login.mikechucktingle.net"
 const TOKEN_URL = "https://login.mikechucktingle.net/oauth2/token"
 var REDIRECT_URI = ""
-var API_URL = "https://api.mikechucktingle.net"
+@export var API_URL = "https://api.mikechucktingle.net"
 
 func _ready() -> void:
 	if OS.has_feature("dev"):
@@ -33,6 +33,37 @@ func _ready() -> void:
 	else:
 		if !has_auth_tokens():
 			navigate_to_landing()
+			
+#### Http request template to manage auth system
+#### This should be used for all HTTP requests to our api
+func api_request(path: String, method: int, callback: Callable, body: String = "", retry_count: int = 0):
+	print("calling api reqeust")
+	var url = API_URL + path
+	var http = HTTPRequest.new()
+	add_child(http)
+	
+	var headers = [
+		"Content-Type: application/json",
+		"Authorization: Bearer " + get_id_token()
+	]
+	
+	http.request_completed.connect(func(result, response_code, response_headers, response_body):
+		if (response_code == 401 and retry_count < 1):
+			if await refresh_tokens():
+				api_request(path, method, callback, body, retry_count + 1)
+			else:
+				# Something is wrong with our auth, boot user
+				navigate_to_landing()
+			
+			http.queue_free()
+			return
+		
+		var json_data = JSON.parse_string(response_body.get_string_from_utf8())
+		callback.call(json_data)
+		http.queue_free()
+	)
+	
+	http.request(url, headers, method, body)
 
 #### Navigation methods
 
@@ -40,6 +71,7 @@ func navigate_to_main():
 	get_tree().call_deferred("change_scene_to_file", "res://scenes/main.tscn")
 	
 func navigate_to_landing():
+	clear_local_storage()
 	get_tree().call_deferred("change_scene_to_file", "res://scenes/landing.tscn")
 	
 func navigate_to_login():
@@ -59,7 +91,10 @@ func exchange_code_for_tokens(code: String):
 	})
 	get_tokens_http_request.request(TOKEN_URL, headers, HTTPClient.METHOD_POST, body)
 		
-func refresh_tokens():
+func refresh_tokens() -> bool:
+	var current_refresh_token = get_refresh_token()
+	if (current_refresh_token == ""): return false
+	
 	var headers = ["Content-Type: application/x-www-form-urlencoded"]
 	var body = HTTPClient.new().query_string_from_dict({
 		"grant_type": "refresh_token",
@@ -67,8 +102,36 @@ func refresh_tokens():
 		"refresh_token": get_refresh_token(),
 	})
 	
-	refresh_tokens_http_request.request(TOKEN_URL, headers, HTTPClient.METHOD_POST, body)
-
+	var err = refresh_tokens_http_request.request(TOKEN_URL, headers, HTTPClient.METHOD_POST, body)
+	if err != OK:
+		print("Error sending request, returning to landing page")
+		navigate_to_landing()
+		return false
+	
+	var response = await refresh_tokens_http_request.request_completed
+	var result = response[0]
+	var response_code = response[1]
+	var response_body = response[3]
+	
+	if result != HTTPRequest.RESULT_SUCCESS:
+		print("Network error code, returning to landing page")
+		navigate_to_landing()
+		return false
+		
+	if response_code < 200 or response_code > 300:
+		print("Error refreshing tokens, returning to landing page")
+		navigate_to_landing()
+		return false
+		
+	var json = JSON.parse_string(response_body.get_string_from_utf8())
+	var access_token = json["access_token"]
+	var id_token = json["id_token"]
+	var refresh_token = json["refresh_token"]
+	JavaScriptBridge.eval("localStorage.setItem('access_token', '%s')" % access_token)
+	JavaScriptBridge.eval("localStorage.setItem('id_token', '%s')" % id_token)
+	JavaScriptBridge.eval("localStorage.setItem('refresh_token', '%s')" % refresh_token)
+	return true
+	
 #### Helper methods
 
 func get_url_parameter(param_name: String) -> String:
@@ -124,13 +187,3 @@ func _on_get_tokens_request_completed(result: int, response_code: int, headers: 
 	JavaScriptBridge.eval("localStorage.setItem('id_token', '%s')" % id_token)
 	JavaScriptBridge.eval("localStorage.setItem('refresh_token', '%s')" % refresh_token)
 	navigate_to_main()
-
-func _on_refresh_token_request_completed(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray) -> void:
-	clean_url()
-	
-	if result != HTTPRequest.RESULT_SUCCESS || response_code != 200:
-		print("Error signing into account. Result: %s | ResponseCode: %s" % [result, response_code])
-		clear_local_storage()
-		return
-	
-	print("response_code: ", response_code)

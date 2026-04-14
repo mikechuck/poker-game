@@ -10,4 +10,3 @@ script = ExtResource("1_y8fr4")
 [node name="RefreshToken" type="HTTPRequest" parent="."]
 
 [connection signal="request_completed" from="GetTokens" to="." method="_on_get_tokens_request_completed"]
-[connection signal="request_completed" from="RefreshToken" to="." method="_on_refresh_token_request_completed"]

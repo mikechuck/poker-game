@@ -18,8 +18,6 @@ func _ready() -> void:
 		navigate_to_game_scene()
 
 	http_request_manager.get_account_data(func(data):
-		print("inside callback %s" % account_section)
-		print("Is inside tree: ", account_section.is_inside_tree())
 		account_section.display_account_data(data)
 	)
 		
