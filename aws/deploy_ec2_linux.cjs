@@ -121,7 +121,29 @@ sudo systemctl start nginx
 chmod +x ./poker_server.x86_64
 
 # Start the Godot server as the standard 'ec2-user' to avoid root warnings/issues.
-sudo -u ec2-user ./poker_server.x86_64 --server --headless --port=12001 > /home/ec2-user/poker_server.log 2>&1 &
+# Not doing this anymore, going to dynamically create games
+# sudo -u ec2-user ./poker_server.x86_64 --server --headless --port=12001 > /home/ec2-user/poker_server.log 2>&1 &
+
+# DYANMIC GAME CREATION FIRST PASS
+# Create a small "port finder" helper script on the EC2
+cat << 'EOF' > /home/ec2-user/start_game_session.sh
+#!/bin/bash
+# Find a random available port between 12000 and 13000
+PORT=$(nmap -p 12000-13000 localhost | grep 'closed' | shuf -n 1 | cut -d'/' -f1)
+
+# If nmap isn't handy, a simple fallback:
+while :; do
+    PORT=$(( ( RANDOM % 1000 )  + 12000 ))
+    (echo >/dev/tcp/localhost/$PORT) >/dev/null 2>&1 || break
+done
+
+# Start the Godot server
+sudo -u ec2-user /home/ec2-user/poker_server.x86_64 --server --headless --port=$PORT > /home/ec2-user/logs/poker_$PORT.log 2>&1 &
+
+# IMPORTANT: Print the port so Lambda can read it
+echo $PORT
+EOF
+chmod +x /home/ec2-user/start_game_session.sh
 `;
     const cleanScript = STARTUP_COMMANDS_SCRIPT.trim();
     const STARTUP_COMMANDS_BASE64 = Buffer.from(cleanScript).toString('base64');

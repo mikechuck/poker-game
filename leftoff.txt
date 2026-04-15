@@ -1,7 +1,6 @@
 leftoff: 
-	- TODO:
-		- coors error talking to api.mikechucktingle.net, fix this in api gateway
-		- make UI to display any account data and debts data
+	- create start_game_session.sh script from ec2 startup script
+	- finish create game flow: create lambda, setup ssm script, create dynamo table and inserts/reads, etc
 	- APIs to create:
 		- /account
 			- update name
@@ -11,6 +10,16 @@ leftoff:
 
 	- Now that ALB is created, figure out how to best setup websocket requests to ALB using subdomain and /game path
 	- Do we ned to set up origins and behaviors in cloudfront (poker.mct.net), or is it fine to request alb directly using server.*?
+
+Create game flow:
+- user calls POST on /game endpoint
+- lambda function:
+	- if Games table doesn't have a record for this player, create one with pending status
+	- if Games table DOES have a record, just return back the game data (port, etc)
+	- Creates record in "Games" table for uuid and "creation pending"
+	- lambda sends command to SSM to start up game
+	- lambda polls
+
 
 Todo:
 	- add "is host" crown to player card for host
