@@ -38,3 +38,7 @@ package-lock.json
 *.dds.converted
 *.hdr.converted
 *.exr.converted
+
+# Terraform
+*.tfplan
+**/.terraform/
