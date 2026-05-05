@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "deploy_launch_server": "node aws/deploy_ec2_linux.cjs"
+    "deploy_launch_server": "node aws/deploy_ec2_linux.cjs",
+    "deploy_frontend": "node aws/deploy_frontend.cjs"
   },
   "repository": {
     "type": "git",
@@ -18,13 +19,15 @@
   },
   "homepage": "https://github.com/mikechuck/poker-game#readme",
   "dependencies": {
+    "@aws-sdk/client-cloudfront": "^3.1042.0",
     "@aws-sdk/client-s3": "^3.1038.0",
     "@aws-sdk/lib-storage": "^3.1041.0",
     "archiver": "^7.0.1",
     "aws-sdk": "^2.1692.0",
     "child_process": "^1.0.2",
     "client-ec2": "github:aws-sdk/client-ec2",
-    "fs": "^0.0.1-security"
+    "fs": "^0.0.1-security",
+    "mime-types": "^3.0.2"
   },
   "devDependencies": {
     "@types/node": "^24.8.1"

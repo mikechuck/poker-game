@@ -1,3 +1,5 @@
+//  WARNING: DEPRECATED, use terraform scripts for server deployment!
+
 var credentials = require('../../credentials.json')
 const fs = require('fs')
 const { S3Client } = require("@aws-sdk/client-s3");

@@ -1,8 +1,5 @@
 leftoff: 
-	- Finish terraform file:
-		- create resources for s3 hosting bucket
-		- permissions, policies, etc (maybe do this as part of an "iam section" in tf script)
-		- something is wrong with where the bucket is reading from, still seeing redirect to ultralight.dev. Maybe redeploy to s3 with newest build that uses cognito?
+	- switch isn't working for redirct back to poker game post login, need to look at that and redeploy
 	- finish create game flow: create lambda, setup ssm script, create dynamo table and inserts/reads, etc
 	- APIs to create:
 		- /account

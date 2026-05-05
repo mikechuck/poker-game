@@ -23,29 +23,6 @@ locals {
     })
 }
 
-resource "aws_s3_bucket_policy" "poker_bucket_policy" {
-  bucket = "chuckycodes-poker-game" # Your actual bucket name
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action   = "s3:GetObject"
-        Effect   = "Allow"
-        Resource = "arn:aws:s3:::chuckycodes-poker-game/*"
-        Principal = {
-          Service = "cloudfront.amazonaws.com"
-        }
-        Condition = {
-          StringEquals = {
-            "AWS:SourceArn" = aws_cloudfront_distribution.poker_cdn.arn
-          }
-        }
-      }
-    ]
-  })
-}
-
 # --- Security Group ---
 resource "aws_security_group" "poker_sg" {
     name = "poker-game-sg"
@@ -76,6 +53,44 @@ resource "aws_instance" "poker_server" {
     tags = {
         Name = "PokerGameServer"
     }
+}
+
+# --- S3 Bucket for Frontend Hosting ---
+resource "aws_s3_bucket" "poker_bucket" {
+    bucket = "chuckycodes-poker-game"
+
+    # The files are uploaded during deployment, we can delete the bucket with files in it
+    force_destroy = true 
+
+    tags = {
+        Name = "Poker Game Frontend"
+    }
+}
+
+# --- Block Public Access (Standard Security Best Practice) ---
+resource "aws_s3_bucket_public_access_block" "poker_bucket_block" {
+    bucket = aws_s3_bucket.poker_bucket.id
+
+    block_public_acls       = true
+    block_public_policy     = true
+    ignore_public_acls      = true
+    restrict_public_buckets = true
+}
+
+# --- Set CORS policy on the S3 bucket
+resource "aws_s3_bucket_cors_configuration" "poker_cors" {
+  bucket = aws_s3_bucket.poker_bucket.id
+
+  cors_rule {
+    allowed_headers = ["*"]
+    allowed_methods = ["GET"]
+    allowed_origins = [
+      "https://ddfh2856132nt.cloudfront.net",
+      "https://poker.mikechucktingle.net"
+    ]
+    expose_headers  = []
+    max_age_seconds = 3000
+  }
 }
 
 # --- Custom Origin Request Policy: godot-web-requests ---
@@ -125,7 +140,7 @@ resource "aws_cloudfront_response_headers_policy" "godot_response" {
         }
 
         content_security_policy {
-            content_security_policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' blob:; media-src 'self' blob:; font-src 'self' data:; worker-src 'self' blob:; connect-src 'self' *.mikechucktingle.net mikechucktingle.net *.ultralight.dev ultralight.dev; object-src 'none'; frame-ancestors 'self';"
+            content_security_policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' blob:; media-src 'self' blob:; font-src 'self' data:; worker-src 'self' blob:; connect-src 'self' *.mikechucktingle.net mikechucktingle.net; object-src 'none'; frame-ancestors 'self';"
             override                = true
         }
     }
@@ -178,8 +193,8 @@ resource "aws_cloudfront_distribution" "poker_cdn" {
 
     # --- Origin: S3 Web Client ---
     origin {
-        domain_name = "chuckycodes-poker-game.s3.us-east-1.amazonaws.com"
-        origin_id   = "chuckycodes-poker-game.s3.us-east-1.amazonaws.com"
+        domain_name = aws_s3_bucket.poker_bucket.bucket_regional_domain_name
+        origin_id   = aws_s3_bucket.poker_bucket.bucket_regional_domain_name
         origin_access_control_id = aws_cloudfront_origin_access_control.poker_oac.id
     }
 
@@ -238,10 +253,11 @@ resource "aws_cloudfront_distribution" "poker_cdn" {
 
 # --- Update S3 policies ---
 resource "aws_s3_bucket_policy" "poker_bucket_policy" {
-  bucket = "chuckycodes-poker-game" # Your actual bucket name
+  bucket = aws_s3_bucket.poker_bucket.id
 
   policy = jsonencode({
     Version = "2012-10-17"
+    Id: "PolicyForCloudFrontPrivateContent",
     Statement = [
       {
         Action   = "s3:GetObject"
