@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "deploy_launch_server": "node aws/deploy_ec2_linux.cjs",
-    "deploy_frontend": "node aws/deploy_frontend.cjs"
+    "deploy_frontend_dev": "pwsh -ExecutionPolicy Bypass -File ./powershell/web/export_web.ps1 -env \"dev\" && node aws/deploy_frontend.cjs dev",
+    "deploy_frontend_prod": "pwsh -ExecutionPolicy Bypass -File ./powershell/web/export_web.ps1 -env \"prod\" && node aws/deploy_frontend.cjs prod"
   },
   "repository": {
     "type": "git",

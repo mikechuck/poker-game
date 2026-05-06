@@ -7,6 +7,16 @@ const { CloudFrontClient, CreateInvalidationCommand } = require("@aws-sdk/client
 const path = require('path');
 require('aws-sdk/lib/maintenance_mode_message').suppress = true;
 
+const ENV = process.argv[2];
+
+if (!ENV ||
+    (ENV != 'dev' &&
+    ENV != 'prod')
+) {
+    console.error("Error: Please provide a valid environment (e.g., 'prod' or 'dev')");
+    process.exit(1);
+}
+
 const BUCKET_NAME = 'chuckycodes-poker-game';
 const DIST_ID = "E1SJ2O1VFU30SP";
 
@@ -22,7 +32,7 @@ const s3Client = new S3Client(clientConfig);
 const cfClient = new CloudFrontClient(clientConfig);
 
 const uploadFolderToS3 = async () => {
-    const localFolderPath = './exports/web';
+    const localFolderPath = `./exports/web/${ENV}`;
     const files = fs.readdirSync(localFolderPath, { recursive: true, withFileTypes: true });
 
     for (const file of files) {
@@ -66,6 +76,7 @@ async function deploy() {
 
         console.log("Invalidating cloudfront cache...");
         await invalidateCloudfrontCache();
+        console.log(`Deployed ${ENV} to S3`)
         console.log("Deployment complete.");
     } catch (err) {
         console.error("Deployment failed", err);

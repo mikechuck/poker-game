@@ -1,7 +1,11 @@
 # Requirements: ensure to run "aws configure" so terraform has correct permissions
 # Resources to add:
-# - S3 front end 
+# - Cognito user pools, with client integrations and everything
 # - any IAM users, roles, policies, etc
+# - lambda functions <- what's the best way to iterate on this?
+# - Api gateway endpoints
+# - dynamo and RDS
+# - KMS?
 
 # --- Provider Configuration ---
 provider "aws" {

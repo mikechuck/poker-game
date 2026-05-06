@@ -1,6 +1,10 @@
 leftoff: 
-	- switch isn't working for redirct back to poker game post login, need to look at that and redeploy
-	- finish create game flow: create lambda, setup ssm script, create dynamo table and inserts/reads, etc
+	- finish create game flow: 
+		- Double check CreateGame function against EC2 startup script
+		- figure out how to add logging to EC2 instance so we have visibility into how it's acting
+		- create dynamo table and inserts/reads, etc
+		- test call from lambda, read output and save to dynamo
+		- return back data to user so they can display and connect from client
 	- APIs to create:
 		- /account
 			- update name

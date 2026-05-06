@@ -4,20 +4,27 @@ extends Node
 @onready var refresh_tokens_http_request = $RefreshToken
 
 const CLIENT_ID = "2m5tvbn5p6po69bi8blouda9sc"
-const REDIRECT_URI_PROD = "https://poker.mikechucktingle.net/"
-const REDIRECT_URI_DEV = "http://localhost:5173/"
+const REDIRECT_URI_HOSTED = "https://poker.mikechucktingle.net/"
+const REDIRECT_URI_LOCAL = "http://localhost:5173/"
 const LOGIN_URL = "https://login.mikechucktingle.net"
 const TOKEN_URL = "https://login.mikechucktingle.net/oauth2/token"
 var REDIRECT_URI = ""
 @export var API_URL = "https://api.mikechucktingle.net"
 
 func _ready() -> void:
+	if (OS.has_feature("local")):
+		REDIRECT_URI = REDIRECT_URI_LOCAL
+		API_URL += "/dev"
 	if OS.has_feature("dev"):
-		REDIRECT_URI = REDIRECT_URI_DEV
+		REDIRECT_URI = REDIRECT_URI_HOSTED
 		API_URL += "/dev"
 	else:
-		REDIRECT_URI = REDIRECT_URI_PROD
+		REDIRECT_URI = REDIRECT_URI_HOSTED
 		API_URL += "/prod"
+	
+	print("Dev mode enabled!")
+	print("API url: ", API_URL)
+	print("Redirect url: ", REDIRECT_URI)
 	
 	# Check tokens and code on ready
 	print(get_tree().current_scene.name)
