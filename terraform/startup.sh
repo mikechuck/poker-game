@@ -4,7 +4,15 @@ set -e
 # System Update and Dependencies
 sudo dnf update -y
 sudo dnf install -y nginx libXcursor libXinerama libXrandr libXi fontconfig nmap-ncat
+sudo yum install -y amazon-cloudwatch-agent
 mkdir -p /home/ec2-user/logs
+
+# Start the agent using the config stored in SSM
+/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+    -a fetch-config \
+    -m ec2 \
+    -c ssm:${cwAgentConfigName} \
+    -s
 
 # Download Files
 aws s3 cp s3://${bucketName}/${s3Prefix} /home/ec2-user/ --recursive
@@ -31,10 +39,13 @@ MIN_PORT=12000
 MAX_PORT=13000
 SERVER_BIN="/home/ec2-user/poker_server.x86_64"
 LOG_DIR="/home/ec2-user/logs"
+
+# Find a free port for the new game instance
 while :; do
-PORT=$(( (RANDOM % ($MAX_PORT - $MIN_PORT + 1)) + $MIN_PORT))
-(echo >/dev/tcp/localhost/$PORT) >/dev/null 2>&1 || break
+    PORT=$(( (RANDOM % ($MAX_PORT - $MIN_PORT + 1)) + $MIN_PORT))
+    (echo >/dev/tcp/localhost/$PORT) >/dev/null 2>&1 || break
 done
+
 sudo -u ec2-user $SERVER_BIN --server --headless --port=$PORT "$@" > "$LOG_DIR/poker_$PORT.log" 2>&1 &
 echo $PORT
 EOF
