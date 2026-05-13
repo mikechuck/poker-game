@@ -3,11 +3,11 @@ extends Node
 @onready var get_tokens_http_request = $GetTokens
 @onready var refresh_tokens_http_request = $RefreshToken
 
-const CLIENT_ID = "2m5tvbn5p6po69bi8blouda9sc"
+const CLIENT_ID = "5n2f71j6to2di5j162nnb3rnvp"
 const REDIRECT_URI_HOSTED = "https://poker.mikechucktingle.net/"
 const REDIRECT_URI_LOCAL = "http://localhost:5173/"
-const LOGIN_URL = "https://login.mikechucktingle.net"
-const TOKEN_URL = "https://login.mikechucktingle.net/oauth2/token"
+const LOGIN_URL = "https://auth.mikechucktingle.net"
+const TOKEN_URL = "https://auth.mikechucktingle.net/oauth2/token"
 var REDIRECT_URI = ""
 @export var API_URL = "https://api.mikechucktingle.net"
 

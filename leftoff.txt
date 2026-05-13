@@ -1,4 +1,5 @@
 leftoff: 
+	- Finalized all terraform infra, now need to test everything
 	- finish create game flow: 
 		- Double check CreateGame function against EC2 startup script
 		- figure out how to add logging to EC2 instance so we have visibility into how it's acting

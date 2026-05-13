@@ -1,63 +1,72 @@
-// No requires! We use the global 'crypto' object
-const JWT_SECRET = "${jwt_secret}";
+const REGION = "${region}";
+const USER_POOL_ID = "${user_pool_id}";
+const APP_CLIENT_ID = "${app_client_id}";
 
-// Helper to convert string to ArrayBuffer
-const enc = new TextEncoder();
+const JWKS_URL = `https://cognito-idp.$${REGION}.amazonaws.com/$${USER_POOL_ID}/.well-known/jwks.json`;
 
-async function verifyJwt(token, secret) {
-    const parts = token.split('.');
-    if (parts.length !== 3) return false;
+let cachedKeys = null;
 
-    const [headerB64, payloadB64, signatureB64] = parts;
-    
-    // Create the signature message
-    const message = enc.encode(headerB64 + "." + payloadB64);
-    
-    // Import the secret key
-    const key = await crypto.subtle.importKey(
-        "raw",
-        enc.encode(secret),
-        { name: "HMAC", hash: "SHA-256" },
+async function getPublicKey(kid) {
+    if (!cachedKeys) {
+        const response = await fetch(JWKS_URL);
+        const jwks = await response.json();
+        cachedKeys = jwks.keys;
+    }
+    return cachedKeys.find(key => key.kid === kid);
+}
+
+// Helper to convert JWK to CryptoKey
+async function importKey(jwk) {
+    return await crypto.subtle.importKey(
+        "jwk",
+        jwk,
+        { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
         false,
         ["verify"]
     );
-
-    // Decode signature from Base64Url
-    const signature = Uint8Array.from(atob(signatureB64.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
-
-    // Verify
-    return await crypto.subtle.verify("HMAC", key, signature, message);
 }
 
 exports.handler = async (event) => {
     const request = event.Records[0].cf.request;
     const headers = request.headers;
 
+    // 1. Get Token from Header or Cookie
     let token = '';
-    // Check Authorization Header
     if (headers.authorization) {
         token = headers.authorization[0].value.replace('Bearer ', '');
-    } 
-    // Check Cookie Header
-    else if (headers.cookie) {
-        const cookies = headers.cookie[0].value.split('; ');
-        const authCookie = cookies.find(c => c.startsWith('poker_token='));
+    } else if (headers.cookie) {
+        const authCookie = headers.cookie[0].value.split('; ').find(c => c.startsWith('poker_token='));
         if (authCookie) token = authCookie.split('=')[1];
     }
 
-    if (!token) {
-        return { status: '401', statusDescription: 'Unauthorized', body: 'Missing Token' };
-    }
+    if (!token) return { status: '401', body: 'Missing Token' };
 
-    const isValid = await verifyJwt(token, JWT_SECRET);
+    try {
+        const [headerB64, payloadB64, signatureB64] = token.split('.');
+        const header = JSON.parse(atob(headerB64));
+        const payload = JSON.parse(atob(payloadB64));
 
-    if (isValid) {
-        return request; // Let the request through to EC2
-    } else {
-        return {
-            status: '401',
-            statusDescription: 'Unauthorized',
-            body: 'Access Denied: Invalid Signature'
-        };
+        // 2. Basic Claims Validation
+        if (payload.iss !== `https://cognito-idp.$${REGION}.amazonaws.com/$${USER_POOL_ID}`) throw new Error('Wrong Issuer');
+        if (payload.exp < Math.floor(Date.now() / 1000)) throw new Error('Token Expired');
+        // If using ID tokens, check 'aud'. If Access tokens, check 'client_id'.
+        if (payload.aud !== APP_CLIENT_ID && payload.client_id !== APP_CLIENT_ID) throw new Error('Wrong Audience');
+
+        // 3. Cryptographic Signature Verification
+        const jwk = await getPublicKey(header.kid);
+        if (!jwk) throw new Error('Key Not Found');
+
+        const cryptoKey = await importKey(jwk);
+        const data = new TextEncoder().encode(headerB64 + "." + payloadB64);
+        const signature = Uint8Array.from(atob(signatureB64.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+
+        const isValid = await crypto.subtle.verify("RSASSA-PKCS1-v1_5", cryptoKey, signature, data);
+
+        if (isValid) return request;
+        throw new Error('Invalid Signature');
+
+    } catch (err) {
+        console.error('Auth Error:', err.message);
+        return { status: '401', body: 'Unauthorized' };
     }
 };

@@ -4,6 +4,7 @@
 *.import
 *.tmp
 *.uid
+*.zip
 
 # Editor specific files
 .vs/
