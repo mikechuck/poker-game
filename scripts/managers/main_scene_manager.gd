@@ -32,7 +32,10 @@ func add_debug_line(text: String) -> void:
 	print(text)
 
 func _on_create_game_button_pressed() -> void:
-	print("Create button pressed")
+	print("Create button pressed, calling API")
+	http_request_manager.create_game(func(data):
+		print("Create game response: %s" % [JSON.stringify(data)])
+	)
 	# Call our orchestration API to request new server startup
 	# On response, set server_url and server_port and connect to the server
 

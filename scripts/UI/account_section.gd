@@ -9,4 +9,4 @@ func display_account_data(data):
 	player_name.text = data["PlayerName"]
 	hands_played.text = data["HandsPlayed"]
 	hands_won.text = data["HandsWon"]
-	player_card_background.modulate = Color.html(data["PlayerCardColor"])
+	player_card_background.modulate = Color.html(data["PlayerColor"])

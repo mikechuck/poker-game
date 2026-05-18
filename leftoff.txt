@@ -1,5 +1,5 @@
 leftoff: 
-	- Finalized all terraform infra, now need to test everything
+	- Added api call for create game call, deploy it and test it. Build it in insomnia so we don't rely on godot implementation to be correct
 	- finish create game flow: 
 		- Double check CreateGame function against EC2 startup script
 		- figure out how to add logging to EC2 instance so we have visibility into how it's acting

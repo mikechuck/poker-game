@@ -8,6 +8,7 @@ const docClient = DynamoDBDocumentClient.from(client);
 
 export const handler = async (event) => {
     const accountId = event.requestContext?.authorizer?.jwt?.claims?.sub;
+    const username = event.requestContext?.authorizer?.jwt?.claims["cognito:username"];
 
     if (!accountId) {
         return {
@@ -32,14 +33,14 @@ export const handler = async (event) => {
 
         // Account not found, create one with initial values
         if (account == null) {
-            console.log("null account, creating record")
             const newAccount = {
                 AccountId: accountId,
-                PlayerName: accountId,
+                PlayerName: username,
                 CreateTimeEpochMilliseconds: Date.now(),
                 ProfilePictureUrl: "",
                 HandsWon: 0,
-                HandsPlayed: 0
+                HandsPlayed: 0,
+                PlayerColor: "#ff8407"
             };
 
             await docClient.send(new PutCommand({

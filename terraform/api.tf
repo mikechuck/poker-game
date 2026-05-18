@@ -158,6 +158,46 @@ resource "aws_iam_policy" "dynamo_poker_access" {
     })
 }
 
+resource "aws_iam_policy" "ssm_poker_server_access" {
+    name        = "poker-ssm-server-access-policy"
+    description = "Allows CreateGame lambda to execute shell scripts on the game server via SSM"
+
+    policy = jsonencode({
+        Version = "2012-10-17"
+        Statement = [
+            {
+                Effect = "Allow"
+                Action = [
+                    "ssm:SendCommand"
+                ]
+                # Lock it down strictly to your game server instance
+                Resource = [
+                    "arn:aws:ec2:*:*:instance/${aws_instance.poker_server.id}"
+                ]
+            },
+            {
+                Effect = "Allow"
+                Action = [
+                    "ssm:SendCommand"
+                ]
+                # Required document helper when sending terminal commands
+                Resource = [
+                    "arn:aws:ssm:*:*:document/AWS-RunShellScript"
+                ]
+            },
+            {
+                Effect = "Allow"
+                Action = [
+                    "ssm:GetCommandInvocation",
+                    "ssm:ListCommandInvocations"
+                ]
+                # Checking statuses and reading outputs requires global resource context
+                Resource = ["*"]
+            }
+        ]
+    })
+}
+
 # Standard CloudWatch logging permissions
 resource "aws_iam_role_policy_attachment" "lambda_integration_logs" {
     role       = aws_iam_role.lambda_integration_role.name
@@ -168,6 +208,12 @@ resource "aws_iam_role_policy_attachment" "lambda_integration_logs" {
 resource "aws_iam_role_policy_attachment" "lambda_integration_dynamo" {
     role       = aws_iam_role.lambda_integration_role.name
     policy_arn = aws_iam_policy.dynamo_poker_access.arn
+}
+
+# Attach the SSM access policy
+resource "aws_iam_role_policy_attachment" "lambda_integration_ssm" {
+    role       = aws_iam_role.lambda_integration_role.name
+    policy_arn = aws_iam_policy.ssm_poker_server_access.arn
 }
 
 # --- Start GetAccount Lambda Function ---
@@ -218,7 +264,7 @@ resource "aws_lambda_function" "create_game" {
     role          = aws_iam_role.lambda_integration_role.arn
     handler       = "index.handler"
     runtime       = "nodejs22.x" # Node 22 is the standard current LTS
-    timeout       = 3
+    timeout       = 10
     memory_size   = 128
 
     source_code_hash = data.archive_file.create_game_zip.output_base64sha256
@@ -226,6 +272,7 @@ resource "aws_lambda_function" "create_game" {
     environment {
         variables = {
             GAMES_TABLE = aws_dynamodb_table.games_table.name
+            POKER_SERVER_INSTANCE_ID = aws_instance.poker_server.id
         }
     }
 }

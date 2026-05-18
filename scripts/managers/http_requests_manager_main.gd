@@ -21,6 +21,14 @@ func get_account_data(callback: Callable):
 		callback
 	)
 
+func create_game(callback: Callable):
+	var path = "/game"
+	auth_manager.api_rquest(
+		path,
+		HTTPClient.METHOD_PUT,
+		callback
+	)
+
 func get_presigned_url():
 	var url = "%s/account/picture/url" % auth_manager.API_URL
 	var headers = ["Authorization: Bearer " + auth_manager.get_id_token()]
