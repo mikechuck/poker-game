@@ -39,6 +39,12 @@ resource "aws_dynamodb_table" "games_table" {
     }
 
     tags = { Name = "PokerGames" }
+
+    global_secondary_index {
+        name               = "HostPlayerIdIndex"
+        hash_key           = "HostPlayerId"       # Make the Host the search key here
+        projection_type    = "ALL_PROJECTED"      # Copies all game details into the index view
+    }
 }
 
 resource "aws_dynamodb_table" "debts_table" {

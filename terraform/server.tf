@@ -54,7 +54,7 @@ data "template_file" "lambda_source" {
 
 data "archive_file" "lambda_zip" {
     type        = "zip"
-    output_path = "${path.module}/auth_edge.zip"
+    output_path = "${path.module}/exports/lambda/auth_edge.zip"
     source {
         content  = data.template_file.lambda_source.rendered
         filename = "index.js"

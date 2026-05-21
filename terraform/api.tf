@@ -151,7 +151,8 @@ resource "aws_iam_policy" "dynamo_poker_access" {
                 Effect   = "Allow"
                 Resource = [
                     aws_dynamodb_table.accounts_table.arn,
-                    aws_dynamodb_table.debts_table.arn
+                    aws_dynamodb_table.debts_table.arn,
+                    aws_dynamodb_table.games_table.arn
                 ]
             }
         ]
@@ -220,8 +221,8 @@ resource "aws_iam_role_policy_attachment" "lambda_integration_ssm" {
 
 data "archive_file" "get_account_zip" {
     type        = "zip"
-    source_dir  = "${path.module}/../src/functions/account/get_account"
-    output_path = "${path.module}/get_account.zip"
+    source_dir  = "${path.module}/../src/functions/GetAccount"
+    output_path = "${path.module}/exports/lambda/GetAccount.zip"
 }
 
 resource "aws_lambda_function" "get_account" {
@@ -254,8 +255,8 @@ resource "aws_cloudwatch_log_group" "get_account_logs" {
 
 data "archive_file" "create_game_zip" {
     type        = "zip"
-    source_dir  = "${path.module}/../src/functions/game/create_game"
-    output_path = "${path.module}/create_game.zip"
+    source_dir  = "${path.module}/../src/functions/CreateGame"
+    output_path = "${path.module}/exports/lambda/CreateGame.zip"
 }
 
 resource "aws_lambda_function" "create_game" {
