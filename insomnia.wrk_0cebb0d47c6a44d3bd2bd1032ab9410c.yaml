@@ -1,0 +1,96 @@
+type: collection.insomnia.rest/5.0
+schema_version: "5.1"
+name: Poker API
+meta:
+  id: wrk_0cebb0d47c6a44d3bd2bd1032ab9410c
+  created: 1775655718426
+  modified: 1775740999473
+  description: ""
+collection:
+  - name: API Gateway Requests
+    meta:
+      id: fld_dd8a91e4ffa84009b9f6a336a63bc64e
+      created: 1775740968960
+      modified: 1775741390315
+      sortKey: -1775740968960
+      description: ""
+    children:
+      - name: Game
+        meta:
+          id: fld_87f89f88c0684cc48ea68870a52576da
+          created: 1779371380276
+          modified: 1779371380276
+          sortKey: -1779371380276
+          description: ""
+        children:
+          - url: https://api.mikechucktingle.net/dev/account
+            name: CreateGame
+            meta:
+              id: req_53e71840a8c342a08ecae4fc9259da12
+              created: 1775741103958
+              modified: 1779371391979
+              isPrivate: false
+              description: ""
+              sortKey: -1779371391967
+            method: POST
+            headers:
+              - name: User-Agent
+                value: insomnia/12.5.0
+                description: ""
+                disabled: false
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+      - name: Account
+        meta:
+          id: fld_ea3471abd2b34ea78c9cce2f54059fb3
+          created: 1779371386564
+          modified: 1779371386564
+          sortKey: -1779371386564
+          description: ""
+        children:
+          - url: https://api.mikechucktingle.net/dev/account
+            name: GetAccount
+            meta:
+              id: req_291b148b5c67465e869271b12cc8a260
+              created: 1775655718471
+              modified: 1779371404257
+              isPrivate: false
+              description: ""
+              sortKey: -1779371404236
+            method: GET
+            headers:
+              - name: User-Agent
+                value: insomnia/12.5.0
+                description: ""
+                disabled: false
+            settings:
+              renderRequestBody: true
+              encodeUrl: true
+              followRedirects: global
+              cookies:
+                send: true
+                store: true
+              rebuildPath: true
+    authentication:
+      type: bearer
+      token: eyJraWQiOiJRemtIZmNXXC9HOTQxZ1FKckgwbktMejk5d2lDREFtVkpcL1JLcG1kc1E3TG89IiwiYWxnIjoiUlMyNTYifQ.eyJhdF9oYXNoIjoidEZsSExieVpiejAxUUJQLWpNN1pWdyIsInN1YiI6IjI0NzhiNGU4LTAwNTEtNzBmYi0wZTc1LWUzZjlkOTMxMTQ3NiIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJpc3MiOiJodHRwczpcL1wvY29nbml0by1pZHAudXMtZWFzdC0xLmFtYXpvbmF3cy5jb21cL3VzLWVhc3QtMV83SVNwZmRoR1UiLCJjb2duaXRvOnVzZXJuYW1lIjoibWlrZWNodWNrIiwib3JpZ2luX2p0aSI6ImUxMWIwMzYzLTAwY2ItNDRhNS1hODkzLWM5ZGE4NzA0NDgxNiIsImF1ZCI6IjJtNXR2Ym41cDZwbzY5Ymk4YmxvdWRhOXNjIiwiZXZlbnRfaWQiOiIyZDRjMGZkMi0xMzBkLTQwYzQtODJmMC03OWM2Y2UyY2QzOTciLCJ0b2tlbl91c2UiOiJpZCIsImF1dGhfdGltZSI6MTc3NTc0MTM2NiwiZXhwIjoxNzc1NzQ0OTY2LCJpYXQiOjE3NzU3NDEzNjYsImp0aSI6ImUwYzE3N2Y4LTdlZTQtNDY2NS04MWQ2LTdkYjgzMTNkODZhZSIsImVtYWlsIjoibWNqb3k0NjVAZ21haWwuY29tIn0.iVnqKuy2XEQQ3O5fFwIS4ivUeHrXhuaTj3nu7cPHAZrRG7JSTraeOIEeTKRMXWiS1IzS5VsuYuJC41wnC9i9Isqm0RxWY6r8d58--P9NEm5szVZVIdyyykDxYvwhKhTch7DFLyMzleAUHhVB7JYYphFcS5o1JCNeuP5rfMFXA7u0U-u5p_KSOxfUHf9Z3s5nE4VajFTxofYe8jnmT-arXEmlYdoiLoJwsfUGgmttngTde75xYE5Exn0OQmUZSsEuKu8QuBeAYcfWz7B7w5_aq1m-ZANn8SKM_8t_inZVBIdSTnSq4Lzqv9VO0OEDhieXJ7BZwJnE4X2gdg2Ik2_sMA
+      prefix: Bearer
+cookieJar:
+  name: Default Jar
+  meta:
+    id: jar_d1f6bd32231d08cd0a56634ded2ae3fd23b096b6
+    created: 1775655718428
+    modified: 1775655718428
+environments:
+  name: Base Environment
+  meta:
+    id: env_d1f6bd32231d08cd0a56634ded2ae3fd23b096b6
+    created: 1775655718427
+    modified: 1775655718427
+    isPrivate: false
