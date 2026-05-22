@@ -20,10 +20,10 @@ cd /home/ec2-user
 
 # Nginx setup
 if [ -f "poker.conf" ]; then
-sudo cp poker.conf /etc/nginx/conf.d/poker.conf
-sudo nginx -t
-sudo systemctl enable nginx
-sudo systemctl start nginx
+    sudo cp poker.conf /etc/nginx/conf.d/poker.conf
+    sudo nginx -t
+    sudo systemctl enable nginx
+    sudo systemctl start nginx
 fi
 chmod +x ./poker_server.x86_64
 
@@ -35,8 +35,12 @@ chmod +x ./poker_server.x86_64
 #  - report back to the launcher process (lambda function) what that new port is so it can save it and tell the user
 cat << 'EOF' > /home/ec2-user/start_game_session.sh
 #!/bin/bash
+
+exec 3>&1
+
 LOG_DIR="/home/ec2-user/logs"
 mkdir -p "$LOG_DIR"
+
 # Redirect stdout and stderr to the orchestrator log file, keeping a local copy for SSM to read from
 exec > >(tee -a "$LOG_DIR/orchestrator.log") 2>&1
 echo "[$(date +'%Y-%m-%dT%H:%M:%S')] Starting new game session request..."
@@ -59,14 +63,19 @@ sudo -u ec2-user $SERVER_BIN --server --headless --port=$PORT "$@" > "$LOG_DIR/p
 PID=$!
 echo "[$(date +'%Y-%m-%dT%H:%M:%S')] Game server process started with PID: $PID"
 
-echo $PORT >&3
-EOF
+# Disown the process so it detaches from this shell execution thread
+disown $PID
 
-#Adjusting the script to preserve a file descriptor path for the clean port callback before saving the file.
-sed -i 's/>\&3/>\&1/g' /home/ec2-user/start_game_session.sh
-# Wrap the script contents inside a descriptor block so 'echo $PORT' handles clean returns
-sed -i '1s/^/exec 3>\&1\n/' /home/ec2-user/start_game_session.sh
+# Cleanly log the port number so SSM repsonse can pick it up
+echo $PORT >&3
+
+# Clear file descriptors explicitly so the shell knows it can close cleanly
+exec 3>&-
+EOF
 
 # Finalize file permissions
 chmod +x /home/ec2-user/start_game_session.sh
-chown -R ec2-user:ec2-user /home/ec2-user/logs
+if [ -f "/home/ec2-user/poker_server.x86_64" ]; then
+    chmod +x /home/ec2-user/poker_server.x86_64
+fi
+chown -R ec2-user:ec2-user /home/ec2-user/

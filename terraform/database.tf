@@ -38,12 +38,18 @@ resource "aws_dynamodb_table" "games_table" {
         type = "S"
     }
 
+    attribute {
+        name = "EndTimeEpochMilliseconds"
+        type = "N" 
+    }
+
     tags = { Name = "PokerGames" }
 
     global_secondary_index {
         name               = "HostPlayerIdIndex"
         hash_key           = "HostPlayerId"       # Make the Host the search key here
-        projection_type    = "ALL_PROJECTED"      # Copies all game details into the index view
+        projection_type    = "ALL"      # Copies all game details into the index view
+        range_key          = "EndTimeEpochMilliseconds"
     }
 }
 

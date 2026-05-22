@@ -1,6 +1,5 @@
 leftoff: 
-	- Finish adding global secondary index for Games table, update query commands and test.
-	- then make sure 200 vs 201 flows work, and delete records then try the SSM functionality
+	- CreateGame flow works, but need to change to "CreateGame" and "CheckGameCreation" split flow so we don't have to keep the api call open while the server spins up
 	- finish create game flow: 
 		- Double check CreateGame function against EC2 startup script
 		- figure out how to add logging to EC2 instance so we have visibility into how it's acting

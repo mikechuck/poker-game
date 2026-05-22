@@ -21,6 +21,50 @@ resource "aws_iam_role_policy_attachment" "cw_agent_policy" {
     policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
 }
 
+resource "aws_iam_role_policy" "ec2_ssm_parameter_access" {
+  name = "poker-ec2-ssm-parameter-policy"
+  role = aws_iam_role.ec2_logs_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ssm:GetParameter",
+          "ssm:GetParameters"
+        ]
+        # Restrict access precisely to your cloudwatch config parameter resource
+        Resource = [
+          aws_ssm_parameter.cw_agent_config.arn
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "ec2_s3_bucket_access" {
+  name = "poker-ec2-s3-bucket-policy"
+  role = aws_iam_role.ec2_logs_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:ListBucket"
+        ]
+        Resource = [
+          "arn:aws:s3:::chuckycodes-games",
+          "arn:aws:s3:::chuckycodes-games/*"
+        ]
+      }
+    ]
+  })
+}
+
 # --- Start Lambda Edge Config ---
 
 resource "aws_iam_role" "lambda_edge_role" {
@@ -89,6 +133,8 @@ resource "aws_instance" "poker_server" {
     iam_instance_profile   = aws_iam_instance_profile.ec2_profile.name
     vpc_security_group_ids = [aws_security_group.poker_sg.id]
     user_data              = local.user_data
+    user_data_replace_on_change = true
+
     tags = {
         Name = "PokerGameServer"
     }

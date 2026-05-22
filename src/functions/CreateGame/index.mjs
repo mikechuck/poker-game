@@ -1,6 +1,7 @@
 import { SSMClient, SendCommandCommand, GetCommandInvocationCommand } from "@aws-sdk/client-ssm";
 import { DynamoDBDocumentClient, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import crypto from "crypto";
 
 const ssm = new SSMClient();
 const client = new DynamoDBClient({});
@@ -20,12 +21,18 @@ Create:
 
 export const handler = async (event) => {
     // Game params -  figure out what we want for these
+    if (!event.body) {
+        return {
+            statusCode: 400,
+            body: JSON.stringify({ message: "Missing request body" })
+        }; 
+    }
+
     const body = JSON.parse(event.body)
     const blindValue = body.blind || 10
     const accountId = event.requestContext?.authorizer?.jwt?.claims?.sub;
 
-    if (!accountId)
-    {
+    if (!accountId) {
         return {
             statusCode: 401,
             body: JSON.stringify({ message: "Unauthorized" })
@@ -39,11 +46,14 @@ export const handler = async (event) => {
         };
     }
 
+    // Get all active games for this player
     const params = {
         TableName: GAMES_TABLE,
-        KeyConditionExpression: "HostPlayerId = :accId",
+        IndexName: "HostPlayerIdIndex",
+        KeyConditionExpression: "HostPlayerId = :accId AND EndTimeEpochMilliseconds > :targetTime",
         ExpressionAttributeValues: {
-            ":accId": accountId
+            ":accId": accountId,
+            ":targetTime": Date.now()
         }
     };
 
@@ -53,58 +63,80 @@ export const handler = async (event) => {
         const response = await docClient.send(command);
         let game = response?.Items?.[0] ?? null;
 
-        if (game)
-        {  
+        if (game) {  
             return {
                 statusCode: 200,
                 body: JSON.stringify(game)
             }
-        } else {
-            const newGame = {
-                GameId: "78372894728394",
-                HostPlayerId: accountId,
-                CreateTimeEpochMilliseconds: Date.now(),
-                Port: 12001,
-                EndTimeEpochMilliseconds: Date.now() + 3600000 // 1 hour from now
-            };
+        }
 
-            await docClient.send(new PutCommand({
-                TableName: GAMES_TABLE,
-                Item: newGame
+        console.log("Sending SSM command...");
+
+        // Send the command to run our helper script
+        const sendRes = await ssm.send(new SendCommandCommand({
+            InstanceIds: [INSTANCE_ID],
+            DocumentName: "AWS-RunShellScript",
+            Parameters: {
+                'commands': [`/home/ec2-user/start_game_session.sh --blind=${blindValue}`]
+            }
+        }));
+    
+        const commandId = sendRes.Command.CommandId;
+
+        let output;
+        let attempts = 0;
+        const maxAttempts = 25;
+
+        while (attempts < maxAttempts) {
+            // Wait exactly 1 second between updates
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            attempts++;
+
+            console.log(`Polling SSM Command status (Attempt ${attempts}/${maxAttempts})...`);
+
+            output = await ssm.send(new GetCommandInvocationCommand({
+                CommandId: commandId,
+                InstanceId: INSTANCE_ID
             }));
 
-            return {
-                statusCode: 201,
-                body: JSON.stringify(newGame)
+            // If the code loop sees a status transition away from In Progress / Pending, break out immediately!
+            if (output.Status !== "InProgress" && output.Status !== "Pending") {
+                console.log(`SSM Command completed with status: ${output.Status}`);
+                break;
             }
         }
 
-        // Send the command to run our helper script
-        // const sendRes = await ssm.send(new SendCommandCommand({
-        //     InstanceIds: [INSTANCE_ID],
-        //     DocumentName: "AWS-RunShellScript",
-        //     Parameters: {
-        //         'commands': [`/home/ec2-user/start_game_session.sh --blind=${blindValue}`]
-        //     }
-        // }));
-    
-        // const commandId = sendRes.Command.CommandId;
-    
-        // // Wait a moment for the script to finish and return the output
-        // // In a real app, you might loop/poll this for 2-3 seconds
-        // await new Promise(resolve => setTimeout(resolve, 2500));
-    
-        // const output = await ssm.send(new GetCommandInvocationCommand({
-        //     CommandId: commandId,
-        //     InstanceId: INSTANCE_ID
-        // }));
-    
-        // const assignedPort = output.StandardOutputContent.trim();
-        
-        // return {
-        //     statusCode: 200,
-        //     body: JSON.stringify({ port: assignedPort })
-        // };
+        console.log("Final SSM command output metadata:", output);
+
+        if (output.ResponseCode !== 0) {
+            console.error("Error creating game instance or command timed out. Exit Status:", output.Status);
+            console.error("Standard Error Payload:", output.StandardErrorContent);
+            return {
+                statusCode: 500,
+                body: JSON.stringify({ message: "Internal server error starting instance" })
+            };
+        }
+
+        const assignedPort = output.StandardOutputContent.trim();
+
+        const newGame = {
+            GameId: crypto.randomUUID(),
+            HostPlayerId: accountId,
+            CreateTimeEpochMilliseconds: Date.now(),
+            Port: assignedPort,
+            EndTimeEpochMilliseconds: Date.now() + 30000, // 30s from now
+            Blind: blindValue
+        };
+
+        await docClient.send(new PutCommand({
+            TableName: GAMES_TABLE,
+            Item: newGame
+        }));
+
+        return {
+            statusCode: 201,
+            body: JSON.stringify(newGame)
+        }
     } catch (error) {
         console.error("SSM Execution Error:", error);
         return {

@@ -6,7 +6,7 @@ resource "aws_apigatewayv2_api" "poker_api" {
     cors_configuration {
         allow_credentials = true
         allow_headers     = ["authorization", "content-type"]
-        allow_methods     = ["GET", "POST", "OPTIONS"]
+        allow_methods     = ["GET", "POST", "OPTIONS", "PUT", "DELETE"]
         allow_origins     = ["https://poker.mikechucktingle.net", "http://localhost:5173"]
         max_age           = 0
     }
@@ -152,7 +152,8 @@ resource "aws_iam_policy" "dynamo_poker_access" {
                 Resource = [
                     aws_dynamodb_table.accounts_table.arn,
                     aws_dynamodb_table.debts_table.arn,
-                    aws_dynamodb_table.games_table.arn
+                    aws_dynamodb_table.games_table.arn,
+                    "${aws_dynamodb_table.games_table.arn}/index/*"
                 ]
             }
         ]
@@ -231,7 +232,7 @@ resource "aws_lambda_function" "get_account" {
     role          = aws_iam_role.lambda_integration_role.arn
     handler       = "index.handler"
     runtime       = "nodejs22.x" # Node 22 is the standard current LTS
-    timeout       = 3
+    timeout       = 10
     memory_size   = 128
 
     source_code_hash = data.archive_file.get_account_zip.output_base64sha256
@@ -265,8 +266,8 @@ resource "aws_lambda_function" "create_game" {
     role          = aws_iam_role.lambda_integration_role.arn
     handler       = "index.handler"
     runtime       = "nodejs22.x" # Node 22 is the standard current LTS
-    timeout       = 10
-    memory_size   = 128
+    timeout       = 30
+    memory_size   = 512
 
     source_code_hash = data.archive_file.create_game_zip.output_base64sha256
 
