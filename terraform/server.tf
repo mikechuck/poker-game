@@ -65,6 +65,26 @@ resource "aws_iam_role_policy" "ec2_s3_bucket_access" {
   })
 }
 
+resource "aws_iam_role_policy" "ec2_dynamo_update_access" {
+    name = "poker-ec2-dynamo-update-policy"
+    role = aws_iam_role.ec2_logs_role.id
+
+    policy = jsonencode({
+        Version = "2012-10-17"
+        Statement = [
+            {
+                Effect = "Allow"
+                Action = [
+                    "dynamodb:UpdateItem"
+                ]
+                Resource = [
+                    aws_dynamodb_table.games_table.arn 
+                ]
+            }
+        ]
+    })
+}
+
 # --- Start Lambda Edge Config ---
 
 resource "aws_iam_role" "lambda_edge_role" {
@@ -124,6 +144,7 @@ locals {
         bucketName        = "chuckycodes-games"
         s3Prefix          = "poker-game/server/linux"
         cwAgentConfigName = aws_ssm_parameter.cw_agent_config.name
+        gamesTableName    = aws_dynamodb_table.games_table.name
     })
 }
 
@@ -154,7 +175,7 @@ resource "aws_security_group" "poker_sg" {
         from_port   = 8000
         to_port     = 8000
         protocol    = "tcp"
-        cidr_blocks = ["0.0.0.0/0"]
+        security_groups = [aws_security_group.alb_sg.id]
     }
 
     egress {

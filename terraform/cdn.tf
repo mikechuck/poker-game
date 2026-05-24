@@ -32,7 +32,7 @@ resource "aws_cloudfront_response_headers_policy" "godot_response" {
             override = true
         }
         content_security_policy {
-            content_security_policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' blob:; media-src 'self' blob:; font-src 'self' data:; worker-src 'self' blob:; connect-src 'self' *.mikechucktingle.net mikechucktingle.net; object-src 'none'; frame-ancestors 'self';"
+            content_security_policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' blob:; media-src 'self' blob:; font-src 'self' data:; worker-src 'self' blob:; connect-src 'self' *.mikechucktingle.net mikechucktingle.net wss://server.mikechucktingle.net; object-src 'none'; frame-ancestors 'self';"
             override                = true
         }
     }

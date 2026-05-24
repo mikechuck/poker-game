@@ -10,17 +10,7 @@ const docClient = DynamoDBDocumentClient.from(client);
 const INSTANCE_ID = process.env.POKER_SERVER_INSTANCE_ID;
 const GAMES_TABLE = process.env.GAMES_TABLE;
 
-/*
-Validate:
-    - check to see if user has game record active, if so return connection info for it
-    - if not, continue
-Create:
-    - call SSM to start server
-    - when getting port back from log, create record for host_account_id, 
-*/
-
 export const handler = async (event) => {
-    // Game params -  figure out what we want for these
     if (!event.body) {
         return {
             statusCode: 400,
@@ -58,7 +48,6 @@ export const handler = async (event) => {
     };
 
     try {
-
         const command = new QueryCommand(params);
         const response = await docClient.send(command);
         let game = response?.Items?.[0] ?? null;
@@ -70,61 +59,13 @@ export const handler = async (event) => {
             }
         }
 
-        console.log("Sending SSM command...");
-
-        // Send the command to run our helper script
-        const sendRes = await ssm.send(new SendCommandCommand({
-            InstanceIds: [INSTANCE_ID],
-            DocumentName: "AWS-RunShellScript",
-            Parameters: {
-                'commands': [`/home/ec2-user/start_game_session.sh --blind=${blindValue}`]
-            }
-        }));
-    
-        const commandId = sendRes.Command.CommandId;
-
-        let output;
-        let attempts = 0;
-        const maxAttempts = 25;
-
-        while (attempts < maxAttempts) {
-            // Wait exactly 1 second between updates
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            attempts++;
-
-            console.log(`Polling SSM Command status (Attempt ${attempts}/${maxAttempts})...`);
-
-            output = await ssm.send(new GetCommandInvocationCommand({
-                CommandId: commandId,
-                InstanceId: INSTANCE_ID
-            }));
-
-            // If the code loop sees a status transition away from In Progress / Pending, break out immediately!
-            if (output.Status !== "InProgress" && output.Status !== "Pending") {
-                console.log(`SSM Command completed with status: ${output.Status}`);
-                break;
-            }
-        }
-
-        console.log("Final SSM command output metadata:", output);
-
-        if (output.ResponseCode !== 0) {
-            console.error("Error creating game instance or command timed out. Exit Status:", output.Status);
-            console.error("Standard Error Payload:", output.StandardErrorContent);
-            return {
-                statusCode: 500,
-                body: JSON.stringify({ message: "Internal server error starting instance" })
-            };
-        }
-
-        const assignedPort = output.StandardOutputContent.trim();
-
         const newGame = {
             GameId: crypto.randomUUID(),
             HostPlayerId: accountId,
             CreateTimeEpochMilliseconds: Date.now(),
-            Port: assignedPort,
-            EndTimeEpochMilliseconds: Date.now() + 30000, // 30s from now
+            Port: 0,
+            GameStatus: "STARTING",
+            EndTimeEpochMilliseconds: Date.now() + 3600000, // 1 hour limit for game
             Blind: blindValue
         };
 
@@ -133,10 +74,23 @@ export const handler = async (event) => {
             Item: newGame
         }));
 
+        // Send the command to run our start game script
+        const sendRes = await ssm.send(new SendCommandCommand({
+            InstanceIds: [INSTANCE_ID],
+            DocumentName: "AWS-RunShellScript",
+            Parameters: {
+                'commands': [`sudo -i -u ec2-user /home/ec2-user/start_game_session.sh "${GAMES_TABLE}" "${newGame.GameId}" "${accountId}" "${blindValue}"`]
+            }
+        }));
+
         return {
-            statusCode: 201,
-            body: JSON.stringify(newGame)
-        }
+            statusCode: 202,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ 
+                message: "Game server configuration initialization started", 
+                gameId: newGame.GameId
+            })
+        };
     } catch (error) {
         console.error("SSM Execution Error:", error);
         return {

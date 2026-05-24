@@ -66,7 +66,7 @@ func api_request(path: String, method: int, callback: Callable, body: String = "
 			return
 		
 		var json_data = JSON.parse_string(response_body.get_string_from_utf8())
-		callback.call(json_data)
+		callback.call(response_code, json_data)
 		http.queue_free()
 	)
 	

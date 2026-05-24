@@ -1,5 +1,6 @@
 leftoff: 
-	- CreateGame flow works, but need to change to "CreateGame" and "CheckGameCreation" split flow so we don't have to keep the api call open while the server spins up
+	- CreateGame flow works, but need to change to "CreateGame" and "CheckGameStatus" split flow so we don't have to keep the api call open while the server spins up
+	- Add reading blind value from server exe startup inside godot code, added the same way as port value
 	- finish create game flow: 
 		- Double check CreateGame function against EC2 startup script
 		- figure out how to add logging to EC2 instance so we have visibility into how it's acting

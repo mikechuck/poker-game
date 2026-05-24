@@ -48,6 +48,10 @@ echo "[$(date +'%Y-%m-%dT%H:%M:%S')] Starting new game session request..."
 MIN_PORT=12000
 MAX_PORT=13000
 SERVER_BIN="/home/ec2-user/poker_server.x86_64"
+GAMES_TABLE_NAME="$1"
+TARGET_GAME_ID="$2"
+HOST_PLAYER_ID="$3"
+BLIND_VALUE="$4"
 
 # Find a free port for the new game instance
 while :; do
@@ -57,8 +61,8 @@ done
 
 echo "[$(date +'%Y-%m-%dT%H:%M:%S')] Found free port: $PORT"
 
-echo "[$(date +'%Y-%m-%dT%H:%M:%S')] Spinning up Godot binary on port $PORT with arguments: $@"
-sudo -u ec2-user $SERVER_BIN --server --headless --port=$PORT "$@" > "$LOG_DIR/poker_$PORT.log" 2>&1 &
+echo "[$(date +'%Y-%m-%dT%H:%M:%S')] Spinning up Godot binary on port $PORT "
+sudo -u ec2-user $SERVER_BIN --server --headless --port=$PORT --blind=$BLIND_VALUE > "$LOG_DIR/poker_$PORT.log" 2>&1 &
 
 PID=$!
 echo "[$(date +'%Y-%m-%dT%H:%M:%S')] Game server process started with PID: $PID"
@@ -66,8 +70,18 @@ echo "[$(date +'%Y-%m-%dT%H:%M:%S')] Game server process started with PID: $PID"
 # Disown the process so it detaches from this shell execution thread
 disown $PID
 
-# Cleanly log the port number so SSM repsonse can pick it up
-echo $PORT >&3
+# Update Dynamo with status so that our check api can return the details back
+echo "[$(date +'%Y-%m-%dT%H:%M:%S')] Updating DynamoDB Game ID $${TARGET_GAME_ID} with Port $${PORT}..."
+
+export AWS_DEFAULT_REGION="us-east-1"
+export HOME="/home/ec2-user"
+
+aws dynamodb update-item \
+    --table-name "$${GAMES_TABLE_NAME}" \
+    --key "{\"GameId\": {\"S\": \"$${TARGET_GAME_ID}\"}, \"HostPlayerId\": {\"S\": \"$${HOST_PLAYER_ID}\"}}" \
+    --update-expression "SET Port = :p, GameStatus = :s" \
+    --expression-attribute-values "{\":p\": {\"S\": \"$${PORT}\"}, \":s\": {\"S\": \"ACTIVE\"}}" \
+    --region us-east-1
 
 # Clear file descriptors explicitly so the shell knows it can close cleanly
 exec 3>&-
