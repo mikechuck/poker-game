@@ -36,6 +36,9 @@ chmod +x ./poker_server.x86_64
 cat << 'EOF' > /home/ec2-user/start_game_session.sh
 #!/bin/bash
 
+echo "[$(date)] Syncing private security components from parameter store..."
+export GAME_SERVER_API_TOKEN=$(aws ssm get-parameter --name "/poker/server/api_token" --with-decryption --query "Parameter.Value" --output text --region us-east-1)
+
 exec 3>&1
 
 LOG_DIR="/home/ec2-user/logs"
@@ -78,8 +81,8 @@ export HOME="/home/ec2-user"
 
 aws dynamodb update-item \
     --table-name "$${GAMES_TABLE_NAME}" \
-    --key "{\"GameId\": {\"S\": \"$${TARGET_GAME_ID}\"}, \"HostPlayerId\": {\"S\": \"$${HOST_PLAYER_ID}\"}}" \
-    --update-expression "SET Port = :p, GameStatus = :s" \
+    --key "{\"gameId\": {\"S\": \"$${TARGET_GAME_ID}\"}, \"hostPlayerId\": {\"S\": \"$${HOST_PLAYER_ID}\"}}" \
+    --update-expression "SET port = :p, gameStatus = :s" \
     --expression-attribute-values "{\":p\": {\"S\": \"$${PORT}\"}, \":s\": {\"S\": \"ACTIVE\"}}" \
     --region us-east-1
 

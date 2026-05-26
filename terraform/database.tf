@@ -5,16 +5,16 @@ resource "aws_dynamodb_table" "accounts_table" {
     billing_mode   = "PAY_PER_REQUEST"
     
     # Use arguments for the main table keys
-    hash_key       = "AccountId"
-    range_key      = "PlayerName"
+    hash_key       = "accountId"
+    range_key      = "playerName"
 
     attribute {
-        name = "AccountId"
+        name = "accountId"
         type = "S"
     }
 
     attribute {
-        name = "PlayerName"
+        name = "playerName"
         type = "S"
     }
 
@@ -25,21 +25,21 @@ resource "aws_dynamodb_table" "games_table" {
     name           = "Games"
     billing_mode   = "PAY_PER_REQUEST"
     
-    hash_key       = "GameId"
-    range_key      = "HostPlayerId"
+    hash_key       = "gameId"
+    range_key      = "hostPlayerId"
 
     attribute {
-        name = "GameId"
+        name = "gameId"
         type = "S"
     }
 
     attribute {
-        name = "HostPlayerId"
+        name = "hostPlayerId"
         type = "S"
     }
 
     attribute {
-        name = "EndTimeEpochMilliseconds"
+        name = "endTimeEpochMilliseconds"
         type = "N" 
     }
 
@@ -47,9 +47,9 @@ resource "aws_dynamodb_table" "games_table" {
 
     global_secondary_index {
         name               = "HostPlayerIdIndex"
-        hash_key           = "HostPlayerId"       # Make the Host the search key here
+        hash_key           = "hostPlayerId"       # Make the Host the search key here
         projection_type    = "ALL"      # Copies all game details into the index view
-        range_key          = "EndTimeEpochMilliseconds"
+        range_key          = "endTimeEpochMilliseconds"
     }
 }
 
@@ -57,16 +57,16 @@ resource "aws_dynamodb_table" "debts_table" {
     name           = "Debts"
     billing_mode   = "PAY_PER_REQUEST"
     
-    hash_key       = "debter_id"
-    range_key      = "creditor_id"
+    hash_key       = "debterId"
+    range_key      = "creditorId"
 
     attribute {
-        name = "debter_id"
+        name = "debterId"
         type = "S"
     }
 
     attribute {
-        name = "creditor_id"
+        name = "creditorId"
         type = "S"
     }
 
@@ -74,8 +74,8 @@ resource "aws_dynamodb_table" "debts_table" {
     # depending on your provider version, but hash_key/range_key is safer here too:
     global_secondary_index {
         name            = "CreditorIndex"
-        hash_key        = "creditor_id"
-        range_key       = "debter_id"
+        hash_key        = "creditorId"
+        range_key       = "debterId"
         projection_type = "ALL"
     }
 

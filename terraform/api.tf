@@ -24,6 +24,17 @@ resource "aws_apigatewayv2_authorizer" "cognito_auth" {
     }
 }
 
+resource "aws_apigatewayv2_authorizer" "server_token_auth" {
+    api_id           = aws_apigatewayv2_api.poker_api.id
+    authorizer_type  = "REQUEST"
+    authorizer_uri   = aws_lambda_function.server_auth_lambda.invoke_arn
+    identity_sources = ["$request.header.x-server-token"] # Expected private auth header
+    name             = "ServerTokenAuthorizer"
+
+    authorizer_payload_format_version = "2.0"
+    enable_simple_responses          = true # Returns a clean true/false output
+}
+
 resource "aws_apigatewayv2_stage" "dev" {
     api_id      = aws_apigatewayv2_api.poker_api.id
     name        = "dev"
@@ -56,94 +67,6 @@ resource "aws_apigatewayv2_api_mapping" "poker_mapping" {
     domain_name = aws_apigatewayv2_domain_name.poker_api_domain.id
     stage       = aws_apigatewayv2_stage.dev.id
 }
-# --- End API Gateway Config ---
-
-# --- Start GetAccount API Gateway Integration ---
-
-# Create the Integration
-resource "aws_apigatewayv2_integration" "get_account_int" {
-    api_id           = aws_apigatewayv2_api.poker_api.id
-    integration_type = "AWS_PROXY"
-    integration_uri  = aws_lambda_function.get_account.invoke_arn
-    payload_format_version = "2.0"
-}
-
-# Update the existing Route to point to this integration
-resource "aws_apigatewayv2_route" "get_account_route" {
-    api_id    = aws_apigatewayv2_api.poker_api.id
-    route_key = "GET /account"
-
-    target             = "integrations/${aws_apigatewayv2_integration.get_account_int.id}"
-    authorization_type = "JWT"
-    authorizer_id      = aws_apigatewayv2_authorizer.cognito_auth.id
-}
-
-# Grant Permission for API Gateway to invoke the Lambda
-resource "aws_lambda_permission" "api_gw_get_account" {
-    statement_id  = "AllowExecutionFromAPIGateway"
-    action        = "lambda:InvokeFunction"
-    function_name = aws_lambda_function.get_account.function_name
-    principal     = "apigateway.amazonaws.com"
-
-    # Standard security: restrict access to your specific API
-    source_arn = "${aws_apigatewayv2_api.poker_api.execution_arn}/*/*/account"
-}
-
-# --- End GetAccount API Gateway Integration ---
-
-# --- Start CreateGame API Gateway Integration ---
-
-resource "aws_apigatewayv2_integration" "create_game_int" {
-    api_id           = aws_apigatewayv2_api.poker_api.id
-    integration_type = "AWS_PROXY"
-    integration_uri  = aws_lambda_function.create_game.invoke_arn
-    payload_format_version = "2.0"
-}
-
-resource "aws_apigatewayv2_route" "create_game_route" {
-    api_id    = aws_apigatewayv2_api.poker_api.id
-    route_key = "PUT /game"
-
-    target             = "integrations/${aws_apigatewayv2_integration.create_game_int.id}"
-    authorization_type = "JWT"
-    authorizer_id      = aws_apigatewayv2_authorizer.cognito_auth.id
-}
-
-resource "aws_lambda_permission" "api_gw_create_game" {
-    statement_id  = "AllowExecutionFromAPIGateway"
-    action        = "lambda:InvokeFunction"
-    function_name = aws_lambda_function.create_game.function_name
-    principal     = "apigateway.amazonaws.com"
-    source_arn    = "${aws_apigatewayv2_api.poker_api.execution_arn}/*/*/game"
-}
-# --- End CreateGame API Gateway Integration ---
-
-# --- Start GetGame API Gateway Integration ---
-
-resource "aws_apigatewayv2_integration" "get_game_int" {
-    api_id           = aws_apigatewayv2_api.poker_api.id
-    integration_type = "AWS_PROXY"
-    integration_uri  = aws_lambda_function.get_game.invoke_arn
-    payload_format_version = "2.0"
-}
-
-resource "aws_apigatewayv2_route" "get_game_route" {
-    api_id    = aws_apigatewayv2_api.poker_api.id
-    route_key = "GET /game"
-
-    target             = "integrations/${aws_apigatewayv2_integration.get_game_int.id}"
-    authorization_type = "JWT"
-    authorizer_id      = aws_apigatewayv2_authorizer.cognito_auth.id
-}
-
-resource "aws_lambda_permission" "api_gw_get_game" {
-    statement_id  = "AllowExecutionFromAPIGateway"
-    action        = "lambda:InvokeFunction"
-    function_name = aws_lambda_function.get_game.function_name
-    principal     = "apigateway.amazonaws.com"
-    source_arn    = "${aws_apigatewayv2_api.poker_api.execution_arn}/*/*/game"
-}
-# --- End CreateGame API Gateway Integration ---
 
 resource "aws_iam_role" "lambda_integration_role" {
     name = "poker-get-account-role"
@@ -227,6 +150,24 @@ resource "aws_iam_policy" "ssm_poker_server_access" {
     })
 }
 
+resource "aws_iam_role" "authorizer_lambda_role" {
+    name = "poker-authorizer-execution-role"
+
+    assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+            Action    = "sts:AssumeRole"
+            Effect    = "Allow"
+            Principal = { Service = "lambda.amazonaws.com" }
+        }]
+    })
+}
+
+resource "aws_iam_role_policy_attachment" "authorizer_basic_logs" {
+  role       = aws_iam_role.authorizer_lambda_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
 # Standard CloudWatch logging permissions
 resource "aws_iam_role_policy_attachment" "lambda_integration_logs" {
     role       = aws_iam_role.lambda_integration_role.name
@@ -244,6 +185,161 @@ resource "aws_iam_role_policy_attachment" "lambda_integration_ssm" {
     role       = aws_iam_role.lambda_integration_role.name
     policy_arn = aws_iam_policy.ssm_poker_server_access.arn
 }
+
+# --- End API Gateway Config ---
+
+# --- Start GetAccount API Gateway Integration ---
+
+# Create the Integration
+resource "aws_apigatewayv2_integration" "get_account_int" {
+    api_id           = aws_apigatewayv2_api.poker_api.id
+    integration_type = "AWS_PROXY"
+    integration_uri  = aws_lambda_function.get_account.invoke_arn
+    payload_format_version = "2.0"
+}
+
+# Update the existing Route to point to this integration
+resource "aws_apigatewayv2_route" "get_account_route" {
+    api_id    = aws_apigatewayv2_api.poker_api.id
+    route_key = "GET /account"
+
+    target             = "integrations/${aws_apigatewayv2_integration.get_account_int.id}"
+    authorization_type = "JWT"
+    authorizer_id      = aws_apigatewayv2_authorizer.cognito_auth.id
+}
+
+# Grant Permission for API Gateway to invoke the Lambda
+resource "aws_lambda_permission" "api_gw_get_account" {
+    statement_id  = "AllowExecutionFromAPIGateway"
+    action        = "lambda:InvokeFunction"
+    function_name = aws_lambda_function.get_account.function_name
+    principal     = "apigateway.amazonaws.com"
+
+    # Standard security: restrict access to your specific API
+    source_arn = "${aws_apigatewayv2_api.poker_api.execution_arn}/*/*/account"
+}
+
+# --- End GetAccount API Gateway Integration ---
+
+# --- Start CreateGame API Gateway Integration ---
+
+resource "aws_apigatewayv2_integration" "create_game_int" {
+    api_id           = aws_apigatewayv2_api.poker_api.id
+    integration_type = "AWS_PROXY"
+    integration_uri  = aws_lambda_function.create_game.invoke_arn
+    payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "create_game_route" {
+    api_id    = aws_apigatewayv2_api.poker_api.id
+    route_key = "PUT /game"
+
+    target             = "integrations/${aws_apigatewayv2_integration.create_game_int.id}"
+    authorization_type = "JWT"
+    authorizer_id      = aws_apigatewayv2_authorizer.cognito_auth.id
+}
+
+resource "aws_lambda_permission" "api_gw_create_game" {
+    statement_id  = "AllowExecutionFromAPIGateway"
+    action        = "lambda:InvokeFunction"
+    function_name = aws_lambda_function.create_game.function_name
+    principal     = "apigateway.amazonaws.com"
+    source_arn    = "${aws_apigatewayv2_api.poker_api.execution_arn}/*/*/game"
+}
+
+# --- End CreateGame API Gateway Integration ---
+
+# --- Start GetGame API Gateway Integration ---
+
+resource "aws_apigatewayv2_integration" "get_game_int" {
+    api_id           = aws_apigatewayv2_api.poker_api.id
+    integration_type = "AWS_PROXY"
+    integration_uri  = aws_lambda_function.get_game.invoke_arn
+    payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "get_game_route" {
+    api_id    = aws_apigatewayv2_api.poker_api.id
+    route_key = "GET /game"
+
+    target             = "integrations/${aws_apigatewayv2_integration.get_game_int.id}"
+    authorization_type = "JWT"
+    authorizer_id      = aws_apigatewayv2_authorizer.cognito_auth.id
+}
+
+resource "aws_lambda_permission" "api_gw_get_game" {
+    statement_id  = "AllowExecutionFromAPIGateway"
+    action        = "lambda:InvokeFunction"
+    function_name = aws_lambda_function.get_game.function_name
+    principal     = "apigateway.amazonaws.com"
+    source_arn    = "${aws_apigatewayv2_api.poker_api.execution_arn}/*/*/game"
+}
+
+# --- End CreateGame API Gateway Integration ---
+
+# --- Start UpdateGame API Gateway Integration ---
+
+resource "aws_apigatewayv2_integration" "update_game_int" {
+    api_id           = aws_apigatewayv2_api.poker_api.id
+    integration_type = "AWS_PROXY"
+    integration_uri  = aws_lambda_function.update_game.invoke_arn
+    payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "update_game_route" {
+    api_id    = aws_apigatewayv2_api.poker_api.id
+    route_key = "POST /game/{gameId}"
+    target    = "integrations/${aws_apigatewayv2_integration.update_game_int.id}"
+    authorization_type = "CUSTOM"
+    authorizer_id      = aws_apigatewayv2_authorizer.server_token_auth.id # Currently only the server can hit this endpoint
+}
+
+resource "aws_lambda_permission" "api_gw_update_game" {
+    statement_id  = "AllowExecutionFromAPIGateway"
+    action        = "lambda:InvokeFunction"
+    function_name = aws_lambda_function.update_game.function_name
+    principal     = "apigateway.amazonaws.com"
+    source_arn    = "${aws_apigatewayv2_api.poker_api.execution_arn}/*/*/game/*"
+}
+
+# --- End UpdateGame API Gateway Integration ---
+
+# --- Start Private Authorizor Lambda Function ---
+
+data "archive_file" "server_auth_zip" {
+    type        = "zip"
+    source_dir  = "${path.module}/../src/functions/ServerAuthorizor"
+    output_path = "${path.module}/exports/lambda/PrivateAuthorizor.zip"
+}
+
+resource "aws_lambda_function" "server_auth_lambda" {
+    function_name = "ServerAuthorizer"
+    filename      = data.archive_file.server_auth_zip.output_path
+    role          = aws_iam_role.authorizer_lambda_role.arn
+    handler       = "index.handler"
+    runtime       = "nodejs22.x"
+    timeout       = 5
+    memory_size   = 128
+
+    source_code_hash = data.archive_file.server_auth_zip.output_base64sha256
+
+    environment {
+        variables = {
+            SERVER_SECRET_TOKEN = random_password.server_api_token.result
+        }
+    }
+}
+
+# Didn't need to do this for the cognito authorizor because it's a built-in resource
+resource "aws_lambda_permission" "api_gw_to_auth_lambda" {
+    statement_id  = "AllowAuthorizerExecutionFromAPIGateway"
+    action        = "lambda:InvokeFunction"
+    function_name = aws_lambda_function.server_auth_lambda.function_name
+    principal     = "apigateway.amazonaws.com"
+    source_arn    = "${aws_apigatewayv2_api.poker_api.execution_arn}/*/*"
+}
+
+# --- End Private Authorizor Lambda Function
 
 # --- Start GetAccount Lambda Function ---
 
@@ -347,3 +443,38 @@ resource "aws_cloudwatch_log_group" "get_game_logs" {
 }
 
 # --- End GetGame Lambda Function ---
+
+# --- Start UpdateGame Lambda Function ---
+
+data "archive_file" "update_game_zip" {
+    type        = "zip"
+    source_dir  = "${path.module}/../src/functions/UpdateGame"
+    output_path = "${path.module}/exports/lambda/UpdateGame.zip"
+}
+
+resource "aws_lambda_function" "update_game" {
+    function_name = "UpdateGame"
+    filename      = data.archive_file.update_game_zip.output_path
+    role          = aws_iam_role.lambda_integration_role.arn
+    handler       = "index.handler"
+    runtime       = "nodejs22.x" # Node 22 is the standard current LTS
+    timeout       = 10
+    memory_size   = 512
+
+    source_code_hash = data.archive_file.update_game_zip.output_base64sha256
+
+    environment {
+        variables = {
+            GAMES_TABLE = aws_dynamodb_table.games_table.name,
+            SERVER_SECRET_TOKEN = random_password.server_api_token.result
+        }
+    }
+}
+
+# Create the log group explicitly to control retention
+resource "aws_cloudwatch_log_group" "update_game_logs" {
+    name              = "/aws/lambda/UpdateGame"
+    retention_in_days = 7
+}
+
+# --- End UpdateGame Lambda Function ---

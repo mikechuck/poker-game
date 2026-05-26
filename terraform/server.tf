@@ -36,7 +36,8 @@ resource "aws_iam_role_policy" "ec2_ssm_parameter_access" {
         ]
         # Restrict access precisely to your cloudwatch config parameter resource
         Resource = [
-          aws_ssm_parameter.cw_agent_config.arn
+          aws_ssm_parameter.cw_agent_config.arn,
+          aws_ssm_parameter.server_api_token.arn
         ]
       }
     ]
