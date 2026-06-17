@@ -6,7 +6,7 @@ extends Control
 @onready var player_card_background = $PlayerCard/DetailsCard
 
 func display_account_data(data):
-	player_name.text = data["PlayerName"]
-	hands_played.text = data["HandsPlayed"]
-	hands_won.text = data["HandsWon"]
-	player_card_background.modulate = Color.html(data["PlayerColor"])
+	player_name.text = data["playerName"]
+	hands_played.text = data["handsPlayed"]
+	hands_won.text = data["handsWon"]
+	player_card_background.modulate = Color.html(data["playerColor"])

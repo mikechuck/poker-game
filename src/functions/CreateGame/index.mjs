@@ -40,7 +40,7 @@ export const handler = async (event) => {
     const params = {
         TableName: GAMES_TABLE,
         IndexName: "HostPlayerIdIndex",
-        KeyConditionExpression: "HostPlayerId = :accId AND EndTimeEpochMilliseconds > :targetTime",
+        KeyConditionExpression: "hostPlayerId = :accId AND endTimeEpochMilliseconds > :targetTime",
         ExpressionAttributeValues: {
             ":accId": accountId,
             ":targetTime": Date.now()
@@ -59,14 +59,23 @@ export const handler = async (event) => {
             }
         }
 
+        // Create game code
+        var gameCode = "";
+        var gameCodeLength = 7;
+        var gameCodeChars = "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+        for (let i = 0; i < gameCodeLength; i++) {
+            gameCode += gameCodeChars[Math.floor(Math.random() * gameCodeChars.length)];
+        }
+
         const newGame = {
-            GameId: crypto.randomUUID(),
-            HostPlayerId: accountId,
-            CreateTimeEpochMilliseconds: Date.now(),
-            Port: 0,
-            GameStatus: "STARTING",
-            EndTimeEpochMilliseconds: Date.now() + 3600000, // 1 hour limit for game
-            Blind: blindValue
+            gameId: gameCode,
+            hostPlayerId: accountId,
+            createTimeEpochMilliseconds: Date.now(),
+            port: 0,
+            gameStatus: "STARTING",
+            endTimeEpochMilliseconds: 0,
+            blind: blindValue
         };
 
         await docClient.send(new PutCommand({
@@ -79,7 +88,11 @@ export const handler = async (event) => {
             InstanceIds: [INSTANCE_ID],
             DocumentName: "AWS-RunShellScript",
             Parameters: {
-                'commands': [`sudo -i -u ec2-user /home/ec2-user/start_game_session.sh "${GAMES_TABLE}" "${newGame.GameId}" "${accountId}" "${blindValue}"`]
+                'commands': [`sudo -u ec2-user /home/ec2-user/start_game_session.sh "${GAMES_TABLE}" "${newGame.gameId}" "${accountId}" "${blindValue}"`]
+            },
+            CloudWatchOutputConfig: {
+                CloudWatchLogGroupName: "/apps/poker-game",
+                CloudWatchOutputEnabled: true
             }
         }));
 
@@ -88,7 +101,7 @@ export const handler = async (event) => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ 
                 message: "Game server configuration initialization started", 
-                gameId: newGame.GameId
+                gameId: newGame.gameId
             })
         };
     } catch (error) {

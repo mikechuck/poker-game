@@ -6,8 +6,9 @@ sudo dnf update -y
 sudo dnf install -y nginx libXcursor libXinerama libXrandr libXi fontconfig nmap-ncat
 sudo yum install -y amazon-cloudwatch-agent
 mkdir -p /home/ec2-user/logs
+sudo usermod -aG ec2-user cwagent
 
-# Start the agent using the config stored in SSM
+# Start the agent using the config stored in SSM (Kept for basic system metrics)
 /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
     -a fetch-config \
     -m ec2 \
@@ -25,28 +26,21 @@ if [ -f "poker.conf" ]; then
     sudo systemctl enable nginx
     sudo systemctl start nginx
 fi
-chmod +x ./poker_server.x86_64
 
-# Create Session Starter
-# Goal of this script: 
-#  - free a port
-#  - launch a new godot server process 
-#  - register that new port as a path (/game/PORT) so that nginx can route requests to it
-#  - report back to the launcher process (lambda function) what that new port is so it can save it and tell the user
+# ==============================================================================
+# Dynamic Session Starter Engine
+# ==============================================================================
 cat << 'EOF' > /home/ec2-user/start_game_session.sh
 #!/bin/bash
 
-echo "[$(date)] Syncing private security components from parameter store..."
-export GAME_SERVER_API_TOKEN=$(aws ssm get-parameter --name "/poker/server/api_token" --with-decryption --query "Parameter.Value" --output text --region us-east-1)
+set -e
 
-exec 3>&1
-
+# Setup a local file log loop just for the orchestration steps
 LOG_DIR="/home/ec2-user/logs"
 mkdir -p "$LOG_DIR"
-
-# Redirect stdout and stderr to the orchestrator log file, keeping a local copy for SSM to read from
 exec > >(tee -a "$LOG_DIR/orchestrator.log") 2>&1
-echo "[$(date +'%Y-%m-%dT%H:%M:%S')] Starting new game session request..."
+
+echo "[Startup] Starting new game session request..."
 
 MIN_PORT=12000
 MAX_PORT=13000
@@ -56,38 +50,61 @@ TARGET_GAME_ID="$2"
 HOST_PLAYER_ID="$3"
 BLIND_VALUE="$4"
 
+# Pull down the latest server build straight from S3
+echo "[Startup] Starting game initialization..."
+aws s3 cp s3://${bucketName}/${s3Prefix}/poker_server.x86_64 "$SERVER_BIN"
+chmod +x "$SERVER_BIN"
+
+# Grab api token so game server instance can talk to our apis
+export GAME_SERVER_API_TOKEN=$(aws ssm get-parameter --name "/poker/server/api_token" --with-decryption --query "Parameter.Value" --output text --region us-east-1)
+export AWS_DEFAULT_REGION="us-east-1"
+export HOME="/home/ec2-user"
+
 # Find a free port for the new game instance
 while :; do
     PORT=$(( (RANDOM % ($MAX_PORT - $MIN_PORT + 1)) + $MIN_PORT))
     (echo >/dev/tcp/localhost/$PORT) >/dev/null 2>&1 || break
 done
 
-echo "[$(date +'%Y-%m-%dT%H:%M:%S')] Found free port: $PORT"
+# Ensure wide open permissions for directory drops
+chmod 777 "$LOG_DIR"
+cd /home/ec2-user
 
-echo "[$(date +'%Y-%m-%dT%H:%M:%S')] Spinning up Godot binary on port $PORT "
-sudo -u ec2-user $SERVER_BIN --server --headless --port=$PORT --blind=$BLIND_VALUE > "$LOG_DIR/poker_$PORT.log" 2>&1 &
+# 🟩 THE DEFINITIVE FIX: Wrap the cat/redirection operator inside a root-level bash string wrapper.
+# This forces the system administrative layer to execute the file creation directly,
+# cleanly bypassing the ec2-user directory write restrictions!
+sudo bash -c "cat << DYNCFG > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.d/poker_$PORT.json
+{
+  \"logs\": {
+    \"logs_collected\": {
+      \"files\": {
+        \"collect_list\": [
+          {
+            \"file_path\": \"/home/ec2-user/logs/poker_$PORT.log\",
+            \"log_group_name\": \"/apps/poker-game\",
+            \"log_stream_name\": \"\{instance_id}-poker_$PORT\"
+          }
+        ]
+      }
+    }
+  }
+}
+DYNCFG"
+
+# 🟩 THE DEFINITIVE FIX 3: Escaped cwAgentConfigName with double dollar signs so it matches your TF environment schema
+sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+    -a fetch-config \
+    -m ec2 \
+    -c ssm:${cwAgentConfigName} \
+    -s
+
+# Execute the server in the background using an isolated subshell string wrapper.
+CMD_STR="nohup $SERVER_BIN --server --headless --gameId=$TARGET_GAME_ID --port=$PORT --blind=$BLIND_VALUE --apiToken=$GAME_SERVER_API_TOKEN > /home/ec2-user/logs/poker_$PORT.log 2>&1 < /dev/null &"
+sudo -u ec2-user bash -c "$CMD_STR"
 
 PID=$!
-echo "[$(date +'%Y-%m-%dT%H:%M:%S')] Game server process started with PID: $PID"
-
-# Disown the process so it detaches from this shell execution thread
-disown $PID
-
-# Update Dynamo with status so that our check api can return the details back
-echo "[$(date +'%Y-%m-%dT%H:%M:%S')] Updating DynamoDB Game ID $${TARGET_GAME_ID} with Port $${PORT}..."
-
-export AWS_DEFAULT_REGION="us-east-1"
-export HOME="/home/ec2-user"
-
-aws dynamodb update-item \
-    --table-name "$${GAMES_TABLE_NAME}" \
-    --key "{\"gameId\": {\"S\": \"$${TARGET_GAME_ID}\"}, \"hostPlayerId\": {\"S\": \"$${HOST_PLAYER_ID}\"}}" \
-    --update-expression "SET port = :p, gameStatus = :s" \
-    --expression-attribute-values "{\":p\": {\"S\": \"$${PORT}\"}, \":s\": {\"S\": \"ACTIVE\"}}" \
-    --region us-east-1
-
-# Clear file descriptors explicitly so the shell knows it can close cleanly
-exec 3>&-
+echo "[Startup] Game server process successfully detached with PID: $PID on port $PORT"
+echo "[Startup] Game initialization complete!"
 EOF
 
 # Finalize file permissions

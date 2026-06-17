@@ -1,5 +1,7 @@
 extends Node2D
 
+@onready var http_request_manager = $HttpRequests
+
 ### Networking fields
 var is_server = false
 
@@ -29,6 +31,7 @@ var game_state_data: GameStateData = GameStateData.new()
 ### Start lifecycle methods
 
 func _ready() -> void:
+	print("[Game] Game scene starting...")
 	server_manager = get_parent().get_node("ServerManager")
 	client_manager = get_parent().get_node("ClientManager")
 	deck_manager = get_parent().get_node("DeckManager")

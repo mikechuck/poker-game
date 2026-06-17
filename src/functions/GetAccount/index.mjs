@@ -19,7 +19,7 @@ export const handler = async (event) => {
 
     const params = {
         TableName: ACCOUNTS_TABLE,
-        KeyConditionExpression: "AccountId = :accId",
+        KeyConditionExpression: "accountId = :accId",
         ExpressionAttributeValues: {
             ":accId": accountId
         }
@@ -34,13 +34,13 @@ export const handler = async (event) => {
         // Account not found, create one with initial values
         if (account == null) {
             const newAccount = {
-                AccountId: accountId,
-                PlayerName: username,
-                CreateTimeEpochMilliseconds: Date.now(),
-                ProfilePictureUrl: "",
-                HandsWon: 0,
-                HandsPlayed: 0,
-                PlayerColor: "#ff8407"
+                accountId: accountId,
+                playerName: username,
+                createTimeEpochMilliseconds: Date.now(),
+                profilePictureUrl: "",
+                handsWon: 0,
+                handsPlayed: 0,
+                playerColor: "#ff8407"
             };
 
             await docClient.send(new PutCommand({

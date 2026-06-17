@@ -25,6 +25,7 @@ const uploadFolderToS3 = async () => {
         const fullLocalPath = path.join(localFolderPath, file.name);
         if (file.isFile()) {
             const s3Key = path.relative(localFolderPath, fullLocalPath);
+            const fullS3Key = path.posix.join(S3_PREFIX, s3Key);
             const fileStream = fs.createReadStream(fullLocalPath);
             const contentType = mime.lookup(fullLocalPath) || 'application/octet-stream';
             console.log("content type:", contentType);
@@ -33,14 +34,14 @@ const uploadFolderToS3 = async () => {
                 client: s3Client,
                 params: {
                     Bucket: BUCKET_NAME,
-                    Key: s3Key,
+                    Key: fullS3Key,
                     Body: fileStream,
                     ContentType: contentType
                 }
             });
 
             await s3ParallelUploads.done()
-            console.log(`Successfully uploaded ${s3Key}`);
+            console.log(`Successfully uploaded ${s3Key} to `);
         }
     }
 

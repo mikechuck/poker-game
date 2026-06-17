@@ -22,26 +22,40 @@ resource "aws_iam_role_policy_attachment" "cw_agent_policy" {
 }
 
 resource "aws_iam_role_policy" "ec2_ssm_parameter_access" {
-  name = "poker-ec2-ssm-parameter-policy"
-  role = aws_iam_role.ec2_logs_role.id
+    name = "poker-ec2-ssm-parameter-policy"
+    role = aws_iam_role.ec2_logs_role.id
 
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "ssm:GetParameter",
-          "ssm:GetParameters"
+    policy = jsonencode({
+        Version = "2012-10-17"
+        Statement = [
+            {
+                Effect = "Allow"
+                Action = [
+                    "ssm:GetParameter",
+                    "ssm:GetParameters"
+                ]
+                # Restrict access precisely to your cloudwatch config parameter resource
+                Resource = [
+                    aws_ssm_parameter.cw_agent_config.arn,
+                    aws_ssm_parameter.server_api_token.arn
+                ]
+            },
+            {
+                Effect = "Allow"
+                Action = [
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents",
+                    "logs:DescribeLogStreams",
+                    "logs:DescribeLogGroups"
+                ]
+                # Restrict permissions directly to your specific node app log group path
+                Resource = [
+                    "*"
+                ]
+            }
         ]
-        # Restrict access precisely to your cloudwatch config parameter resource
-        Resource = [
-          aws_ssm_parameter.cw_agent_config.arn,
-          aws_ssm_parameter.server_api_token.arn
-        ]
-      }
-    ]
-  })
+    })
 }
 
 resource "aws_iam_role_policy" "ec2_s3_bucket_access" {
@@ -212,9 +226,9 @@ resource "aws_ssm_parameter" "cw_agent_config" {
                 files = {
                     collect_list = [
                         {
-                            file_path       = "/home/ec2-user/logs/*.log"
+                            file_path       = "/home/ec2-user/logs/orchestrator.log"
                             log_group_name  = "/apps/poker-game"
-                            log_stream_name = "{instance_id}"
+                            log_stream_name = "{instance_id}-orchestrator"
                         }
                     ]
                 }

@@ -38,9 +38,9 @@ func wait_for_game_creation(game_id: String):
 	http_request_manager.get_game(game_id, func(response_code, data):
 		print("Get game response: %s" % [JSON.stringify(data)])
 		if (response_code == 200):
-			if (data["GameStatus"] == "ACTIVE"):
+			if (data["gameStatus"] == "ACTIVE"):
 				print("Game is active!")
-				connect_to_server(data["Port"])
+				connect_to_server(data["port"])
 			else:
 				await get_tree().create_timer(3.0).timeout
 				wait_for_game_creation(game_id)
@@ -53,7 +53,7 @@ func _on_create_game_button_pressed() -> void:
 	http_request_manager.create_game(func(response_code, data):
 		print("Create game response code: %s, data: %s" % [response_code, JSON.stringify(data)])
 		if (response_code == 202 or response_code == 200):
-			var game_id = data["GameId"]
+			var game_id = data["gameId"]
 			if (game_id):
 				wait_for_game_creation(game_id)
 			else:

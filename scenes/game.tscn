@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://bv78nq7paqs7f"]
+[gd_scene load_steps=14 format=3 uid="uid://bv78nq7paqs7f"]
 
 [ext_resource type="Script" uid="uid://b7pkboiy8lcrw" path="res://scripts/UI/table.gd" id="1_cfscn"]
 [ext_resource type="Script" uid="uid://t8a0fwy0ry0u" path="res://scripts/managers/game_scene_manager.gd" id="1_h2fnp"]
@@ -11,6 +11,8 @@
 [ext_resource type="Texture2D" uid="uid://cdibtxyl8cvkj" path="res://assets/DealerCardSpot.png" id="4_ya4ey"]
 [ext_resource type="PackedScene" uid="uid://dof81yg1jefa" path="res://scenes/UI/player_ui.tscn" id="5_tbgi4"]
 [ext_resource type="Script" uid="uid://cnawrfbgpgpfu" path="res://scripts/managers/deck_manager.gd" id="8_85g3d"]
+[ext_resource type="Script" uid="uid://c2cyo161ww6p8" path="res://scripts/managers/http_requests_manager.gd" id="12_kvuet"]
+[ext_resource type="PackedScene" uid="uid://077b5tafbax5" path="res://scenes/networking/auth_manager.tscn" id="13_trtic"]
 
 [node name="Game" type="Control"]
 layout_mode = 3
@@ -143,3 +145,8 @@ script = ExtResource("8_85g3d")
 
 [node name="GameManager" type="Node2D" parent="."]
 script = ExtResource("1_h2fnp")
+
+[node name="HttpRequests" type="Node" parent="."]
+script = ExtResource("12_kvuet")
+
+[node name="AuthManager" parent="." instance=ExtResource("13_trtic")]

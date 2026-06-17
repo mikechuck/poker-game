@@ -9,6 +9,8 @@ const REDIRECT_URI_LOCAL = "http://localhost:5173/"
 const LOGIN_URL = "https://auth.mikechucktingle.net"
 const TOKEN_URL = "https://auth.mikechucktingle.net/oauth2/token"
 var REDIRECT_URI = ""
+var SERVER_API_TOKEN = ""
+
 @export var API_URL = "https://api.mikechucktingle.net"
 
 func _ready() -> void:
@@ -68,6 +70,30 @@ func api_request(path: String, method: int, callback: Callable, body: String = "
 		var json_data = JSON.parse_string(response_body.get_string_from_utf8())
 		callback.call(response_code, json_data)
 		http.queue_free()
+	)
+	
+	http.request(url, headers, method, body)
+	
+# For api calls from the server, uses api token instead of JWT
+func server_api_request(path: String, method: int, callback: Callable, body: String = ""):
+	print("[Server] Sending api request")
+	var url = API_URL + path
+	var http = HTTPRequest.new()
+	add_child(http)
+	
+	var headers = [
+		"Content-Type: application/json",
+		"x-server-token: " + SERVER_API_TOKEN
+	]
+	
+	http.request_completed.connect(func(result, response_code, response_headers, response_body):
+		if (response_code != 200):
+			print("[Server] API request failed | Status code: %s | Response %" % [response_code, JSON.parse_string(response_body.get_string_from_utf8())])
+		else:
+			print("[Server] API rquest succeeded.")
+			var json_data = JSON.parse_string(response_body.get_string_from_utf8())
+			callback.call(response_code, json_data)
+			http.queue_free()
 	)
 	
 	http.request(url, headers, method, body)

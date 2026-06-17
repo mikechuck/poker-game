@@ -15,7 +15,7 @@ export const handler = async (event) => {
     try {
         const response = await docClient.send(new QueryCommand({
             TableName: GAMES_TABLE,
-            KeyConditionExpression: "GameId = :gId",
+            KeyConditionExpression: "gameId = :gId",
             ExpressionAttributeValues: {
                 ":gId": gameId
             }
@@ -32,8 +32,8 @@ export const handler = async (event) => {
             statusCode: 200,
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                GameStatus: game.GameStatus,
-                Port: game.Port,
+                gameStatus: game.gameStatus,
+                port: game.port,
             })
         };
 

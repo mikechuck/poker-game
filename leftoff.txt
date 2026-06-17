@@ -1,5 +1,16 @@
 leftoff: 
-	- CreateGame flow works, but need to change to "CreateGame" and "CheckGameStatus" split flow so we don't have to keep the api call open while the server spins up
+	- poker logs are still not showing up in cloudwatch streamss
+	- Check to make sure EC2 edge auth is working:
+		- start two games with two different users
+		- try to connect other games without joining them via api
+		- autorizor should reject request. Also see if it logs to CW, and if not setup a log path for it
+	- When game is over:
+		- call lambda to update dybamo to:
+			- switch game state from ACTIVE to COMPLETE
+			- set expiration time
+		- debt tracking:
+			- do debt tracking call when a player LEAVES the game
+			- initiate debt settling when game finishes
 	- Add reading blind value from server exe startup inside godot code, added the same way as port value
 	- finish create game flow: 
 		- Double check CreateGame function against EC2 startup script
