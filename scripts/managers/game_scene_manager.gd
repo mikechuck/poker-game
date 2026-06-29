@@ -1,6 +1,6 @@
 extends Node2D
 
-@onready var http_request_manager = $HttpRequests
+@onready var http_request_manager =  get_tree().current_scene.get_node("HttpRequests")
 
 ### Networking fields
 var is_server = false
@@ -31,13 +31,16 @@ var game_state_data: GameStateData = GameStateData.new()
 ### Start lifecycle methods
 
 func _ready() -> void:
-	print("[Game] Game scene starting...")
+	call_deferred("run_after_tree_load")
+	
+# Make sure all the other managers are ready (auth, http, etc)
+func run_after_tree_load():
+	Log.write("Initializing connections...")
 	server_manager = get_parent().get_node("ServerManager")
 	client_manager = get_parent().get_node("ClientManager")
 	deck_manager = get_parent().get_node("DeckManager")
 	
-	var args = OS.get_cmdline_args()
-	if (args.find("--server") >= 0):
+	if (OS.has_feature("server")):
 		is_server = true
 		screen_origin = Vector2.ZERO # Adjust for screen size on client only
 		server_manager.start_server()
@@ -47,6 +50,8 @@ func _ready() -> void:
 		screen_origin = get_viewport_rect().size / 2
 		player_ui_instance = get_parent().find_child("PlayerUI")
 		server_manager.request_game_state_publish.rpc_id(1)
+		
+	Log.write("Initialization complete.")
 	
 ### End lifecycle methods
 
@@ -206,7 +211,7 @@ func find_winning_seat() -> PlayerSeat:
 		var full_cards = seat.hole_cards + game_state_data.board_cards
 		full_cards.sort_custom(func(a, b):
 			return a.number > b.number)
-		print("Player hand: [%s%s, %s%s, %s%s, %s%s, %s%s]" % [full_cards[0].value, full_cards[0].suit, full_cards[1].value, full_cards[1].suit, full_cards[2].value, full_cards[2].suit, full_cards[3].value, full_cards[3].suit, full_cards[4].value, full_cards[4].suit])
+		Log.write("Player hand: [%s%s, %s%s, %s%s, %s%s, %s%s]" % [full_cards[0].value, full_cards[0].suit, full_cards[1].value, full_cards[1].suit, full_cards[2].value, full_cards[2].suit, full_cards[3].value, full_cards[3].suit, full_cards[4].value, full_cards[4].suit])
 		# Keep track of the remaining cards once we find the players score, might need to evaluate kickers
 		seat.sorted_hand_cards = full_cards
 		# Optimistically get the highest hand score, break once found

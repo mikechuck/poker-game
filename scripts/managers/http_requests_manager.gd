@@ -1,17 +1,17 @@
 extends Node
 
-@onready var auth_manager = $"../AuthManager"
+@onready var auth_manager =  get_tree().current_scene.get_node("AuthManager")
 
 func get_headers():
 	var id_token = auth_manager.get_id_token()
-	print("id token:", id_token)
+	Log.write("Id token: %s" % id_token)
 	return [
 		"Content-Type: application/json",
 		"Authorization: Bearer %s" % id_token
 	]
 	
 func get_account_data(callback: Callable):
-	print("Calling GET /account")
+	Log.write("Calling GET /account")
 	var path = "/account"
 	auth_manager.api_request(
 		path,
@@ -20,7 +20,7 @@ func get_account_data(callback: Callable):
 	)
 
 func create_game(callback: Callable):
-	print("Calling PUT /game")
+	Log.write("Calling PUT /game")
 	var path = "/game"
 	var reqeustBody = {
 		blind = 10
@@ -34,7 +34,7 @@ func create_game(callback: Callable):
 	)
 	
 func get_game(game_id: String, callback: Callable):
-	print("Calling GET /game for game id %s" % game_id)
+	Log.write("Calling GET /game for game id %s" % game_id)
 	var path = "/game?gameId=%s" % game_id.uri_encode()
 	auth_manager.api_request(
 		path,
@@ -43,7 +43,7 @@ func get_game(game_id: String, callback: Callable):
 	)
 	
 func update_game(game_id: String, game_status: String, callback: Callable):
-	print("Calling POST /game for game id %s" % game_id)
+	Log.write("Calling POST /game for game id %s" % game_id)
 	var path = "/game?gameId=%s" % game_id.uri_encode()
 	var reqeustBody = {
 		gameStatus = game_status
@@ -58,9 +58,8 @@ func update_game(game_id: String, game_status: String, callback: Callable):
 	
 # Server methods
 func server_update_game(game_id: String, game_status: String, callback: Callable):
-	print("[Server] Updating game details for game id %s" % game_id)
+	Log.write("Updating game details for game id %s" % game_id)
 	var path = "/game?gameId=%s" % game_id.uri_encode()
-	
 	var reqeustBody = {
 		gameStatus = game_status
 	}

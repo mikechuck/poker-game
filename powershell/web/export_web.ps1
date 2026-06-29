@@ -25,4 +25,4 @@ if ($IsWindows) {
     exit 1
 }
 
-Write-Host "Exported using $export_name preset"
+Write-Host "Exported client using $export_name preset"

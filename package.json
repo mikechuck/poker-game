@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "upload_server_s3": "pwsh -ExecutionPolicy Bypass -File ./powershell/server/export_linux_server.ps1 && node aws/upload_server_s3.cjs",
+    "upload_server_s3_dev": "pwsh -ExecutionPolicy Bypass -File ./powershell/server/export_linux_server.ps1 -env \"dev\" && node aws/upload_server_s3.cjs",
+    "upload_server_s3_prod": "pwsh -ExecutionPolicy Bypass -File ./powershell/server/export_linux_server.ps1 -env \"prod\" && node aws/upload_server_s3.cjs",
     "deploy_frontend_dev": "pwsh -ExecutionPolicy Bypass -File ./powershell/web/export_web.ps1 -env \"dev\" && node aws/deploy_frontend.cjs dev",
     "deploy_frontend_prod": "pwsh -ExecutionPolicy Bypass -File ./powershell/web/export_web.ps1 -env \"prod\" && node aws/deploy_frontend.cjs prod"
   },

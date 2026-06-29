@@ -39,11 +39,12 @@ export const handler = async (event) => {
     // Get all active games for this player
     const params = {
         TableName: GAMES_TABLE,
-        IndexName: "HostPlayerIdIndex",
-        KeyConditionExpression: "hostPlayerId = :accId AND endTimeEpochMilliseconds > :targetTime",
+        IndexName: "HostPlayerIdIndex", 
+        KeyConditionExpression: "hostPlayerId = :accId",
+        FilterExpression: "gameStatus <> :endedStatus",
         ExpressionAttributeValues: {
             ":accId": accountId,
-            ":targetTime": Date.now()
+            ":endedStatus": "ENDED"
         }
     };
 

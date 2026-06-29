@@ -16,6 +16,11 @@ config/features=PackedStringArray("4.5", "GL Compatibility")
 run/flush_stdout_on_print=true
 config/icon="res://icon.svg"
 
+[autoload]
+
+NavigationManager="*res://scripts/singletons/navigation_manager.gd"
+Log="*res://scripts/singletons/log.gd"
+
 [debug]
 
 file_logging/enable_file_logging=true

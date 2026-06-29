@@ -17,36 +17,38 @@ func _ready() -> void:
 	if (OS.has_feature("local")):
 		REDIRECT_URI = REDIRECT_URI_LOCAL
 		API_URL += "/dev"
+		Log.write("Dev mode enabled")
 	if OS.has_feature("dev"):
 		REDIRECT_URI = REDIRECT_URI_HOSTED
 		API_URL += "/dev"
+		Log.write("Dev mode enabled")
 	else:
 		REDIRECT_URI = REDIRECT_URI_HOSTED
 		API_URL += "/prod"
-	
-	print("Dev mode enabled!")
-	print("API url: ", API_URL)
-	print("Redirect url: ", REDIRECT_URI)
+		Log.write("Prod mode enabled")
+		
+	# No need for further setup for server
+	if (OS.has_feature("server")):
+		return
 	
 	# Check tokens and code on ready
-	print(get_tree().current_scene.name)
 	if (get_tree().current_scene.name == "Landing"):
 		var auth_code = get_url_parameter("code")
 		if auth_code != "":
 			exchange_code_for_tokens(auth_code)
 		elif has_auth_tokens():
-			navigate_to_main()
+			NavigationManager.navigate_to_main()
 		else:
 			clean_url()
 			clear_local_storage()
 	else:
 		if !has_auth_tokens():
-			navigate_to_landing()
+			NavigationManager.navigate_to_landing()
 			
 #### Http request template to manage auth system
 #### This should be used for all HTTP requests to our api
 func api_request(path: String, method: int, callback: Callable, body: String = "", retry_count: int = 0):
-	print("calling api reqeust")
+	Log.write("Sending api reqeust")
 	var url = API_URL + path
 	var http = HTTPRequest.new()
 	add_child(http)
@@ -62,7 +64,7 @@ func api_request(path: String, method: int, callback: Callable, body: String = "
 				api_request(path, method, callback, body, retry_count + 1)
 			else:
 				# Something is wrong with our auth, boot user
-				navigate_to_landing()
+				NavigationManager.navigate_to_landing()
 			
 			http.queue_free()
 			return
@@ -76,7 +78,7 @@ func api_request(path: String, method: int, callback: Callable, body: String = "
 	
 # For api calls from the server, uses api token instead of JWT
 func server_api_request(path: String, method: int, callback: Callable, body: String = ""):
-	print("[Server] Sending api request")
+	Log.write("Sending api request")
 	var url = API_URL + path
 	var http = HTTPRequest.new()
 	add_child(http)
@@ -88,9 +90,9 @@ func server_api_request(path: String, method: int, callback: Callable, body: Str
 	
 	http.request_completed.connect(func(result, response_code, response_headers, response_body):
 		if (response_code != 200):
-			print("[Server] API request failed | Status code: %s | Response %" % [response_code, JSON.parse_string(response_body.get_string_from_utf8())])
+			Log.write("API request failed | Status code: %s | Response %" % [response_code, JSON.parse_string(response_body.get_string_from_utf8())])
 		else:
-			print("[Server] API rquest succeeded.")
+			Log.write("API rquest succeeded.")
 			var json_data = JSON.parse_string(response_body.get_string_from_utf8())
 			callback.call(response_code, json_data)
 			http.queue_free()
@@ -99,16 +101,8 @@ func server_api_request(path: String, method: int, callback: Callable, body: Str
 	http.request(url, headers, method, body)
 
 #### Navigation methods
-
-func navigate_to_main():
-	get_tree().call_deferred("change_scene_to_file", "res://scenes/main.tscn")
-	
-func navigate_to_landing():
-	clear_local_storage()
-	get_tree().call_deferred("change_scene_to_file", "res://scenes/landing.tscn")
 	
 func navigate_to_login():
-	print("navigating to login")
 	var login_url = "%s/login?client_id=%s&response_type=code&scope=email+openid&redirect_uri=%s" % [LOGIN_URL, CLIENT_ID, REDIRECT_URI]
 	JavaScriptBridge.eval("window.location.href = '" + login_url + "';")
 
@@ -137,8 +131,8 @@ func refresh_tokens() -> bool:
 	
 	var err = refresh_tokens_http_request.request(TOKEN_URL, headers, HTTPClient.METHOD_POST, body)
 	if err != OK:
-		print("Error sending request, returning to landing page")
-		navigate_to_landing()
+		("Error sending request, returning to landing page")
+		NavigationManager.navigate_to_landing()
 		return false
 	
 	var response = await refresh_tokens_http_request.request_completed
@@ -147,13 +141,13 @@ func refresh_tokens() -> bool:
 	var response_body = response[3]
 	
 	if result != HTTPRequest.RESULT_SUCCESS:
-		print("Network error code, returning to landing page")
-		navigate_to_landing()
+		Log.write("Network error code, returning to landing page")
+		NavigationManager.navigate_to_landing()
 		return false
 		
 	if response_code < 200 or response_code > 300:
-		print("Error refreshing tokens, returning to landing page")
-		navigate_to_landing()
+		Log.write("Error refreshing tokens, returning to landing page")
+		NavigationManager.navigate_to_landing()
 		return false
 		
 	var json = JSON.parse_string(response_body.get_string_from_utf8())
@@ -192,7 +186,7 @@ func has_auth_tokens():
 	var id_token = JavaScriptBridge.eval("localStorage.getItem('id_token')")
 	var access_token = JavaScriptBridge.eval("localStorage.getItem('access_token')")
 	var refresh_token = JavaScriptBridge.eval("localStorage.getItem('refresh_token')")
-	print("has tokens? %s" % (id_token != null && access_token != null && refresh_token != null))
+	Log.write("Has tokens? %s" % (id_token != null && access_token != null && refresh_token != null))
 	return id_token != null && access_token != null && refresh_token != null
 	
 func clear_local_storage():
@@ -203,11 +197,10 @@ func clear_local_storage():
 #### Http request callbacks
 
 func _on_get_tokens_request_completed(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray) -> void:
-	print("done getting tokens!")
 	clean_url() # Remove anything from the url so we don't re-trigger the token exchange
 	
 	if result != HTTPRequest.RESULT_SUCCESS || response_code != 200:
-		print("Error signing into account. Result: %s | ResponseCode: %s" % [result, response_code])
+		Log.write("Error signing into account. Result: %s | ResponseCode: %s" % [result, response_code])
 		clear_local_storage()
 		return
 		
@@ -219,4 +212,4 @@ func _on_get_tokens_request_completed(result: int, response_code: int, headers: 
 	JavaScriptBridge.eval("localStorage.setItem('access_token', '%s')" % access_token)
 	JavaScriptBridge.eval("localStorage.setItem('id_token', '%s')" % id_token)
 	JavaScriptBridge.eval("localStorage.setItem('refresh_token', '%s')" % refresh_token)
-	navigate_to_main()
+	NavigationManager.navigate_to_main()

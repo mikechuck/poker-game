@@ -30,80 +30,79 @@ fi
 # ==============================================================================
 # Dynamic Session Starter Engine
 # ==============================================================================
-cat << 'EOF' > /home/ec2-user/start_game_session.sh
+cat << EOF > /home/ec2-user/start_game_session.sh
 #!/bin/bash
 
 set -e
 
 # Setup a local file log loop just for the orchestration steps
 LOG_DIR="/home/ec2-user/logs"
-mkdir -p "$LOG_DIR"
-exec > >(tee -a "$LOG_DIR/orchestrator.log") 2>&1
+mkdir -p "\$LOG_DIR"
+exec > >(tee -a "\$LOG_DIR/orchestrator.log") 2>&1
 
 echo "[Startup] Starting new game session request..."
 
 MIN_PORT=12000
 MAX_PORT=13000
 SERVER_BIN="/home/ec2-user/poker_server.x86_64"
-GAMES_TABLE_NAME="$1"
-TARGET_GAME_ID="$2"
-HOST_PLAYER_ID="$3"
-BLIND_VALUE="$4"
-
-# Pull down the latest server build straight from S3
-echo "[Startup] Starting game initialization..."
-aws s3 cp s3://${bucketName}/${s3Prefix}/poker_server.x86_64 "$SERVER_BIN"
-chmod +x "$SERVER_BIN"
+GAMES_TABLE_NAME="\$1"
+TARGET_GAME_ID="\$2"
+HOST_PLAYER_ID="\$3"
+BLIND_VALUE="\$4"
 
 # Grab api token so game server instance can talk to our apis
-export GAME_SERVER_API_TOKEN=$(aws ssm get-parameter --name "/poker/server/api_token" --with-decryption --query "Parameter.Value" --output text --region us-east-1)
+export GAME_SERVER_API_TOKEN=\$(aws ssm get-parameter --name "/poker/server/api_token" --with-decryption --query "Parameter.Value" --output text --region us-east-1)
 export AWS_DEFAULT_REGION="us-east-1"
 export HOME="/home/ec2-user"
 
 # Find a free port for the new game instance
 while :; do
-    PORT=$(( (RANDOM % ($MAX_PORT - $MIN_PORT + 1)) + $MIN_PORT))
-    (echo >/dev/tcp/localhost/$PORT) >/dev/null 2>&1 || break
+    PORT=\$(( (RANDOM % (\$MAX_PORT - \$MIN_PORT + 1)) + \$MIN_PORT ))
+    nc -z localhost \$PORT && CONTINUE=true || CONTINUE=false
+    if [ "\$CONTINUE" = false ]; then
+        break
+    fi
 done
 
+echo "[Startup] Selected available port: \$PORT"
+
 # Ensure wide open permissions for directory drops
-chmod 777 "$LOG_DIR"
+chmod 777 "\$LOG_DIR"
 cd /home/ec2-user
 
-# 🟩 THE DEFINITIVE FIX: Wrap the cat/redirection operator inside a root-level bash string wrapper.
-# This forces the system administrative layer to execute the file creation directly,
-# cleanly bypassing the ec2-user directory write restrictions!
-sudo bash -c "cat << DYNCFG > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.d/poker_$PORT.json
+# Write the file directly to the agent's configuration directory using sudo tee
+sudo tee /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.d/poker_\$PORT.json > /dev/null << DYNCFG
 {
-  \"logs\": {
-    \"logs_collected\": {
-      \"files\": {
-        \"collect_list\": [
+  "logs": {
+    "logs_collected": {
+      "files": {
+        "collect_list": [
           {
-            \"file_path\": \"/home/ec2-user/logs/poker_$PORT.log\",
-            \"log_group_name\": \"/apps/poker-game\",
-            \"log_stream_name\": \"\{instance_id}-poker_$PORT\"
+            "file_path": "/home/ec2-user/logs/poker_\$PORT.log",
+            "log_group_name": "/apps/poker-game",
+            "log_stream_name": "{instance_id}-poker_\$PORT",
+            "retention_in_days": -1
           }
         ]
       }
     }
   }
 }
-DYNCFG"
+DYNCFG
 
-# 🟩 THE DEFINITIVE FIX 3: Escaped cwAgentConfigName with double dollar signs so it matches your TF environment schema
+echo "[Startup] Appending new log tracking rule for port \$PORT..."
+
 sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
-    -a fetch-config \
+    -a append-config \
     -m ec2 \
-    -c ssm:${cwAgentConfigName} \
+    -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.d/poker_\$PORT.json \
     -s
 
-# Execute the server in the background using an isolated subshell string wrapper.
-CMD_STR="nohup $SERVER_BIN --server --headless --gameId=$TARGET_GAME_ID --port=$PORT --blind=$BLIND_VALUE --apiToken=$GAME_SERVER_API_TOKEN > /home/ec2-user/logs/poker_$PORT.log 2>&1 < /dev/null &"
-sudo -u ec2-user bash -c "$CMD_STR"
+# Running binary execution natively without nesting inside an unprivileged shell string wrapper.
+nohup "\$SERVER_BIN" --headless --gameId="\$TARGET_GAME_ID" --port="\$PORT" --blind="\$BLIND_VALUE" --apiToken="\$GAME_SERVER_API_TOKEN" > "/home/ec2-user/logs/poker_\$PORT.log" 2>&1 < /dev/null &
 
-PID=$!
-echo "[Startup] Game server process successfully detached with PID: $PID on port $PORT"
+PID=\$!
+echo "[Startup] Game server process successfully detached with PID: \$PID on port \$PORT"
 echo "[Startup] Game initialization complete!"
 EOF
 
