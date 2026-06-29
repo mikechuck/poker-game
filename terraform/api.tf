@@ -304,12 +304,12 @@ resource "aws_lambda_permission" "api_gw_update_game" {
 
 # --- End UpdateGame API Gateway Integration ---
 
-# --- Start Private Authorizor Lambda Function ---
+# --- Start Private Authorizer Lambda Function ---
 
 data "archive_file" "server_auth_zip" {
     type        = "zip"
-    source_dir  = "${path.module}/../src/functions/ServerAuthorizor"
-    output_path = "${path.module}/exports/lambda/PrivateAuthorizor.zip"
+    source_dir  = "${path.module}/../src/functions/ServerAuthorizer"
+    output_path = "${path.module}/exports/lambda/PrivateAuthorizer.zip"
 }
 
 resource "aws_lambda_function" "server_auth_lambda" {
@@ -330,7 +330,7 @@ resource "aws_lambda_function" "server_auth_lambda" {
     }
 }
 
-# Didn't need to do this for the cognito authorizor because it's a built-in resource
+# Didn't need to do this for the cognito authorizer because it's a built-in resource
 resource "aws_lambda_permission" "api_gw_to_auth_lambda" {
     statement_id  = "AllowAuthorizerExecutionFromAPIGateway"
     action        = "lambda:InvokeFunction"
@@ -339,7 +339,7 @@ resource "aws_lambda_permission" "api_gw_to_auth_lambda" {
     source_arn    = "${aws_apigatewayv2_api.poker_api.execution_arn}/*/*"
 }
 
-# --- End Private Authorizor Lambda Function
+# --- End Private Authorizer Lambda Function
 
 # --- Start GetAccount Lambda Function ---
 

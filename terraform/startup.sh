@@ -71,16 +71,16 @@ chmod 777 "\$LOG_DIR"
 cd /home/ec2-user
 
 # Write the file directly to the agent's configuration directory using sudo tee
-sudo tee /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.d/poker_\$PORT.json > /dev/null << DYNCFG
+sudo tee /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.d/poker_\$PORT_\$TARGET_GAME_ID.json > /dev/null << DYNCFG
 {
   "logs": {
     "logs_collected": {
       "files": {
         "collect_list": [
           {
-            "file_path": "/home/ec2-user/logs/poker_\$PORT.log",
+            "file_path": "/home/ec2-user/logs/poker_\$PORT_\$TARGET_GAME_ID.log",
             "log_group_name": "/apps/poker-game",
-            "log_stream_name": "{instance_id}-poker_\$PORT",
+            "log_stream_name": "{instance_id}-poker_\$PORT_\$TARGET_GAME_ID",
             "retention_in_days": -1
           }
         ]
@@ -95,11 +95,11 @@ echo "[Startup] Appending new log tracking rule for port \$PORT..."
 sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
     -a append-config \
     -m ec2 \
-    -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.d/poker_\$PORT.json \
+    -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.d/poker_\$PORT_\$TARGET_GAME_ID.json \
     -s
 
 # Running binary execution natively without nesting inside an unprivileged shell string wrapper.
-nohup "\$SERVER_BIN" --headless --gameId="\$TARGET_GAME_ID" --port="\$PORT" --blind="\$BLIND_VALUE" --apiToken="\$GAME_SERVER_API_TOKEN" > "/home/ec2-user/logs/poker_\$PORT.log" 2>&1 < /dev/null &
+nohup "\$SERVER_BIN" --headless --gameId="\$TARGET_GAME_ID" --port="\$PORT" --blind="\$BLIND_VALUE" --apiToken="\$GAME_SERVER_API_TOKEN" > "/home/ec2-user/logs/poker_\$PORT_\$TARGET_GAME_ID.log" 2>&1 < /dev/null &
 
 PID=\$!
 echo "[Startup] Game server process successfully detached with PID: \$PID on port \$PORT"

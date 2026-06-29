@@ -57,17 +57,19 @@ func update_game(game_id: String, game_status: String, callback: Callable):
 	)
 	
 # Server methods
-func server_update_game(game_id: String, game_status: String, callback: Callable):
+func server_update_game(game_id: String, game_status: String, port, callback: Callable):
 	Log.write("Updating game details for game id %s" % game_id)
 	var path = "/game?gameId=%s" % game_id.uri_encode()
-	var reqeustBody = {
-		gameStatus = game_status
+	var requestBody = {
+		gameStatus = game_status,
+		port = port
 	}
+	print("Request body: %s" % requestBody)
 	
 	auth_manager.server_api_request(
 		path,
 		HTTPClient.METHOD_POST,
 		callback,
-		JSON.stringify(reqeustBody)
+		JSON.stringify(requestBody)
 	)
 	

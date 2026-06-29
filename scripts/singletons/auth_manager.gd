@@ -83,6 +83,8 @@ func server_api_request(path: String, method: int, callback: Callable, body: Str
 	var http = HTTPRequest.new()
 	add_child(http)
 	
+	print("Full url: %s" % url)
+	
 	var headers = [
 		"Content-Type: application/json",
 		"x-server-token: " + SERVER_API_TOKEN
@@ -90,7 +92,7 @@ func server_api_request(path: String, method: int, callback: Callable, body: Str
 	
 	http.request_completed.connect(func(result, response_code, response_headers, response_body):
 		if (response_code != 200):
-			Log.write("API request failed | Status code: %s | Response %" % [response_code, JSON.parse_string(response_body.get_string_from_utf8())])
+			Log.write("API request failed | Status code: %s | Response: %s" % [response_code, JSON.parse_string(response_body.get_string_from_utf8())])
 		else:
 			Log.write("API rquest succeeded.")
 			var json_data = JSON.parse_string(response_body.get_string_from_utf8())

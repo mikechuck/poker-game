@@ -85,7 +85,8 @@ func _check_idle_game_state() -> void:
 		idle_timer.start()
 		
 func update_server_startup_info() -> void:
-	http_request_manager.server_update_game(GAME_ID, "STARTED", func(response_code, data):
+	Log.write("Updating game record from server...")
+	http_request_manager.server_update_game(GAME_ID, "STARTED", PORT, func(response_code, data):
 		if (response_code == 200):
 			Log.write("Game record updated for %s" % GAME_ID)
 		else:
@@ -95,7 +96,7 @@ func update_server_startup_info() -> void:
 func _on_idle_timeout() -> void:
 	Log.write("Idle timeout reached with 0 players. Initiating shutdown...")
 	
-	http_request_manager.server_update_game(GAME_ID, "ENDED", func(response_code, data):
+	http_request_manager.server_update_game(GAME_ID, "ENDED", PORT, func(response_code, data):
 		if (response_code == 200):
 			Log.write("Game record updated for %s" % GAME_ID)
 		else:

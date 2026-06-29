@@ -1,5 +1,4 @@
-import { SSMClient, SendCommandCommand, GetCommandInvocationCommand } from "@aws-sdk/client-ssm";
-import { DynamoDBDocumentClient, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, UpdateCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import crypto from "crypto";
 
@@ -23,9 +22,10 @@ export const handler = async (event) => {
         };
     }
 
+    const gameId = event.queryStringParameters?.gameId;
     const body = JSON.parse(event.body)
-    const gameId = body.gameId;
     const newGameStatus = body.gameStatus;
+    const newPort = body.port
     var hostPlayerId = "";
     var updateParams;
 
@@ -58,20 +58,21 @@ export const handler = async (event) => {
 
     if (newGameStatus == "STARTED") {
         updateParams = {
-            TableName: "gamesTable",
+            TableName: GAMES_TABLE,
             Key: {
                 gameId: gameId,
                 hostPlayerId: hostPlayerId
             },
-            UpdateExpression: "SET gameStatus = :statusValue",
+            UpdateExpression: "SET gameStatus = :statusValue, port = :newPort",
             ExpressionAttributeValues: {
                 ":statusValue": newGameStatus,
+                ":newPort": newPort
             },
             ReturnValues: "ALL_NEW"
         };
     } else if (newGameStatus == "ENDED") {
         updateParams = {
-            TableName: "gamesTable",
+            TableName: GAMES_TABLE,
             Key: {
                 gameId: gameId,
                 hostPlayerId: hostPlayerId
@@ -91,7 +92,7 @@ export const handler = async (event) => {
     }
 
     try {
-        const response = await ddbDocClient.send(new UpdateCommand(updateParams));
+        const response = await docClient.send(new UpdateCommand(updateParams));
         console.log("[Lambda] Game record updated successfully.");
         
         return {

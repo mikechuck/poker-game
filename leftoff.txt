@@ -1,5 +1,6 @@
 leftoff: 
-	- Loghs are working, fix server vs client startup flows in godot code
+	- Fix server timeout game update
+	- Create client join flow via game code instead of port id
 	- Check to make sure EC2 edge auth is working:
 		- start two games with two different users
 		- try to connect other games without joining them via api
