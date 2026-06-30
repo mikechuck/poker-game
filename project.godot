@@ -20,6 +20,7 @@ config/icon="res://icon.svg"
 
 NavigationManager="*res://scripts/singletons/navigation_manager.gd"
 Log="*res://scripts/singletons/log.gd"
+NotificationManager="*res://scripts/singletons/notification_manager.gd"
 
 [debug]
 

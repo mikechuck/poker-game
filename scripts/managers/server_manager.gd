@@ -16,7 +16,6 @@ func _ready() -> void:
 	client_manager = get_parent().get_node("ClientManager")
 
 func start_server():
-	Log.write("Starting game server...")
 	var args = OS.get_cmdline_args()
 	for arg in args:
 		if arg.begins_with("--gameId"):
@@ -41,6 +40,7 @@ func start_server():
 	idle_timer.one_shot = true
 	idle_timer.timeout.connect(_on_idle_timeout)
 	add_child(idle_timer)
+	idle_timer.start()
 	
 func _on_peer_connected(id):
 	Log.write("Player %s connected" % id)
@@ -85,7 +85,6 @@ func _check_idle_game_state() -> void:
 		idle_timer.start()
 		
 func update_server_startup_info() -> void:
-	Log.write("Updating game record from server...")
 	http_request_manager.server_update_game(GAME_ID, "STARTED", PORT, func(response_code, data):
 		if (response_code == 200):
 			Log.write("Game record updated for %s" % GAME_ID)
@@ -94,15 +93,13 @@ func update_server_startup_info() -> void:
 	)
 		
 func _on_idle_timeout() -> void:
-	Log.write("Idle timeout reached with 0 players. Initiating shutdown...")
-	
 	http_request_manager.server_update_game(GAME_ID, "ENDED", PORT, func(response_code, data):
 		if (response_code == 200):
 			Log.write("Game record updated for %s" % GAME_ID)
 		else:
 			Log.write("Error updating game record for %s" % GAME_ID)
 		
-		Log.write("Process turning off now. Goodbye.")
+		Log.write("Game server instance shutting down. Goodbye.")
 		get_tree().quit()
 	)
 

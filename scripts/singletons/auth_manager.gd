@@ -48,7 +48,6 @@ func _ready() -> void:
 #### Http request template to manage auth system
 #### This should be used for all HTTP requests to our api
 func api_request(path: String, method: int, callback: Callable, body: String = "", retry_count: int = 0):
-	Log.write("Sending api reqeust")
 	var url = API_URL + path
 	var http = HTTPRequest.new()
 	add_child(http)
@@ -78,12 +77,9 @@ func api_request(path: String, method: int, callback: Callable, body: String = "
 	
 # For api calls from the server, uses api token instead of JWT
 func server_api_request(path: String, method: int, callback: Callable, body: String = ""):
-	Log.write("Sending api request")
 	var url = API_URL + path
 	var http = HTTPRequest.new()
 	add_child(http)
-	
-	print("Full url: %s" % url)
 	
 	var headers = [
 		"Content-Type: application/json",
@@ -101,12 +97,6 @@ func server_api_request(path: String, method: int, callback: Callable, body: Str
 	)
 	
 	http.request(url, headers, method, body)
-
-#### Navigation methods
-	
-func navigate_to_login():
-	var login_url = "%s/login?client_id=%s&response_type=code&scope=email+openid&redirect_uri=%s" % [LOGIN_URL, CLIENT_ID, REDIRECT_URI]
-	JavaScriptBridge.eval("window.location.href = '" + login_url + "';")
 
 #### Cognito methods
 
@@ -188,7 +178,6 @@ func has_auth_tokens():
 	var id_token = JavaScriptBridge.eval("localStorage.getItem('id_token')")
 	var access_token = JavaScriptBridge.eval("localStorage.getItem('access_token')")
 	var refresh_token = JavaScriptBridge.eval("localStorage.getItem('refresh_token')")
-	Log.write("Has tokens? %s" % (id_token != null && access_token != null && refresh_token != null))
 	return id_token != null && access_token != null && refresh_token != null
 	
 func clear_local_storage():

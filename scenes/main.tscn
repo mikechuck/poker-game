@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://b7ckdfv84qrn2"]
+[gd_scene load_steps=9 format=3 uid="uid://b7ckdfv84qrn2"]
 
 [ext_resource type="Script" uid="uid://dvefjfvnac0ds" path="res://scripts/managers/main_scene_manager.gd" id="1_o5qli"]
 [ext_resource type="Script" uid="uid://c2cyo161ww6p8" path="res://scripts/managers/http_requests_manager.gd" id="2_0wfyh"]
@@ -6,6 +6,7 @@
 [ext_resource type="Script" uid="uid://cnbwlolh7w646" path="res://scripts/UI/account_section.gd" id="4_jyhfs"]
 [ext_resource type="Texture2D" uid="uid://ddlkeu1b8yhay" path="res://assets/PlayerCard/DetailsCard.png" id="5_tefeu"]
 [ext_resource type="Texture2D" uid="uid://3pvy2qjel0j0" path="res://assets/PlayerCard/ProfilePicture.png" id="6_o6xl0"]
+[ext_resource type="PackedScene" uid="uid://bufv2sc6gxjsa" path="res://scenes/UI/notification_container.tscn" id="7_o6xl0"]
 
 [sub_resource type="GDScript" id="GDScript_tipki"]
 
@@ -106,8 +107,10 @@ text = "Join Game
 
 [node name="PortInput" type="LineEdit" parent="Menu/JoinGame"]
 layout_mode = 0
+offset_left = -39.0
 offset_right = 100.0
 offset_bottom = 50.0
+placeholder_text = "Game Code"
 alignment = 1
 
 [node name="IpInput" type="LineEdit" parent="Menu/JoinGame"]
@@ -221,7 +224,22 @@ text = "0
 horizontal_alignment = 2
 vertical_alignment = 1
 
+[node name="Notifications" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -199.62
+offset_right = 0.38000488
+offset_bottom = 200.0
+grow_horizontal = 0
+
+[node name="NotificationContainer" parent="." instance=ExtResource("7_o6xl0")]
+visible = false
+layout_mode = 0
+anchors_preset = 0
+
 [connection signal="pressed" from="Menu/CreateGame/Button" to="." method="_on_create_game_button_pressed"]
 [connection signal="pressed" from="Menu/JoinGame/Button" to="." method="_on_join_game_button_pressed"]
-[connection signal="text_changed" from="Menu/JoinGame/PortInput" to="." method="_on_port_input_text_changed"]
+[connection signal="text_changed" from="Menu/JoinGame/PortInput" to="." method="_on_game_code_input_text_changed"]
 [connection signal="text_changed" from="Menu/JoinGame/IpInput" to="." method="_on_ip_input_text_changed"]

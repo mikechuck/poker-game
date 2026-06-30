@@ -8,26 +8,21 @@ extends Node
 @onready var http_request_manager =  get_tree().current_scene.get_node("HttpRequests")
 
 const SERVER_URL = "server.mikechucktingle.net"
-var server_port = "12001"
-var mp_peer = null
+var _server_port = "12001"
+var _game_code = ""
 
 func _ready() -> void:
 	if (OS.has_feature("server")):
-		Log.write("Navigating from main to game scene")
 		NavigationManager.navigate_to_game_scene()
-	else:
-		Log.write("Landing page loaded")
 	
 	# Should have auth by now, grab their account data on load
 	http_request_manager.get_account_data(func(response_code, data):
 		if (response_code == 200):
 			account_section.display_account_data(data)
-		else:
-			Log.write("Error getting account data")
 	)
 		
 	# If not the server, then we should bounce the user the landing if they don't have
-	port_input_node.text = server_port
+	port_input_node.text = _server_port
 	multiplayer.connected_to_server.connect(_on_connected)
 	multiplayer.connection_failed.connect(_on_connection_failed)
 	multiplayer.server_disconnected.connect(_on_disconnected)
@@ -38,7 +33,6 @@ func add_debug_line(text: String) -> void:
 	
 func wait_for_game_creation(game_id: String):
 	http_request_manager.get_game(game_id, func(response_code, data):
-		Log.write("Get game response: %s" % [JSON.stringify(data)])
 		if (response_code == 200):
 			if (data["gameStatus"] == "ACTIVE"):
 				Log.write("Game is active!")
@@ -53,7 +47,6 @@ func wait_for_game_creation(game_id: String):
 func _on_create_game_button_pressed() -> void:
 	Log.write("Create button pressed, calling API")
 	http_request_manager.create_game(func(response_code, data):
-		Log.write("Create game response code: %s, data: %s" % [response_code, JSON.stringify(data)])
 		if (response_code == 202 or response_code == 200):
 			var game_id = data["gameId"]
 			if (game_id):
@@ -67,14 +60,22 @@ func _on_create_game_button_pressed() -> void:
 	# On response, set server_url and server_port and connect to the server
 
 func _on_join_game_button_pressed() -> void:
-	connect_to_server(server_port)
+	Log.write("Joining game code: %s" % _game_code)
 	
-func _on_port_input_text_changed(new_text: String) -> void:
-	server_port = new_text
+	http_request_manager.get_game(_game_code, func(response_code, data):
+		if (response_code == 200):
+			if (data["gameStatus"] == "ACTIVE"):
+				Log.write("Game is active!")
+				#connect_to_server(data["port"])
+			else:
+				Log.write("Game not active")
+		else:
+			Log.write("Error getting game status")
+	)
+	#connect_to_server(_server_port)
 
-func _on_ip_input_text_changed(new_text: String) -> void:
-	#server_url = new_text
-	pass
+func _on_game_code_input_text_changed(game_code: String) -> void:
+	_game_code = game_code
 
 func connect_to_server(port: String):
 	var connection_url = "wss://%s/game/%s" % [SERVER_URL, port]

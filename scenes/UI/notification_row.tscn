@@ -1,0 +1,28 @@
+[gd_scene load_steps=2 format=3 uid="uid://du3vlwhpwn7ww"]
+
+[ext_resource type="FontVariation" uid="uid://dfhasnafmhk2" path="res://fonts/emoji_font.tres" id="1_bovmf"]
+
+[node name="NotificationRow" type="HBoxContainer"]
+
+[node name="Icon" type="RichTextLabel" parent="."]
+clip_contents = false
+custom_minimum_size = Vector2(10, 10)
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_fonts/normal_font = ExtResource("1_bovmf")
+theme_override_fonts/bold_font = ExtResource("1_bovmf")
+theme_override_fonts/bold_italics_font = ExtResource("1_bovmf")
+theme_override_fonts/italics_font = ExtResource("1_bovmf")
+theme_override_fonts/mono_font = ExtResource("1_bovmf")
+bbcode_enabled = true
+text = "[font_size=10]✅[/font_size]"
+fit_content = true
+scroll_active = false
+
+[node name="Text" type="RichTextLabel" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+bbcode_enabled = true
+text = "[font_size=8]Game started[/font_size]"
+fit_content = true
+scroll_active = false

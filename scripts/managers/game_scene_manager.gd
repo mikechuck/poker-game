@@ -35,7 +35,6 @@ func _ready() -> void:
 	
 # Make sure all the other managers are ready (auth, http, etc)
 func run_after_tree_load():
-	Log.write("Initializing connections...")
 	server_manager = get_parent().get_node("ServerManager")
 	client_manager = get_parent().get_node("ClientManager")
 	deck_manager = get_parent().get_node("DeckManager")
@@ -50,8 +49,6 @@ func run_after_tree_load():
 		screen_origin = get_viewport_rect().size / 2
 		player_ui_instance = get_parent().find_child("PlayerUI")
 		server_manager.request_game_state_publish.rpc_id(1)
-		
-	Log.write("Initialization complete.")
 	
 ### End lifecycle methods
 
