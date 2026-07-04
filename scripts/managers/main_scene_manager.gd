@@ -64,7 +64,7 @@ func _on_join_game_button_pressed() -> void:
 	
 	http_request_manager.get_game(_game_code, func(response_code, data):
 		if (response_code == 200):
-			if (data["gameStatus"] == "ACTIVE"):
+			if (data["gameStatus"] == "STARTED"):
 				Log.write("Game is active!")
 				#connect_to_server(data["port"])
 			else:

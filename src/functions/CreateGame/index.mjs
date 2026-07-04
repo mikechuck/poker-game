@@ -2,6 +2,7 @@ import { SSMClient, SendCommandCommand, GetCommandInvocationCommand } from "@aws
 import { DynamoDBDocumentClient, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import crypto from "crypto";
+import Enums from "#shared/enums.json";
 
 const ssm = new SSMClient();
 const client = new DynamoDBClient({});
@@ -44,7 +45,7 @@ export const handler = async (event) => {
         FilterExpression: "gameStatus <> :endedStatus",
         ExpressionAttributeValues: {
             ":accId": accountId,
-            ":endedStatus": "ENDED"
+            ":endedStatus": Enums.GameStatus.ENDED
         }
     };
 
@@ -74,7 +75,7 @@ export const handler = async (event) => {
             hostPlayerId: accountId,
             createTimeEpochMilliseconds: Date.now(),
             port: 0,
-            gameStatus: "STARTING",
+            gameStatus: Enums.GameStatus.STARTING,
             endTimeEpochMilliseconds: 0,
             blind: blindValue
         };

@@ -1,6 +1,7 @@
 import { DynamoDBDocumentClient, UpdateCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import crypto from "crypto";
+import Enums from "#shared/enums.json";
 
 const docClient = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 
@@ -56,7 +57,7 @@ export const handler = async (event) => {
         };
     }
 
-    if (newGameStatus == "STARTED") {
+    if (newGameStatus == Enums.GameStatus.STARTED) {
         updateParams = {
             TableName: GAMES_TABLE,
             Key: {
@@ -70,7 +71,7 @@ export const handler = async (event) => {
             },
             ReturnValues: "ALL_NEW"
         };
-    } else if (newGameStatus == "ENDED") {
+    } else if (newGameStatus == Enums.GameStatus.ENDED) {
         updateParams = {
             TableName: GAMES_TABLE,
             Key: {

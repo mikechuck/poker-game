@@ -63,6 +63,7 @@ func api_request(path: String, method: int, callback: Callable, body: String = "
 				api_request(path, method, callback, body, retry_count + 1)
 			else:
 				# Something is wrong with our auth, boot user
+				clear_local_storage()
 				NavigationManager.navigate_to_landing()
 			
 			http.queue_free()
