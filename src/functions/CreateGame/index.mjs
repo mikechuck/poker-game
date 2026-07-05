@@ -2,7 +2,7 @@ import { SSMClient, SendCommandCommand, GetCommandInvocationCommand } from "@aws
 import { DynamoDBDocumentClient, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import crypto from "crypto";
-import Enums from "#shared/enums.json";
+import Enums from "./shared/enums.json" with { type: "json" };
 
 const ssm = new SSMClient();
 const client = new DynamoDBClient({});

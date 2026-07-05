@@ -17,15 +17,15 @@ func _ready() -> void:
 	if (OS.has_feature("local")):
 		REDIRECT_URI = REDIRECT_URI_LOCAL
 		API_URL += "/dev"
-		Log.write("Dev mode enabled")
+		Log.message("Dev mode enabled")
 	if OS.has_feature("dev"):
 		REDIRECT_URI = REDIRECT_URI_HOSTED
 		API_URL += "/dev"
-		Log.write("Dev mode enabled")
+		Log.message("Dev mode enabled")
 	else:
 		REDIRECT_URI = REDIRECT_URI_HOSTED
 		API_URL += "/prod"
-		Log.write("Prod mode enabled")
+		Log.message("Prod mode enabled")
 		
 	# No need for further setup for server
 	if (OS.has_feature("server")):
@@ -89,9 +89,9 @@ func server_api_request(path: String, method: int, callback: Callable, body: Str
 	
 	http.request_completed.connect(func(result, response_code, response_headers, response_body):
 		if (response_code != 200):
-			Log.write("API request failed | Status code: %s | Response: %s" % [response_code, JSON.parse_string(response_body.get_string_from_utf8())])
+			Log.message("API request failed | Status code: %s | Response: %s" % [response_code, JSON.parse_string(response_body.get_string_from_utf8())])
 		else:
-			Log.write("API rquest succeeded.")
+			Log.message("API rquest succeeded.")
 			var json_data = JSON.parse_string(response_body.get_string_from_utf8())
 			callback.call(response_code, json_data)
 			http.queue_free()
@@ -134,12 +134,12 @@ func refresh_tokens() -> bool:
 	var response_body = response[3]
 	
 	if result != HTTPRequest.RESULT_SUCCESS:
-		Log.write("Network error code, returning to landing page")
+		Log.message("Network error code, returning to landing page")
 		NavigationManager.navigate_to_landing()
 		return false
 		
 	if response_code < 200 or response_code > 300:
-		Log.write("Error refreshing tokens, returning to landing page")
+		Log.message("Error refreshing tokens, returning to landing page")
 		NavigationManager.navigate_to_landing()
 		return false
 		
@@ -192,7 +192,7 @@ func _on_get_tokens_request_completed(result: int, response_code: int, headers: 
 	clean_url() # Remove anything from the url so we don't re-trigger the token exchange
 	
 	if result != HTTPRequest.RESULT_SUCCESS || response_code != 200:
-		Log.write("Error signing into account. Result: %s | ResponseCode: %s" % [result, response_code])
+		Log.message("Error signing into account. Result: %s | ResponseCode: %s" % [result, response_code])
 		clear_local_storage()
 		return
 		

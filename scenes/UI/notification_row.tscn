@@ -26,3 +26,4 @@ bbcode_enabled = true
 text = "[font_size=8]Game started[/font_size]"
 fit_content = true
 scroll_active = false
+vertical_alignment = 2

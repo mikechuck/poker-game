@@ -208,7 +208,7 @@ func find_winning_seat() -> PlayerSeat:
 		var full_cards = seat.hole_cards + game_state_data.board_cards
 		full_cards.sort_custom(func(a, b):
 			return a.number > b.number)
-		Log.write("Player hand: [%s%s, %s%s, %s%s, %s%s, %s%s]" % [full_cards[0].value, full_cards[0].suit, full_cards[1].value, full_cards[1].suit, full_cards[2].value, full_cards[2].suit, full_cards[3].value, full_cards[3].suit, full_cards[4].value, full_cards[4].suit])
+		Log.message("Player hand: [%s%s, %s%s, %s%s, %s%s, %s%s]" % [full_cards[0].value, full_cards[0].suit, full_cards[1].value, full_cards[1].suit, full_cards[2].value, full_cards[2].suit, full_cards[3].value, full_cards[3].suit, full_cards[4].value, full_cards[4].suit])
 		# Keep track of the remaining cards once we find the players score, might need to evaluate kickers
 		seat.sorted_hand_cards = full_cards
 		# Optimistically get the highest hand score, break once found

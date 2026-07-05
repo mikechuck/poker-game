@@ -43,7 +43,7 @@ func _shuffle_deck(source_deck: Array[CardData]) -> Array[CardData]:
 func deal_card() -> CardData:
 	var new_card = deck[0]
 	deck.remove_at(0)
-	Log.write("Card delt: [%s, %s]" % [new_card.number, new_card.suit])
+	Log.message("Card delt: [%s, %s]" % [new_card.number, new_card.suit])
 	return new_card
 	
 

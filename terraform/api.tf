@@ -345,8 +345,15 @@ resource "aws_lambda_permission" "api_gw_to_auth_lambda" {
 
 data "archive_file" "get_account_zip" {
     type        = "zip"
-    source_dir  = "${path.module}/../src/functions/GetAccount"
     output_path = "${path.module}/exports/lambda/GetAccount.zip"
+    source {
+        content  = file("${path.module}/../src/functions/GetAccount/index.mjs")
+        filename = "index.mjs"
+    }
+    source {
+        content  = file("${path.module}/../shared/enums.json")
+        filename = "shared/enums.json"
+    }
 }
 
 resource "aws_lambda_function" "get_account" {
@@ -379,8 +386,15 @@ resource "aws_cloudwatch_log_group" "get_account_logs" {
 
 data "archive_file" "create_game_zip" {
     type        = "zip"
-    source_dir  = "${path.module}/../src/functions/CreateGame"
     output_path = "${path.module}/exports/lambda/CreateGame.zip"
+    source {
+        content  = file("${path.module}/../src/functions/CreateGame/index.mjs")
+        filename = "index.mjs"
+    }
+    source {
+        content  = file("${path.module}/../shared/enums.json")
+        filename = "shared/enums.json"
+    }
 }
 
 resource "aws_lambda_function" "create_game" {
@@ -414,8 +428,15 @@ resource "aws_cloudwatch_log_group" "create_game_logs" {
 
 data "archive_file" "get_game_zip" {
     type        = "zip"
-    source_dir  = "${path.module}/../src/functions/GetGame"
     output_path = "${path.module}/exports/lambda/GetGame.zip"
+    source {
+        content  = file("${path.module}/../src/functions/GetGame/index.mjs")
+        filename = "index.mjs"
+    }
+    source {
+        content  = file("${path.module}/../shared/enums.json")
+        filename = "shared/enums.json"
+    }
 }
 
 resource "aws_lambda_function" "get_game" {
@@ -448,8 +469,15 @@ resource "aws_cloudwatch_log_group" "get_game_logs" {
 
 data "archive_file" "update_game_zip" {
     type        = "zip"
-    source_dir  = "${path.module}/../src/functions/UpdateGame"
     output_path = "${path.module}/exports/lambda/UpdateGame.zip"
+    source {
+        content  = file("${path.module}/../src/functions/UpdateGame/index.mjs")
+        filename = "index.mjs"
+    }
+    source {
+        content  = file("${path.module}/../shared/enums.json")
+        filename = "shared/enums.json"
+    }
 }
 
 resource "aws_lambda_function" "update_game" {

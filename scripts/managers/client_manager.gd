@@ -14,7 +14,7 @@ func disconnect_from_sever() -> void:
 	
 @rpc("reliable", "call_remote", "authority")
 func update_game_state_data(game_state_data: Dictionary):
-	Log.write("Game state: %s" % game_state_data.game_state)
+	Log.message("Game state: %s" % game_state_data.game_state)
 	var deserialized_game_state_data = GameStateData.from_dict(game_state_data)
 	var old_game_state_data = game_manager.game_state_data.clone()
 	game_manager.game_state_data = deserialized_game_state_data

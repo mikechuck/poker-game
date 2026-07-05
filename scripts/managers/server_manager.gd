@@ -32,7 +32,7 @@ func start_server():
 	multiplayer.multiplayer_peer = peer
 	multiplayer.peer_connected.connect(_on_peer_connected)
 	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
-	Log.write("Started server at wss://localhost:%s for game id %s..." % [PORT, GAME_ID])
+	Log.message("Started server at wss://localhost:%s for game id %s..." % [PORT, GAME_ID])
 	
 	update_server_startup_info()
 	
@@ -44,7 +44,7 @@ func start_server():
 	idle_timer.start()
 	
 func _on_peer_connected(id):
-	Log.write("Player %s connected" % id)
+	Log.message("Player %s connected" % id)
 	var connected_player = ConnectedPlayer.new()
 	connected_player.id = id
 	connected_player.account_total_cash = GameStateData.default_starting_cash
@@ -56,10 +56,10 @@ func _on_peer_connected(id):
 		connected_player.is_host = true
 		
 	client_manager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
-	Log.write("Number of players connected: %s" % [game_manager.game_state_data.connected_players.size()])
+	Log.message("Number of players connected: %s" % [game_manager.game_state_data.connected_players.size()])
 	
 func _on_peer_disconnected(id):
-	Log.write("Player %s disconnected" % id)
+	Log.message("Player %s disconnected" % id)
 	var disconnecting_player = game_manager.game_state_data.connected_players.get(id)
 	game_manager.game_state_data.connected_players.erase(id)
 	
@@ -84,31 +84,31 @@ func _on_peer_disconnected(id):
 		game_manager.reset_hand()
 		
 	client_manager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
-	Log.write("Number of players connected: %s" % [game_manager.game_state_data.connected_players.size()])
+	Log.message("Number of players connected: %s" % [game_manager.game_state_data.connected_players.size()])
 	
 	# If no players are in the game, start the idle timeout shutdown
 	if (game_manager.game_state_data.connected_players.size() == 0):
-		Log.write("Room is empty. Starting shutdown timer...")
+		Log.message("Room is empty. Starting shutdown timer...")
 		idle_timer.start()
 		
 func update_server_startup_info() -> void:
-	http_request_manager.server_update_game(GAME_ID, "STARTED", PORT, func(response_code, data):
+	http_request_manager.server_update_game(GAME_ID, Globals.Enums.GameStatus.STARTED, PORT, func(response_code, data):
 		if (response_code == 200):
-			Log.write("Game record updated for %s" % GAME_ID)
+			Log.message("Game record updated for %s" % GAME_ID)
 		else:
-			Log.write("Error updating game record for %s" % GAME_ID)
+			Log.message("Error updating game record for %s" % GAME_ID)
 	)
 		
 func _on_idle_timeout() -> void:
 	# If no players are in the game after the timeout, end the game
 	if (game_manager.game_state_data.connected_players.size() == 0):
-		http_request_manager.server_update_game(GAME_ID, "ENDED", PORT, func(response_code, data):
+		http_request_manager.server_update_game(GAME_ID, Globals.Enums.GameStatus.ENDED, PORT, func(response_code, data):
 			if (response_code == 200):
-				Log.write("Game record updated for %s" % GAME_ID)
+				Log.message("Game record updated for %s" % GAME_ID)
 			else:
-				Log.write("Error updating game record for %s" % GAME_ID)
+				Log.message("Error updating game record for %s" % GAME_ID)
 			
-			Log.write("Game server instance shutting down. Goodbye.")
+			Log.message("Game server instance shutting down. Goodbye.")
 			get_tree().quit()
 		)
 

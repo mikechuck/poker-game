@@ -9,4 +9,4 @@ func _on_login_button_pressed() -> void:
 	if OS.has_feature("web"):
 		NavigationManager.navigate_to_login()
 	else:
-		Log.write("Can't redirect to login url, user is not on web environment")
+		Log.error("Can't redirect to login url, user is not on web environment")

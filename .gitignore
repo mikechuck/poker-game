@@ -13,9 +13,9 @@
 # Build artifacts
 bin/
 build/
-exports/web/local/
-exports/web/dev/
-exports/web/prod/
+exports/web/local/*
+exports/web/dev/*
+exports/web/prod/*
 exports/server/linux/*
 exports/server/windows/*
 /node_modules/
