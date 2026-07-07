@@ -1,7 +1,11 @@
 leftoff: 
-	- Fix server timeout game update
 	- Create client join flow via game code instead of port id
+	- authentication	
+		- we should only be doing token authentication on the initial TCP connection request
+		- The game server should hold a record of player ids from TCP connections and validate each subsequent request
+			- need this because of the dynamic routing? Or does the TCP auth handle this?
 	- Check to make sure EC2 edge auth is working:
+		
 		- start two games with two different users
 		- try to connect other games without joining them via api
 		- autorizor should reject request. Also see if it logs to CW, and if not setup a log path for it

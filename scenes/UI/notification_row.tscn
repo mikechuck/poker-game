@@ -1,8 +1,10 @@
-[gd_scene load_steps=2 format=3 uid="uid://du3vlwhpwn7ww"]
+[gd_scene load_steps=3 format=3 uid="uid://du3vlwhpwn7ww"]
 
 [ext_resource type="FontVariation" uid="uid://dfhasnafmhk2" path="res://fonts/emoji_font.tres" id="1_bovmf"]
+[ext_resource type="Script" uid="uid://dh2r6e0o4go2p" path="res://scenes/UI/notification_row.gd" id="1_nasc2"]
 
 [node name="NotificationRow" type="HBoxContainer"]
+script = ExtResource("1_nasc2")
 
 [node name="Icon" type="RichTextLabel" parent="."]
 clip_contents = false

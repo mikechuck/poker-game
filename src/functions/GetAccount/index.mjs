@@ -1,5 +1,6 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import Enums from "./shared/enums.json" with { type: "json" };
 
 const ACCOUNTS_TABLE = process.env.ACCOUNTS_TABLE;
 

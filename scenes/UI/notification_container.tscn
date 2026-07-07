@@ -2,24 +2,43 @@
 
 [ext_resource type="PackedScene" uid="uid://du3vlwhpwn7ww" path="res://scenes/UI/notification_row.tscn" id="1_1b8gb"]
 
-[node name="NotificationContainer" type="PanelContainer"]
-anchors_preset = 1
+[node name="Control" type="Control"]
+layout_mode = 3
+anchors_preset = 3
 anchor_left = 1.0
+anchor_top = 1.0
 anchor_right = 1.0
+anchor_bottom = 1.0
 offset_left = -300.0
-offset_bottom = 200.0
+offset_top = -200.0
 grow_horizontal = 0
+grow_vertical = 0
 
-[node name="MarginContainer" type="MarginContainer" parent="."]
+[node name="NotificationContainer" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -300.0
+offset_top = -200.0
+grow_horizontal = 0
+grow_vertical = 0
+size_flags_vertical = 8
+
+[node name="MarginContainer" type="MarginContainer" parent="NotificationContainer"]
 layout_mode = 2
 theme_override_constants/margin_left = 5
 theme_override_constants/margin_top = 5
 theme_override_constants/margin_right = 5
 theme_override_constants/margin_bottom = 5
 
-[node name="Notifications" type="VBoxContainer" parent="MarginContainer"]
+[node name="Notifications" type="VBoxContainer" parent="NotificationContainer/MarginContainer"]
+custom_minimum_size = Vector2(20, 0)
 layout_mode = 2
 alignment = 2
 
-[node name="NotificationRow" parent="MarginContainer/Notifications" instance=ExtResource("1_1b8gb")]
+[node name="NotificationRow" parent="NotificationContainer/MarginContainer/Notifications" instance=ExtResource("1_1b8gb")]
 layout_mode = 2
+alignment = 2

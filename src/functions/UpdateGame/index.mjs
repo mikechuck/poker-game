@@ -1,7 +1,7 @@
 import { DynamoDBDocumentClient, UpdateCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import crypto from "crypto";
-import Enums from "#shared/enums.json";
+import Enums from "./shared/enums.json" with { type: "json" };
 
 const docClient = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 
@@ -25,6 +25,7 @@ export const handler = async (event) => {
 
     const gameId = event.queryStringParameters?.gameId;
     const body = JSON.parse(event.body)
+    console.log(body);
     const newGameStatus = body.gameStatus;
     const newPort = body.port
     var hostPlayerId = "";

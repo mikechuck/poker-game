@@ -7,35 +7,23 @@ const docClient = DynamoDBDocumentClient.from(client);
 const GAMES_TABLE = process.env.GAMES_TABLE;
 
 export const handler = async (event) => {
-    const gameId = event.queryStringParameters?.gameId;
-
-    if (!gameId) {
-        return { statusCode: 400, body: JSON.stringify({ message: "Missing gameId parameter" }) };
-    }
+    const accountId = event.requestContext?.authorizer?.jwt?.claims?.sub;
 
     try {
         const response = await docClient.send(new QueryCommand({
             TableName: GAMES_TABLE,
-            KeyConditionExpression: "gameId = :gId",
+            IndexName: "HostPlayerIdIndex", 
+            KeyConditionExpression: "hostPlayerId = :hId",
             ExpressionAttributeValues: {
-                ":gId": gameId
+                ":hId": accountId
             }
         }));
-
-        const game = response.Items?.[0] ?? null;
-
-        if (!game) {
-            return { statusCode: 404, body: JSON.stringify({ message: "Game session not found" }) };
-        }
 
         // Return the current status (Whether PENDING or ACTIVE along with the port)
         return {
             statusCode: 200,
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                gameStatus: game.gameStatus,
-                port: game.port,
-            })
+            body: response.Items
         };
 
     } catch (error) {

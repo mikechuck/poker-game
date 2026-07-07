@@ -30,15 +30,23 @@ func create_game(callback: Callable):
 		JSON.stringify(reqeustBody)
 	)
 	
-func get_game(game_id: String, callback: Callable):
+func get_game(game_id, callback: Callable):
 	var path = "/game?gameId=%s" % game_id.uri_encode()
 	auth_manager.api_request(
 		path,
 		HTTPClient.METHOD_GET,
 		callback
 	)
+
+func get_games(callback: Callable):
+	var path = "/games"
+	auth_manager.api_request(
+		path,
+		HTTPClient.METHOD_GET,
+		callback
+	)
 	
-func update_game(game_id: String, game_status: String, callback: Callable):
+func update_game(game_id, game_status, callback: Callable):
 	var path = "/game?gameId=%s" % game_id.uri_encode()
 	var reqeustBody = {
 		gameStatus = game_status
@@ -52,7 +60,7 @@ func update_game(game_id: String, game_status: String, callback: Callable):
 	)
 	
 # Server methods
-func server_update_game(game_id: String, game_status: String, port, callback: Callable):
+func server_update_game(game_id, game_status, port, callback: Callable):
 	var path = "/game?gameId=%s" % game_id.uri_encode()
 	var requestBody = {
 		gameStatus = game_status,

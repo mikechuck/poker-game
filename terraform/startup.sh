@@ -15,8 +15,8 @@ sudo usermod -aG ec2-user cwagent
     -c ssm:${cwAgentConfigName} \
     -s
 
-# Download Files
-aws s3 cp s3://${bucketName}/${s3Prefix} /home/ec2-user/ --recursive
+# We only grab base environment configs like nginx config sheets here, not the game files
+aws s3 cp s3://${bucketName}/${s3Prefix} /home/ec2-user/ --recursive --exclude "*" --include "poker.conf"
 cd /home/ec2-user
 
 # Nginx setup
@@ -54,6 +54,14 @@ BLIND_VALUE="\$4"
 export GAME_SERVER_API_TOKEN=\$(aws ssm get-parameter --name "/poker/server/api_token" --with-decryption --query "Parameter.Value" --output text --region us-east-1)
 export AWS_DEFAULT_REGION="us-east-1"
 export HOME="/home/ec2-user"
+
+# 🟩 STEP 1: Pull the latest fresh server engine builds directly from S3 at launch time
+echo "[Startup] Downloading fresh server binaries from S3..."
+aws s3 cp s3://\${bucketName}/\${s3Prefix} /home/ec2-user/ --recursive --exclude "*" --include "poker_server*" --include "shared/*"
+
+# 🟩 STEP 2: Explicitly clear permissions so ec2-user can run it even if SSM invoked as root
+chmod +x "\$SERVER_BIN"
+chown -R ec2-user:ec2-user /home/ec2-user
 
 # Find a free port for the new game instance
 while :; do
@@ -98,17 +106,15 @@ sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
     -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.d/poker_\$PORT_\$TARGET_GAME_ID.json \
     -s
 
-# Running binary execution natively without nesting inside an unprivileged shell string wrapper.
-nohup "\$SERVER_BIN" --headless --gameId="\$TARGET_GAME_ID" --port="\$PORT" --blind="\$BLIND_VALUE" --apiToken="\$GAME_SERVER_API_TOKEN" > "/home/ec2-user/logs/poker_\$PORT_\$TARGET_GAME_ID.log" 2>&1 < /dev/null &
+# Execute the binary explicitly running context dropped to 'ec2-user'
+echo "[Startup] Detaching poker server engine process..."
+sudo -u ec2-user -H nohup "\$SERVER_BIN" --headless --gameId="\$TARGET_GAME_ID" --port="\$PORT" --blind="\$BLIND_VALUE" --apiToken="\$GAME_SERVER_API_TOKEN" > "/home/ec2-user/logs/poker_\$PORT_\$TARGET_GAME_ID.log" 2>&1 < /dev/null &
 
 PID=\$!
 echo "[Startup] Game server process successfully detached with PID: \$PID on port \$PORT"
 echo "[Startup] Game initialization complete!"
 EOF
 
-# Finalize file permissions
+# Finalize orchestrator script permissions
 chmod +x /home/ec2-user/start_game_session.sh
-if [ -f "/home/ec2-user/poker_server.x86_64" ]; then
-    chmod +x /home/ec2-user/poker_server.x86_64
-fi
-chown -R ec2-user:ec2-user /home/ec2-user/
+chown -R ec2-user:ec2-user /home/ec2-user

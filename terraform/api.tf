@@ -275,7 +275,35 @@ resource "aws_lambda_permission" "api_gw_get_game" {
     source_arn    = "${aws_apigatewayv2_api.poker_api.execution_arn}/*/*/game"
 }
 
-# --- End CreateGame API Gateway Integration ---
+# --- End GetGame API Gateway Integration ---
+
+# --- Start GetGames API Gateway Integration ---
+
+resource "aws_apigatewayv2_integration" "get_games_int" {
+    api_id           = aws_apigatewayv2_api.poker_api.id
+    integration_type = "AWS_PROXY"
+    integration_uri  = aws_lambda_function.get_games.invoke_arn
+    payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "get_games_route" {
+    api_id    = aws_apigatewayv2_api.poker_api.id
+    route_key = "GET /games"
+
+    target             = "integrations/${aws_apigatewayv2_integration.get_games_int.id}"
+    authorization_type = "JWT"
+    authorizer_id      = aws_apigatewayv2_authorizer.cognito_auth.id
+}
+
+resource "aws_lambda_permission" "api_gw_get_games" {
+    statement_id  = "AllowExecutionFromAPIGateway"
+    action        = "lambda:InvokeFunction"
+    function_name = aws_lambda_function.get_games.function_name
+    principal     = "apigateway.amazonaws.com"
+    source_arn    = "${aws_apigatewayv2_api.poker_api.execution_arn}/*/*/games"
+}
+
+# --- End GetGames API Gateway Integration ---
 
 # --- Start UpdateGame API Gateway Integration ---
 
@@ -464,6 +492,47 @@ resource "aws_cloudwatch_log_group" "get_game_logs" {
 }
 
 # --- End GetGame Lambda Function ---
+
+# --- Start GetGames Lambda Function ---
+
+data "archive_file" "get_games_zip" {
+    type        = "zip"
+    output_path = "${path.module}/exports/lambda/GetGames.zip"
+    source {
+        content  = file("${path.module}/../src/functions/GetGames/index.mjs")
+        filename = "index.mjs"
+    }
+    source {
+        content  = file("${path.module}/../shared/enums.json")
+        filename = "shared/enums.json"
+    }
+}
+
+resource "aws_lambda_function" "get_games" {
+    function_name = "GetGames"
+    filename      = data.archive_file.get_games_zip.output_path
+    role          = aws_iam_role.lambda_integration_role.arn
+    handler       = "index.handler"
+    runtime       = "nodejs22.x" # Node 22 is the standard current LTS
+    timeout       = 10
+    memory_size   = 512
+
+    source_code_hash = data.archive_file.get_games_zip.output_base64sha256
+
+    environment {
+        variables = {
+            GAMES_TABLE = aws_dynamodb_table.games_table.name
+        }
+    }
+}
+
+# Create the log group explicitly to control retention
+resource "aws_cloudwatch_log_group" "get_games_logs" {
+    name              = "/aws/lambda/GetGames"
+    retention_in_days = 7
+}
+
+# --- End GetGames Lambda Function ---
 
 # --- Start UpdateGame Lambda Function ---
 

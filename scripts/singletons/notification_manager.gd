@@ -10,7 +10,6 @@ func _ready() -> void:
 	_notification_container_scene = NOTIFICATION_CONTAINER_SCENE.instantiate()
 	add_child(_notification_container_scene)
 	_notifications_node = _notification_container_scene.find_child("Notifications")
-	print("setup notifications node")
 	
 func write(message: String, icon: String = "👉", warning: bool = false, error: bool = false):
 	var new_notification_row = NOTIFICATION_ROW_SCENE.instantiate()
@@ -28,4 +27,6 @@ func write(message: String, icon: String = "👉", warning: bool = false, error:
 	
 	if (_notifications_node):
 		_notifications_node.add_child(new_notification_row)
+		
+	
 	

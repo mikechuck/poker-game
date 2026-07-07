@@ -1,7 +1,6 @@
 extends Node
 
 @onready var debug_output_node = $DebugOutput
-@onready var url_input_node = $Menu/JoinGame/IpInput
 @onready var game_code_input_node = $Menu/JoinGame/GameCodeInput
 @onready var account_section = $AccountSection
 @onready var auth_manager =  get_tree().current_scene.get_node("AuthManager")
@@ -19,7 +18,12 @@ func _ready() -> void:
 		if (response_code == 200):
 			account_section.display_account_data(data)
 	)
-		
+	
+	# Grab list of the users games to display in the menu
+	http_request_manager.get_games(func(response_code, data):
+		Log.message("Got response from GetGames endpoint! Response code: %s" % response_code)
+	)
+	
 	# If not the server, then we should bounce the user the landing if they don't have
 	multiplayer.connected_to_server.connect(_on_connected)
 	multiplayer.connection_failed.connect(_on_connection_failed)
@@ -29,7 +33,7 @@ func wait_for_game_creation(game_id: String):
 	http_request_manager.get_game(game_id, func(response_code, data):
 		if (response_code == 200):
 			if (data["gameStatus"] == Globals.Enums.GameStatus.STARTED):
-				Log.message("Game is active!")
+				Log.message("Game found! Joining...")
 				connect_to_server(data["port"])
 			else:
 				await get_tree().create_timer(3.0).timeout
@@ -39,7 +43,6 @@ func wait_for_game_creation(game_id: String):
 	)
 
 func _on_create_game_button_pressed() -> void:
-	Log.message("Create button pressed, calling API")
 	http_request_manager.create_game(func(response_code, data):
 		if (response_code == 202 or response_code == 200):
 			var game_id = data["gameId"]
@@ -58,29 +61,26 @@ func _on_join_game_button_pressed() -> void:
 	
 	http_request_manager.get_game(_game_code, func(response_code, data):
 		if (response_code == 200):
-			if (data["gameStatus"] == Globals.enums.GameStatus.STARTED):
-				Log.message("Game is active!")
-				#connect_to_server(data["port"])
+			if (data["gameStatus"] == Globals.Enums.GameStatus.STARTED):
+				connect_to_server(data["port"])
 			else:
 				Log.message("Game not active")
 		else:
 			Log.message("Error getting game status")
 	)
-	#connect_to_server(_server_port)
 
 func _on_game_code_input_text_changed(game_code: String) -> void:
 	_game_code = game_code
 
-func connect_to_server(port: String):
-	var connection_url = "wss://%s/game/%s" % [SERVER_URL, port]
-	Log.message("Joining server at %s..." % connection_url)
+func connect_to_server(port):
+	var connection_url = "wss://%s/game/%s" % [SERVER_URL, int(port)]
 	var peer = WebSocketMultiplayerPeer.new()
 	multiplayer.multiplayer_peer = null
 	peer.create_client(connection_url)
 	multiplayer.multiplayer_peer = peer
 	
 func _on_connected():
-	Log.message("Successfully connected to server!")
+	Log.message("Connected to game!")
 	NavigationManager.navigate_to_game_scene()
 
 func _on_connection_failed():
