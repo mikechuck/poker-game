@@ -6,7 +6,6 @@ extends Node
 @onready var auth_manager =  get_tree().current_scene.get_node("AuthManager")
 @onready var http_request_manager =  get_tree().current_scene.get_node("HttpRequests")
 
-const SERVER_URL = "server.mikechucktingle.net"
 var _game_code = ""
 
 func _ready() -> void:
@@ -19,10 +18,11 @@ func _ready() -> void:
 			account_section.display_account_data(data)
 	)
 	
+	# TODO add this back in when we have a "games history" view
 	# Grab list of the users games to display in the menu
-	http_request_manager.get_games(func(response_code, data):
-		Log.message("Got response from GetGames endpoint! Response code: %s" % response_code)
-	)
+	#http_request_manager.get_games(func(response_code, data):
+		#Log.message("Got response from GetGames endpoint! Response code: %s" % response_code)
+	#)
 	
 	# If not the server, then we should bounce the user the landing if they don't have
 	multiplayer.connected_to_server.connect(_on_connected)
@@ -58,7 +58,6 @@ func _on_create_game_button_pressed() -> void:
 
 func _on_join_game_button_pressed() -> void:
 	Log.message("Joining game code: %s" % _game_code)
-	
 	http_request_manager.get_game(_game_code, func(response_code, data):
 		if (response_code == 200):
 			if (data["gameStatus"] == Globals.Enums.GameStatus.STARTED):
@@ -73,9 +72,16 @@ func _on_game_code_input_text_changed(game_code: String) -> void:
 	_game_code = game_code
 
 func connect_to_server(port):
-	var connection_url = "wss://%s/game/%s" % [SERVER_URL, int(port)]
+	Log.message("Connecting to game %s..." % _game_code)
+	var connection_url = "wss://%s/game/%s" % [auth_manager.BASE_URL, int(port)]
 	var peer = WebSocketMultiplayerPeer.new()
 	multiplayer.multiplayer_peer = null
+	
+	var headers = PackedStringArray([
+		"Authorization: Bearer " + auth_manager.get_access_token(),
+		"Cookie: poker_token=" + auth_manager.get_access_token()
+	])
+	peer.set_handshake_headers(headers)
 	peer.create_client(connection_url)
 	multiplayer.multiplayer_peer = peer
 	

@@ -72,7 +72,7 @@ layout_mode = 0
 offset_right = 300.0
 offset_bottom = 50.0
 mouse_default_cursor_shape = 2
-text = "Create New Game
+text = "Host Game
 "
 
 [node name="JoinGame" type="Control" parent="Menu"]

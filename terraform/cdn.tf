@@ -65,7 +65,9 @@ resource "aws_cloudfront_distribution" "poker_cdn" {
     aliases             = ["poker.mikechucktingle.net"]
 
     origin {
-        domain_name = aws_eip.poker_server_eip.public_dns
+        # TODO attempting to target alb instead of ec2 directly?
+        # domain_name = aws_eip.poker_server_eip.public_dns
+        domain_name = aws_lb.poker_alb.dns_name
         origin_id   = "ec2-poker-server"
         custom_origin_config {
             http_port              = 8000

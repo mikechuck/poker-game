@@ -1,14 +1,21 @@
 leftoff: 
-	- Create client join flow via game code instead of port id
+
+	- add player list to Game record in db, add and remove when players connect or disconnect
 	- authentication	
 		- we should only be doing token authentication on the initial TCP connection request
-		- The game server should hold a record of player ids from TCP connections and validate each subsequent request
-			- need this because of the dynamic routing? Or does the TCP auth handle this?
-	- Check to make sure EC2 edge auth is working:
-		
-		- start two games with two different users
-		- try to connect other games without joining them via api
-		- autorizor should reject request. Also see if it logs to CW, and if not setup a log path for it
+			- need to add tokens to a cookie instead of tcp headers, which get stripped out?
+			- we should add a db lookup to see if this player is supposed to be making requests to the game
+
+
+	- Main scene:
+		- list active games, be able to join them:
+			- new lambda function for getGames,
+			- add new endpoint and lambda to api.tf
+			- in godot, call GetGames, show a ui icon for code, number of players in it, and a join button
+			- in Games table during creation and whenever someone joins or leaves, call UpdateGame with new number of players
+
+	
+
 	- When game is over:
 		- call lambda to update dybamo to:
 			- switch game state from ACTIVE to COMPLETE
