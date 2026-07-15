@@ -77,7 +77,8 @@ export const handler = async (event) => {
             port: 0,
             gameStatus: Enums.GameStatus.STARTING,
             endTimeEpochMilliseconds: 0,
-            blind: blindValue
+            blind: blindValue,
+            connectedPlayers: []
         };
 
         await docClient.send(new PutCommand({

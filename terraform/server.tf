@@ -100,9 +100,9 @@ resource "aws_iam_role_policy" "ec2_dynamo_update_access" {
     })
 }
 
-# --- Start Lambda Edge Config ---
+# --- Start Lambda Server Edge Auth Config ---
 
-resource "aws_iam_role" "lambda_edge_role" {
+resource "aws_iam_role" "lambda_edge_auth_role" {
     name = "poker-auth-edge-role"
 
     assume_role_policy = jsonencode({
@@ -118,39 +118,37 @@ resource "aws_iam_role" "lambda_edge_role" {
 }
 
 resource "aws_iam_role_policy_attachment" "edge_logs" {
-  role       = aws_iam_role.lambda_edge_role.name
+  role       = aws_iam_role.lambda_edge_auth_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-data "template_file" "lambda_source" {
-    template = file("${path.module}/auth_edge.js.tpl")
-    vars = {
-        region         = "us-east-1"
-        user_pool_id   = aws_cognito_user_pool.poker_pool.id
-        app_client_id  = aws_cognito_user_pool_client.poker_client.id
-    }
-}
 
-data "archive_file" "lambda_zip" {
+data "archive_file" "server_edge_auth_zip" {
     type        = "zip"
-    output_path = "${path.module}/exports/lambda/auth_edge.zip"
-    source {
-        content  = data.template_file.lambda_source.rendered
-        filename = "index.js"
+    source_dir  = "${path.module}/../src/functions/ServerEdgeAuthorizer"
+    output_path = "${path.module}/exports/lambda/ServerEdgeAuthorizer.zip"
+}
+
+resource "aws_lambda_function" "server_edge_auth_lambda" {
+    function_name = "ServerEdgeAuthorizer"
+    filename      = data.archive_file.server_edge_auth_zip.output_path
+    role          = aws_iam_role.lambda_edge_auth_role.arn
+    handler       = "index.handler"
+    runtime       = "nodejs22.x"
+    timeout       = 5
+    memory_size   = 128
+
+    source_code_hash = data.archive_file.server_edge_auth_zip.output_base64sha256
+
+    environment {
+        variables = {
+            region         = "us-east-1"
+            user_pool_id   = aws_cognito_user_pool.poker_pool.id
+            app_client_id  = aws_cognito_user_pool_client.poker_client.id
+        }
     }
 }
 
-resource "aws_lambda_function" "auth_edge" {
-    provider      = aws.us_east_1 
-    function_name = "poker-auth-at-edge"
-    role          = aws_iam_role.lambda_edge_role.arn
-    handler       = "index.handler"
-    runtime       = "nodejs20.x"
-    publish       = true
-
-    filename         = data.archive_file.lambda_zip.output_path
-    source_code_hash = data.archive_file.lambda_zip.output_base64sha256
-}
 # --- End Lambda Edge Config ---
 
 # --- Start EC2 Instance Config ---

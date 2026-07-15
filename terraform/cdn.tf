@@ -95,7 +95,7 @@ resource "aws_cloudfront_distribution" "poker_cdn" {
 
         lambda_function_association {
             event_type   = "viewer-request"
-            lambda_arn   = aws_lambda_function.auth_edge.qualified_arn 
+            lambda_arn   = aws_lambda_function.server_edge_auth_lambda.qualified_arn 
             include_body = false
         }
     }

@@ -1,3 +1,6 @@
+// This function is to provide authentication for new TCP connections to our server.
+// It will run once during TCP connection handshake using a client auth cookie
+
 const REGION = "${region}";
 const USER_POOL_ID = "${user_pool_id}";
 const APP_CLIENT_ID = "${app_client_id}";
@@ -30,16 +33,20 @@ exports.handler = async (event) => {
     const request = event.Records[0].cf.request;
     const headers = request.headers;
 
+    console.log("headers:", headers)
+
     // 1. Get Token from Header or Cookie
     let token = '';
-    if (headers.authorization) {
-        token = headers.authorization[0].value.replace('Bearer ', '');
-    } else if (headers.cookie) {
+    if (headers.cookie) {
+        console.log("found cookie");
         const authCookie = headers.cookie[0].value.split('; ').find(c => c.startsWith('poker_token='));
+        console.log("authCookie value:", authCookie);
         if (authCookie) token = authCookie.split('=')[1];
     }
 
-    if (!token) return { status: '401', body: 'Missing Token' };
+    console.log("token:", token);
+
+    if (!token) return { status: '401', body: 'Missing authorization' };
 
     try {
         const [headerB64, payloadB64, signatureB64] = token.split('.');

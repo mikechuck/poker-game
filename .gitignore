@@ -45,3 +45,6 @@ package-lock.json
 # Terraform
 *.tfplan
 **/.terraform/
+*.tfstate
+*.tfstate.backup
+*.tf.backup

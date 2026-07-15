@@ -55,6 +55,9 @@ func _on_peer_connected(id):
 		game_manager.game_state_data.host_player_id = connected_player.id
 		connected_player.is_host = true
 		
+	# Update the db record with the new player ID
+	
+		
 	client_manager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
 	Log.message("Number of players connected: %s" % [game_manager.game_state_data.connected_players.size()])
 	
@@ -98,6 +101,9 @@ func update_server_startup_info() -> void:
 		else:
 			Log.message("Error updating game record for %s" % GAME_ID)
 	)
+	
+func update_db_player_connected() -> void:
+	http_request_manager.server_update_game(GAME)
 		
 func _on_idle_timeout() -> void:
 	# If no players are in the game after the timeout, end the game

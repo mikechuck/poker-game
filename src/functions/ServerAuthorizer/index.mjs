@@ -1,3 +1,5 @@
+// This function is used to authenticate requests from the server coming through api gateway
+
 export const handler = async (event) => {
     // API Gateway passes identity source parameters inside the primary headers map
     const incomingToken = event.headers['x-server-token'];

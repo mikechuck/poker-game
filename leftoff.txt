@@ -1,10 +1,8 @@
 leftoff: 
-
+	- remove tfstate files from git. delete from repo
 	- add player list to Game record in db, add and remove when players connect or disconnect
 	- authentication	
-		- we should only be doing token authentication on the initial TCP connection request
-			- need to add tokens to a cookie instead of tcp headers, which get stripped out?
-			- we should add a db lookup to see if this player is supposed to be making requests to the game
+		- finish fixing tcp auth. wait for replicated lambda to finish OR fix terraform to ditch the resources. Do a terraform apply to see the error about the role (might need to untrack it)
 
 
 	- Main scene:

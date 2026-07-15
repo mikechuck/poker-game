@@ -76,12 +76,6 @@ func connect_to_server(port):
 	var connection_url = "wss://%s/game/%s" % [auth_manager.BASE_URL, int(port)]
 	var peer = WebSocketMultiplayerPeer.new()
 	multiplayer.multiplayer_peer = null
-	
-	var headers = PackedStringArray([
-		"Authorization: Bearer " + auth_manager.get_access_token(),
-		"Cookie: poker_token=" + auth_manager.get_access_token()
-	])
-	peer.set_handshake_headers(headers)
 	peer.create_client(connection_url)
 	multiplayer.multiplayer_peer = peer
 	

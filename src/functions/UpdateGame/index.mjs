@@ -25,11 +25,14 @@ export const handler = async (event) => {
 
     const gameId = event.queryStringParameters?.gameId;
     const body = JSON.parse(event.body)
-    console.log(body);
     const newGameStatus = body.gameStatus;
     const newPort = body.port
+    const addPlayers = body.addPlayers;
+    const removePlayers = body.removePlayers;
     var hostPlayerId = "";
     var updateParams;
+
+    console.log("body:", body);
 
     // TODO: update logic to migrate to a new dynamo record if trying to change hosts
     // Maybe best to just create a new endpoint for this...
@@ -58,22 +61,62 @@ export const handler = async (event) => {
         };
     }
 
-    if (newGameStatus == Enums.GameStatus.STARTED) {
-        updateParams = {
-            TableName: GAMES_TABLE,
-            Key: {
-                gameId: gameId,
-                hostPlayerId: hostPlayerId
-            },
-            UpdateExpression: "SET gameStatus = :statusValue, port = :newPort",
-            ExpressionAttributeValues: {
-                ":statusValue": newGameStatus,
-                ":newPort": newPort
-            },
-            ReturnValues: "ALL_NEW"
-        };
-    } else if (newGameStatus == Enums.GameStatus.ENDED) {
-        updateParams = {
+    // Add all of our update values
+    let updateExpressions = []
+    let updateValues = {}
+
+    // const newGameStatus = body.gameStatus;
+    // const newPort = body.port
+    // const addPlayers = body.addPlayers;
+    // const removePlayers = body.removePlayers;
+    if (newGameStatus) {
+        if (newGameStatus == Enums.GameStatus.STARTED) {
+            updateExpressions.push("gameStatus = :statusValue");
+            updateValues[":statusValue", newGameStatus];
+        } else if (newGameStatus == Enums.GameStatus.ENDED) {
+            updateExpressions.push("gameStatus = :statusValue, endTimeEpochMilliseconds = :endTimeValue");
+            updateValues[":statusValue", newGameStatus];
+            updateValues[":endTimeEpochMilliseconds", Date.now()];
+        } else {
+            return {
+                statusCode: 403,
+                body: JSON.stringify({ message: "Unmapped gameStatus value" })
+            };
+        }
+    }
+
+    if (newPort) {
+        updateExpressions.push("newPort = :newPort");
+        updateVlues[":newPort"] = newPort
+    }
+
+    if (addPlayers.length > 0) {
+        const currentPlayers = game.connectedPlayers;
+        addPlayers.forEach((playerId) => {
+            currentPlayers.push(playerId);
+        });
+
+        updateExpressions.push("connectedPlayers = :connectedPlayers");
+        updateVlues[":connectedPlayers"] = currentPlayers
+    }
+
+    if (removePlayers.length > 0) {
+        // get players, find player id, remove from list, update
+        // ignore id if player doesn't exist in game list
+        const playersList = []
+        addPlayers.forEach((playerId) => {
+            game.connectedPlayers.forEach((currentPlayerId) => {
+                if (currentPlayerId != playerId) {
+                    playersList.push(currentPlayerId);
+                }
+            })
+        });
+
+        updateExpressions.push("connectedPlayers = :connectedPlayers");
+        updateVlues[":connectedPlayers"] = playersList
+    }
+
+    updateParams = {
             TableName: GAMES_TABLE,
             Key: {
                 gameId: gameId,
@@ -86,12 +129,6 @@ export const handler = async (event) => {
             },
             ReturnValues: "ALL_NEW"
         };
-    } else {
-        return {
-            statusCode: 403,
-            body: JSON.stringify({ message: "Unmapped gameStatus value" })
-        };
-    }
 
     try {
         const response = await docClient.send(new UpdateCommand(updateParams));

@@ -337,7 +337,7 @@ resource "aws_lambda_permission" "api_gw_update_game" {
 data "archive_file" "server_auth_zip" {
     type        = "zip"
     source_dir  = "${path.module}/../src/functions/ServerAuthorizer"
-    output_path = "${path.module}/exports/lambda/PrivateAuthorizer.zip"
+    output_path = "${path.module}/exports/lambda/ServerAuthorizer.zip"
 }
 
 resource "aws_lambda_function" "server_auth_lambda" {

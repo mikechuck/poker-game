@@ -151,7 +151,17 @@ func refresh_tokens() -> bool:
 	JavaScriptBridge.eval("localStorage.setItem('access_token', '%s')" % access_token)
 	JavaScriptBridge.eval("localStorage.setItem('id_token', '%s')" % id_token)
 	JavaScriptBridge.eval("localStorage.setItem('refresh_token', '%s')" % refresh_token)
+	save_token_to_cookie(access_token)
 	return true
+	
+	
+#### TCP connections
+
+# Create cookie to be used for TCP authentication
+func save_token_to_cookie(token: String) -> void:
+	if OS.has_feature("web"):
+		var cookie_string = "poker_token=%s; path=/; secure; SameSite=Strict; max-age=3600" % token
+		JavaScriptBridge.eval("document.cookie = '%s';" % cookie_string)
 	
 #### Helper methods
 
@@ -205,4 +215,5 @@ func _on_get_tokens_request_completed(result: int, response_code: int, headers: 
 	JavaScriptBridge.eval("localStorage.setItem('access_token', '%s')" % access_token)
 	JavaScriptBridge.eval("localStorage.setItem('id_token', '%s')" % id_token)
 	JavaScriptBridge.eval("localStorage.setItem('refresh_token', '%s')" % refresh_token)
+	save_token_to_cookie(access_token)
 	NavigationManager.navigate_to_main()
