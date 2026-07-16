@@ -72,7 +72,7 @@ resource "aws_lb_target_group" "poker_ec2_8000" {
     target_type = "instance"
 
     health_check {
-        path                = "/"
+        path                = "/health"
         protocol            = "HTTP"
         port                = "8000"
         interval            = 30

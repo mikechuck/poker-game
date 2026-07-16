@@ -32,6 +32,7 @@ export const handler = async (event) => {
     var hostPlayerId = "";
     var updateParams;
 
+    console.log("GAME ID:", gameId);
     console.log("body:", body);
 
     // TODO: update logic to migrate to a new dynamo record if trying to change hosts
@@ -72,7 +73,7 @@ export const handler = async (event) => {
         } else if (newGameStatus == Enums.GameStatus.ENDED) {
             updateExpressions.push("gameStatus = :statusValue, endTimeEpochMilliseconds = :endTimeValue");
             updateValues[":statusValue"] = newGameStatus;
-            updateValues[":endTimeEpochMilliseconds"] = Date.now();
+            updateValues[":endTimeValue"] = Date.now();
         } else {
             return {
                 statusCode: 403,

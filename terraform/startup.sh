@@ -27,6 +27,11 @@ if [ -f "poker.conf" ]; then
     sudo systemctl start nginx
 fi
 
+# Replace the token in nginx for request verification
+SSM_TOKEN=$(aws ssm get-parameter --name "${tcpTokenName}" --with-decryption --query "Parameter.Value" --output text --region us-east-1)
+sudo sed -i "s/TOKEN_PLACEHOLDER/$SSM_TOKEN/g" /etc/nginx/conf.d/poker.conf
+sudo systemctl reload nginx
+
 # ==============================================================================
 # Dynamic Session Starter Engine
 # ==============================================================================
@@ -55,11 +60,9 @@ export GAME_SERVER_API_TOKEN=\$(aws ssm get-parameter --name "/poker/server/api_
 export AWS_DEFAULT_REGION="us-east-1"
 export HOME="/home/ec2-user"
 
-# 🟩 STEP 1: Pull the latest fresh server engine builds directly from S3 at launch time
 echo "[Startup] Downloading fresh server binaries from S3..."
 aws s3 cp s3://\${bucketName}/\${s3Prefix} /home/ec2-user/ --recursive --exclude "*" --include "poker_server*" --include "shared/*"
 
-# 🟩 STEP 2: Explicitly clear permissions so ec2-user can run it even if SSM invoked as root
 chmod +x "\$SERVER_BIN"
 chown -R ec2-user:ec2-user /home/ec2-user
 

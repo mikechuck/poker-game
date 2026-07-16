@@ -37,7 +37,8 @@ resource "aws_iam_role_policy" "ec2_ssm_parameter_access" {
                 # Restrict access precisely to your cloudwatch config parameter resource
                 Resource = [
                     aws_ssm_parameter.cw_agent_config.arn,
-                    aws_ssm_parameter.server_api_token.arn
+                    aws_ssm_parameter.server_api_token.arn,
+                    aws_ssm_parameter.tcp_request_token.arn
                 ]
             },
             {
@@ -160,7 +161,8 @@ locals {
         bucketName        = "chuckycodes-games"
         s3Prefix          = "poker-game/server/linux"
         cwAgentConfigName = aws_ssm_parameter.cw_agent_config.name
-        gamesTableName    = aws_dynamodb_table.games_table.name
+        gamesTableName    = aws_dynamodb_table.games_table.name,
+        tcpTokenName      = aws_ssm_parameter.tcp_request_token.name
     })
 }
 

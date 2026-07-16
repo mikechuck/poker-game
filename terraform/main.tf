@@ -34,3 +34,17 @@ resource "aws_ssm_parameter" "server_api_token" {
     value       = random_password.server_api_token.result
     description = "Private token for EC2 to bypass public user authentication gates"
 }
+
+# Generate a secure random string for the nginx router to validate that requests are coming from the ALB
+resource "random_password" "tcp_request_token" {
+    length  = 32
+    special = false
+}
+
+# Securely store this private token inside the SSM Parameter Store
+resource "aws_ssm_parameter" "tcp_request_token" {
+    name        = "/poker/server/tcp_token"
+    type        = "SecureString"
+    value       = random_password.tcp_request_token.result
+    description = "Private token for EC2 nginx to validate tcp requests to ensure they are coming from ALB"
+}

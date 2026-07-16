@@ -65,15 +65,17 @@ resource "aws_cloudfront_distribution" "poker_cdn" {
     aliases             = ["poker.mikechucktingle.net"]
 
     origin {
-        # TODO attempting to target alb instead of ec2 directly?
-        # domain_name = aws_eip.poker_server_eip.public_dns
         domain_name = aws_lb.poker_alb.dns_name
         origin_id   = "ec2-poker-server"
         custom_origin_config {
-            http_port              = 8000
+            http_port              = 80
             https_port             = 443
-            origin_protocol_policy = "http-only"
+            origin_protocol_policy = "https-only"
             origin_ssl_protocols   = ["TLSv1.2"]
+        }
+        custom_header {
+            name = "X-Origin-Verify"
+            value = random_password.tcp_request_token.result
         }
     }
 
@@ -91,7 +93,7 @@ resource "aws_cloudfront_distribution" "poker_cdn" {
         compress         = true
         viewer_protocol_policy = "https-only"
         cache_policy_id = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" 
-        origin_request_policy_id = "216adef6-5c7f-47e4-b989-5492eafa07d3" 
+        origin_request_policy_id = "216adef6-5c7f-47e4-b989-5492eafa07d3"
 
         lambda_function_association {
             event_type   = "viewer-request"
