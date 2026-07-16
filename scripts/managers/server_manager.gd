@@ -56,7 +56,11 @@ func _on_peer_connected(id):
 		connected_player.is_host = true
 		
 	# Update the db record with the new player ID
-	
+	var update_request = {
+		"game_id": GAME_ID,
+		"add_players": [id]
+	}
+	http_request_manager.server_update_game(update_request, func (response_code, data): pass)
 		
 	client_manager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
 	Log.message("Number of players connected: %s" % [game_manager.game_state_data.connected_players.size()])
@@ -86,6 +90,12 @@ func _on_peer_disconnected(id):
 	if game_manager.game_state_data.connected_players.size() == 0:
 		game_manager.reset_hand()
 		
+	var update_request = {
+		"game_id": GAME_ID,
+		"add_players": [id]
+	}
+	http_request_manager.server_update_game(update_request)
+	
 	client_manager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
 	Log.message("Number of players connected: %s" % [game_manager.game_state_data.connected_players.size()])
 	
@@ -95,25 +105,26 @@ func _on_peer_disconnected(id):
 		idle_timer.start()
 		
 func update_server_startup_info() -> void:
-	http_request_manager.server_update_game(GAME_ID, Globals.Enums.GameStatus.STARTED, PORT, func(response_code, data):
-		if (response_code == 200):
-			Log.message("Game record updated for %s" % GAME_ID)
-		else:
-			Log.message("Error updating game record for %s" % GAME_ID)
-	)
+	var update_request: Dictionary = {
+		"game_id": GAME_ID,
+		"game_status": Globals.Enums.GameStatus.STARTED,
+		"port": PORT
+	}
+	http_request_manager.server_update_game(update_request)
 	
 func update_db_player_connected() -> void:
-	http_request_manager.server_update_game(GAME)
+	http_request_manager.server_update_game(GAME_ID, )
 		
 func _on_idle_timeout() -> void:
 	# If no players are in the game after the timeout, end the game
 	if (game_manager.game_state_data.connected_players.size() == 0):
-		http_request_manager.server_update_game(GAME_ID, Globals.Enums.GameStatus.ENDED, PORT, func(response_code, data):
-			if (response_code == 200):
-				Log.message("Game record updated for %s" % GAME_ID)
-			else:
-				Log.message("Error updating game record for %s" % GAME_ID)
-			
+		var update_request: Dictionary = {
+			"game_id": GAME_ID,
+			"game_status": Globals.Enums.GameStatus.ENDED,
+			"port": PORT
+		}
+		
+		http_request_manager.server_update_game(update_request, func(response_code, data):
 			Log.message("Game server instance shutting down. Goodbye.")
 			get_tree().quit()
 		)

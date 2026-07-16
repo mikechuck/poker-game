@@ -65,18 +65,14 @@ export const handler = async (event) => {
     let updateExpressions = []
     let updateValues = {}
 
-    // const newGameStatus = body.gameStatus;
-    // const newPort = body.port
-    // const addPlayers = body.addPlayers;
-    // const removePlayers = body.removePlayers;
     if (newGameStatus) {
         if (newGameStatus == Enums.GameStatus.STARTED) {
             updateExpressions.push("gameStatus = :statusValue");
-            updateValues[":statusValue", newGameStatus];
+            updateValues[":statusValue"] = newGameStatus;
         } else if (newGameStatus == Enums.GameStatus.ENDED) {
             updateExpressions.push("gameStatus = :statusValue, endTimeEpochMilliseconds = :endTimeValue");
-            updateValues[":statusValue", newGameStatus];
-            updateValues[":endTimeEpochMilliseconds", Date.now()];
+            updateValues[":statusValue"] = newGameStatus;
+            updateValues[":endTimeEpochMilliseconds"] = Date.now();
         } else {
             return {
                 statusCode: 403,
@@ -86,21 +82,21 @@ export const handler = async (event) => {
     }
 
     if (newPort) {
-        updateExpressions.push("newPort = :newPort");
-        updateVlues[":newPort"] = newPort
+        updateExpressions.push("port = :newPort");
+        updateValues[":newPort"] = newPort;
     }
 
-    if (addPlayers.length > 0) {
+    if (addPlayers && addPlayers.length > 0) {
         const currentPlayers = game.connectedPlayers;
         addPlayers.forEach((playerId) => {
             currentPlayers.push(playerId);
         });
 
         updateExpressions.push("connectedPlayers = :connectedPlayers");
-        updateVlues[":connectedPlayers"] = currentPlayers
+        updateValues[":connectedPlayers"] = currentPlayers
     }
 
-    if (removePlayers.length > 0) {
+    if (removePlayers && removePlayers.length > 0) {
         // get players, find player id, remove from list, update
         // ignore id if player doesn't exist in game list
         const playersList = []
@@ -113,22 +109,19 @@ export const handler = async (event) => {
         });
 
         updateExpressions.push("connectedPlayers = :connectedPlayers");
-        updateVlues[":connectedPlayers"] = playersList
+        updateValues[":connectedPlayers"] = playersList
     }
 
     updateParams = {
-            TableName: GAMES_TABLE,
-            Key: {
-                gameId: gameId,
-                hostPlayerId: hostPlayerId
-            },
-            UpdateExpression: "SET gameStatus = :statusValue, endTimeEpochMilliseconds = :endTimeValue",
-            ExpressionAttributeValues: {
-                ":statusValue": newGameStatus,
-                ":endTimeValue": Date.now()
-            },
-            ReturnValues: "ALL_NEW"
-        };
+        TableName: GAMES_TABLE,
+        Key: {
+            gameId: gameId,
+            hostPlayerId: hostPlayerId
+        },
+        UpdateExpression: "SET " + updateExpressions.join(", "),
+        ExpressionAttributeValues: updateValues,
+        ReturnValues: "ALL_NEW"
+    };
 
     try {
         const response = await docClient.send(new UpdateCommand(updateParams));

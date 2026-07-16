@@ -60,20 +60,15 @@ func update_game(game_id, game_status, callback: Callable):
 	)
 	
 # Server methods
-func server_update_game(
-	game_id,
-	callback: Callable,
-	game_status = null,
-	port = null,
-	add_players: Array[int] = [],
-	remove_players: Array[int] = []
-):
+# game_id, game_status = null, port = null, add_players: Array[int] = [], remove_players: Array[int] = []
+func server_update_game(params: Dictionary, callback: Callable = func(): pass):
+	var game_id = params["game_id"]
 	var path = "/game?gameId=%s" % game_id.uri_encode()
 	var requestBody = {
-		gameStatus = game_status,
-		port = port,
-		addPlayers = add_players,
-		removePlayers = remove_players
+		gameStatus = params["game_status"],
+		port = params["port"],
+		addPlayers = params["add_players"],
+		removePlayers = params["remove_players"]
 	}
 	
 	auth_manager.server_api_request(

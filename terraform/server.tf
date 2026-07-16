@@ -103,7 +103,7 @@ resource "aws_iam_role_policy" "ec2_dynamo_update_access" {
 # --- Start Lambda Server Edge Auth Config ---
 
 resource "aws_iam_role" "lambda_edge_auth_role" {
-    name = "poker-auth-edge-role"
+    name = "ServerEdgeAuthV2Role"
 
     assume_role_policy = jsonencode({
         Version = "2012-10-17"
@@ -117,36 +117,39 @@ resource "aws_iam_role" "lambda_edge_auth_role" {
     })
 }
 
-resource "aws_iam_role_policy_attachment" "edge_logs" {
+resource "aws_iam_role_policy_attachment" "server_auth_edge_logs" {
   role       = aws_iam_role.lambda_edge_auth_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+data "template_file" "lambda_source" {
+    template = file("${path.module}/../src/functions/ServerEdgeAuthorizer/index.js.tpl")
+    vars = {
+        region         = "us-east-1"
+        user_pool_id   = aws_cognito_user_pool.poker_pool.id
+        app_client_id  = aws_cognito_user_pool_client.poker_client.id
+    }
+}
 
 data "archive_file" "server_edge_auth_zip" {
     type        = "zip"
-    source_dir  = "${path.module}/../src/functions/ServerEdgeAuthorizer"
-    output_path = "${path.module}/exports/lambda/ServerEdgeAuthorizer.zip"
+    output_path = "${path.module}/exports/lambda/ServeEdgeAuthorizer.zip"
+    source {
+        content  = data.template_file.lambda_source.rendered
+        filename = "index.js"
+    }
 }
 
 resource "aws_lambda_function" "server_edge_auth_lambda" {
-    function_name = "ServerEdgeAuthorizer"
-    filename      = data.archive_file.server_edge_auth_zip.output_path
+    provider      = aws.us_east_1 
+    function_name = "ServerEdgeAuthorizerV2"
     role          = aws_iam_role.lambda_edge_auth_role.arn
     handler       = "index.handler"
-    runtime       = "nodejs22.x"
-    timeout       = 5
-    memory_size   = 128
+    runtime       = "nodejs20.x"
+    publish       = true
 
+    filename         = data.archive_file.server_edge_auth_zip.output_path
     source_code_hash = data.archive_file.server_edge_auth_zip.output_base64sha256
-
-    environment {
-        variables = {
-            region         = "us-east-1"
-            user_pool_id   = aws_cognito_user_pool.poker_pool.id
-            app_client_id  = aws_cognito_user_pool_client.poker_client.id
-        }
-    }
 }
 
 # --- End Lambda Edge Config ---

@@ -348,6 +348,8 @@ resource "aws_lambda_function" "server_auth_lambda" {
     runtime       = "nodejs22.x"
     timeout       = 5
     memory_size   = 128
+    provider      = aws.us_east_1
+    publish       = true
 
     source_code_hash = data.archive_file.server_auth_zip.output_base64sha256
 

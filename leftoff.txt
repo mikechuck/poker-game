@@ -1,4 +1,5 @@
 leftoff: 
+	- join request not getting all the way to server code, check nginx logs
 	- remove tfstate files from git. delete from repo
 	- add player list to Game record in db, add and remove when players connect or disconnect
 	- authentication	
