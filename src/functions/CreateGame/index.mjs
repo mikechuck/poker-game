@@ -21,6 +21,8 @@ export const handler = async (event) => {
 
     const body = JSON.parse(event.body)
     const blindValue = body.blind || 10
+    const buyIn = body.buyIn || 0 // 0 is free game
+    const chipRatio = body.chipRatio || 1
     const accountId = event.requestContext?.authorizer?.jwt?.claims?.sub;
 
     if (!accountId) {
@@ -74,11 +76,14 @@ export const handler = async (event) => {
             gameId: gameCode,
             hostPlayerId: accountId,
             createTimeEpochMilliseconds: Date.now(),
-            port: 0,
             gameStatus: Enums.GameStatus.STARTING,
             endTimeEpochMilliseconds: 0,
+            connectedPlayers: [],
+            port: 0,
             blind: blindValue,
-            connectedPlayers: []
+            buyInDollars: buyIn,
+            chipRatio: chipRatio,
+            handsPlayed: 0
         };
 
         await docClient.send(new PutCommand({

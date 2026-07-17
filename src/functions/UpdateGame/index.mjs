@@ -31,6 +31,7 @@ export const handler = async (event) => {
     const removePlayers = body.removePlayers;
     var hostPlayerId = "";
     var updateParams;
+    var game;
 
     console.log("GAME ID:", gameId);
     console.log("body:", body);
@@ -48,7 +49,7 @@ export const handler = async (event) => {
             }
         }));
 
-        const game = response.Items?.[0] ?? null;
+        game = response.Items?.[0] ?? null;
 
         if (!game) {
             return { statusCode: 404, body: JSON.stringify({ message: "Game session not found" }) };

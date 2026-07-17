@@ -92,7 +92,7 @@ func _on_peer_disconnected(id):
 		
 	var update_request = {
 		"game_id": GAME_ID,
-		"add_players": [id]
+		"remove_players": [id]
 	}
 	http_request_manager.server_update_game(update_request)
 	
@@ -117,7 +117,9 @@ func update_db_player_connected() -> void:
 		
 func _on_idle_timeout() -> void:
 	# If no players are in the game after the timeout, end the game
+	Log.message("checking if game is empty")
 	if (game_manager.game_state_data.connected_players.size() == 0):
+		Log.message("game is empty, update db shutting down")
 		var update_request: Dictionary = {
 			"game_id": GAME_ID,
 			"game_status": Globals.Enums.GameStatus.ENDED,

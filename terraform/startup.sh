@@ -111,7 +111,7 @@ sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
 
 # Execute the binary explicitly running context dropped to 'ec2-user'
 echo "[Startup] Detaching poker server engine process..."
-sudo -u ec2-user -H nohup "\$SERVER_BIN" --headless --gameId="\$TARGET_GAME_ID" --port="\$PORT" --blind="\$BLIND_VALUE" --apiToken="\$GAME_SERVER_API_TOKEN" > "/home/ec2-user/logs/poker_\$PORT_\$TARGET_GAME_ID.log" 2>&1 < /dev/null &
+sudo -u ec2-user -H nohup "\$SERVER_BIN" --verbose --headless --gameId="\$TARGET_GAME_ID" --port="\$PORT" --blind="\$BLIND_VALUE" --apiToken="\$GAME_SERVER_API_TOKEN" > "/home/ec2-user/logs/poker_\$PORT_\$TARGET_GAME_ID.log" 2>&1 < /dev/null &
 
 PID=\$!
 echo "[Startup] Game server process successfully detached with PID: \$PID on port \$PORT"

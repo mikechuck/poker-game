@@ -13,6 +13,7 @@ var REDIRECT_URI = ""
 var SERVER_API_TOKEN = ""
 
 @export var API_URL = "https://api.mikechucktingle.net"
+@export var PLAYER_DATA = {}
 
 func _ready() -> void:
 	if (OS.has_feature("local")):
@@ -90,9 +91,19 @@ func server_api_request(path: String, method: int, callback: Callable, body: Str
 	
 	http.request_completed.connect(func(result, response_code, response_headers, response_body):
 		if (response_code != 200):
-			Log.message("API request failed | Status code: %s | Response: %s" % [response_code, JSON.parse_string(response_body.get_string_from_utf8())])
+			Log.error("API request failed | Method: %s | Path: %s | Status code: %s | Response: %s" % [
+				method,
+				path,
+				response_code,
+				JSON.parse_string(response_body.get_string_from_utf8())
+			])
 		else:
-			Log.message("API rquest succeeded.")
+			Log.message("API request succeeded | Method: %s | Path: %s | Status code: %s | Response: %s" % [
+				method,
+				path,
+				response_code,
+				JSON.parse_string(response_body.get_string_from_utf8())
+			])
 			var json_data = JSON.parse_string(response_body.get_string_from_utf8())
 			callback.call(response_code, json_data)
 			http.queue_free()
