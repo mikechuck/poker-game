@@ -22,6 +22,7 @@ NavigationManager="*res://scripts/singletons/navigation_manager.gd"
 Log="*res://scripts/singletons/log.gd"
 NotificationManager="*res://scripts/singletons/notification_manager.gd"
 Globals="*res://scripts/singletons/globals.gd"
+DataStore="*res://scripts/singletons/data_store.gd"
 
 [debug]
 
@@ -43,4 +44,4 @@ ui/toolbar/run_overall=true
 
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
-environment/defaults/default_clear_color=Color(0.592157, 0.701961, 0.729412, 1)
+environment/defaults/default_clear_color=Color(0, 0, 0, 1)

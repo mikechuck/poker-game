@@ -1,8 +1,10 @@
 extends Node
 
 @onready var debug_output_node = $DebugOutput
-@onready var game_code_input_node = $Menu/JoinGame/GameCodeInput
-@onready var account_section = $AccountSection
+@onready var game_code_input_node = $Content/Menu/JoinGame/GameCodeInput
+@onready var account_section = $Content/AccountSection
+@onready var loading_screen = $Loading
+@onready var main_content = $Content
 @onready var auth_manager =  get_tree().current_scene.get_node("AuthManager")
 @onready var http_request_manager =  get_tree().current_scene.get_node("HttpRequests")
 
@@ -15,19 +17,15 @@ func _ready() -> void:
 	# Should have auth by now, grab their account data on load
 	http_request_manager.get_account_data(func(response_code, data):
 		if (response_code == 200):
-			auth_manager.PLAYER_DATA = data
+			DataStore.account_data = data
 			account_section.display_account_data(data)
+			
+			http_request_manager.get_games(func(response_code, data):
+				if (response_code == 200):
+					loading_screen.visible = false
+					main_content.visible = true
+			)
 	)
-	
-	### TODO add loading screen until we get back our auth data
-	
-	### TODO add this back in when we have a "games history" view
-	# Grab list of the users games to display in the menu
-	#http_request_manager.get_games(func(response_code, data):
-		#Log.message("Got response from GetGames endpoint! Response code: %s" % response_code)
-	#)
-	
-	
 	
 	# If not the server, then we should bounce the user the landing if they don't have
 	multiplayer.connected_to_server.connect(_on_connected)

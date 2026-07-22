@@ -33,6 +33,9 @@ var game_state_data: GameStateData = GameStateData.new()
 func _ready() -> void:
 	call_deferred("run_after_tree_load")
 	
+	Log.message("account data")
+	Log.message(DataStore.account_data)
+	
 # Make sure all the other managers are ready (auth, http, etc)
 func run_after_tree_load():
 	server_manager = get_parent().get_node("ServerManager")

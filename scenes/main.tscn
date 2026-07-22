@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://b7ckdfv84qrn2"]
+[gd_scene load_steps=9 format=3 uid="uid://b7ckdfv84qrn2"]
 
 [ext_resource type="Script" uid="uid://dvefjfvnac0ds" path="res://scripts/managers/main_scene_manager.gd" id="1_o5qli"]
 [ext_resource type="Script" uid="uid://c2cyo161ww6p8" path="res://scripts/managers/http_requests_manager.gd" id="2_0wfyh"]
@@ -6,6 +6,8 @@
 [ext_resource type="Script" uid="uid://cnbwlolh7w646" path="res://scripts/UI/account_section.gd" id="4_jyhfs"]
 [ext_resource type="Texture2D" uid="uid://ddlkeu1b8yhay" path="res://assets/PlayerCard/DetailsCard.png" id="5_tefeu"]
 [ext_resource type="Texture2D" uid="uid://3pvy2qjel0j0" path="res://assets/PlayerCard/ProfilePicture.png" id="6_o6xl0"]
+
+[sub_resource type="Theme" id="Theme_o6xl0"]
 
 [sub_resource type="GDScript" id="GDScript_tipki"]
 
@@ -19,99 +21,787 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("1_o5qli")
 
-[node name="Title" type="Control" parent="."]
+[node name="Loading" type="Control" parent="."]
+visible = false
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -250.0
-offset_top = -50.0
-offset_right = 250.0
-offset_bottom = 50.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="RichTextLabel" type="RichTextLabel" parent="Title"]
-layout_mode = 1
-anchors_preset = 10
+anchors_preset = 15
 anchor_right = 1.0
-offset_bottom = 100.0
-grow_horizontal = 2
-bbcode_enabled = true
-text = "[font_size=40]POKER GAME[/font_size]"
-horizontal_alignment = 1
-
-[node name="Menu" type="Control" parent="."]
-layout_mode = 1
-anchors_preset = 7
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
 anchor_bottom = 1.0
 grow_horizontal = 2
-grow_vertical = 0
+grow_vertical = 2
 
-[node name="CreateGame" type="Control" parent="Menu"]
+[node name="Title" type="Control" parent="Loading"]
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = 50.0
-offset_top = -100.0
-offset_right = 350.0
-offset_bottom = -50.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Button" type="Button" parent="Menu/CreateGame"]
-layout_mode = 0
-offset_right = 300.0
-offset_bottom = 50.0
+[node name="RichTextLabel" type="RichTextLabel" parent="Loading/Title"]
+clip_contents = false
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 1
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+bbcode_enabled = true
+text = "[font_size=40]Loading account...[/font_size]"
+horizontal_alignment = 1
+
+[node name="Content" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Menu" type="Control" parent="Content"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_top = -500.0
+offset_right = 400.0
+grow_vertical = 0
+
+[node name="MarginContainer" type="MarginContainer" parent="Content/Menu"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -186.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_constants/margin_left = 25
+theme_override_constants/margin_top = 25
+theme_override_constants/margin_right = 25
+theme_override_constants/margin_bottom = 25
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Content/Menu/MarginContainer"]
+layout_mode = 2
+alignment = 2
+
+[node name="CreateGameButton" type="Button" parent="Content/Menu/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
 mouse_default_cursor_shape = 2
 text = "Host Game
 "
 
-[node name="JoinGame" type="Control" parent="Menu"]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -350.0
-offset_top = -100.0
-offset_bottom = -50.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="HBoxContainer" type="HBoxContainer" parent="Content/Menu/MarginContainer/VBoxContainer"]
+layout_mode = 2
 
-[node name="Button" type="Button" parent="Menu/JoinGame"]
-layout_mode = 1
-anchors_preset = 6
-anchor_left = 1.0
-anchor_top = 0.5
-anchor_right = 1.0
-anchor_bottom = 0.5
-offset_left = -205.0
-offset_top = -25.0
-offset_right = -5.0
-offset_bottom = 25.0
-grow_horizontal = 0
-grow_vertical = 2
+[node name="GameCodeInput" type="LineEdit" parent="Content/Menu/MarginContainer/VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(200, 52)
+layout_mode = 2
+placeholder_text = "Game Code"
+alignment = 1
+
+[node name="MarginContainer" type="MarginContainer" parent="Content/Menu/MarginContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_bottom = 2
+
+[node name="JoinGameButton" type="Button" parent="Content/Menu/MarginContainer/VBoxContainer/HBoxContainer/MarginContainer"]
+custom_minimum_size = Vector2(150, 50)
+layout_mode = 2
 mouse_default_cursor_shape = 2
+theme = SubResource("Theme_o6xl0")
 text = "Join Game
 "
 
-[node name="GameCodeInput" type="LineEdit" parent="Menu/JoinGame"]
+[node name="AccountSection" type="Control" parent="Content"]
+layout_mode = 1
+anchors_preset = 0
+script = ExtResource("4_jyhfs")
+
+[node name="PlayerCard" type="Node2D" parent="Content/AccountSection"]
+position = Vector2(100, 50)
+script = SubResource("GDScript_tipki")
+
+[node name="DetailsCard" type="Sprite2D" parent="Content/AccountSection/PlayerCard"]
+modulate = Color(1, 0.5176471, 0.02745098, 1)
+position = Vector2(99, 48)
+texture = ExtResource("5_tefeu")
+
+[node name="ProfilePicture" type="Sprite2D" parent="Content/AccountSection/PlayerCard"]
+position = Vector2(17, 41)
+texture = ExtResource("6_o6xl0")
+
+[node name="Name" type="RichTextLabel" parent="Content/AccountSection/PlayerCard"]
+clip_contents = false
+offset_left = 71.0
+offset_top = 13.0
+offset_right = 198.0
+offset_bottom = 43.0
+bbcode_enabled = true
+text = "[font_size=16][b]Player 1[/b][/font_size]"
+fit_content = true
+scroll_active = false
+
+[node name="CashAmount" type="RichTextLabel" parent="Content/AccountSection/PlayerCard"]
+clip_contents = false
+offset_left = 71.0
+offset_top = 43.0
+offset_right = 198.0
+offset_bottom = 73.0
+bbcode_enabled = true
+text = "[font_size=16]$50[/font_size]"
+fit_content = true
+scroll_active = false
+
+[node name="HandsPlayed" type="Control" parent="Content/AccountSection/PlayerCard"]
+layout_mode = 3
+anchors_preset = 0
+offset_top = 100.0
+offset_right = 40.0
+offset_bottom = 130.0
+
+[node name="Label" type="RichTextLabel" parent="Content/AccountSection/PlayerCard/HandsPlayed"]
+layout_mode = 1
+offset_left = -21.0
+offset_right = 94.0
+offset_bottom = 30.0
+text = "Hands Played"
+vertical_alignment = 1
+
+[node name="Value" type="RichTextLabel" parent="Content/AccountSection/PlayerCard/HandsPlayed"]
 layout_mode = 0
-offset_left = -85.0
-offset_right = 100.0
-offset_bottom = 50.0
-placeholder_text = "Game Code"
-alignment = 1
+offset_left = 115.0
+offset_right = 195.0
+offset_bottom = 30.0
+text = "0"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="HandsWon" type="Control" parent="Content/AccountSection/PlayerCard"]
+layout_mode = 3
+anchors_preset = 0
+offset_top = 130.0
+offset_right = 40.0
+offset_bottom = 160.0
+
+[node name="Label" type="RichTextLabel" parent="Content/AccountSection/PlayerCard/HandsWon"]
+layout_mode = 1
+offset_left = -21.0
+offset_right = 94.0
+offset_bottom = 30.0
+text = "Hands Won"
+vertical_alignment = 1
+
+[node name="Value" type="RichTextLabel" parent="Content/AccountSection/PlayerCard/HandsWon"]
+layout_mode = 0
+offset_left = 115.0
+offset_right = 195.0
+offset_bottom = 30.0
+text = "0
+"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="GamesList" type="Control" parent="Content"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -700.0
+offset_top = -300.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="MarginContainer" type="MarginContainer" parent="Content/GamesList"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 25
+theme_override_constants/margin_top = 25
+theme_override_constants/margin_right = 25
+theme_override_constants/margin_bottom = 25
+
+[node name="ColorRect" type="ColorRect" parent="Content/GamesList/MarginContainer"]
+layout_mode = 2
+color = Color(1, 1, 1, 0.019607844)
+
+[node name="MarginContainer" type="MarginContainer" parent="Content/GamesList/MarginContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 25
+theme_override_constants/margin_top = 25
+theme_override_constants/margin_right = 25
+theme_override_constants/margin_bottom = 25
+
+[node name="Table" type="VBoxContainer" parent="Content/GamesList/MarginContainer/MarginContainer"]
+layout_mode = 2
+
+[node name="ColumnTitles" type="HBoxContainer" parent="Content/GamesList/MarginContainer/MarginContainer/Table"]
+layout_mode = 2
+
+[node name="GameIdHeader" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ColumnTitles"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+size_flags_horizontal = 3
+bbcode_enabled = true
+text = "[font_size=12][b]Game Id[/b][/font_size]"
+fit_content = true
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="StatusHeader" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ColumnTitles"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+size_flags_horizontal = 3
+bbcode_enabled = true
+text = "[font_size=12][b]Status[/b][/font_size]"
+fit_content = true
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BuyInHeader" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ColumnTitles"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+size_flags_horizontal = 3
+bbcode_enabled = true
+text = "[font_size=12][b]Buy In[/b][/font_size]"
+fit_content = true
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ChipRatioHeader" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ColumnTitles"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+size_flags_horizontal = 3
+bbcode_enabled = true
+text = "[font_size=12][b]Chip Ratio[/b][/font_size]"
+fit_content = true
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HandsHeader" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ColumnTitles"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+size_flags_horizontal = 3
+bbcode_enabled = true
+text = "[font_size=12][b]Hands[/b][/font_size]"
+fit_content = true
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="JoinHeader" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ColumnTitles"]
+custom_minimum_size = Vector2(100, 30)
+layout_mode = 2
+size_flags_horizontal = 3
+bbcode_enabled = true
+text = "
+"
+fit_content = true
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Content/GamesList/MarginContainer/MarginContainer/Table"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 2
+
+[node name="GameDetails" type="HBoxContainer" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="GameId" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails"]
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 5
+bbcode_enabled = true
+text = "[font_size=12]S1WZMO5[/font_size]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Status" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 5
+theme_override_colors/default_color = Color(0.17540708, 0.5885051, 0.19145653, 1)
+bbcode_enabled = true
+text = "[font_size=12]Active[/font_size]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BuyIn" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 5
+bbcode_enabled = true
+text = "[font_size=12]$20[/font_size]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ChipRatio" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 5
+bbcode_enabled = true
+text = "[font_size=12]100:1[/font_size]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Hands" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 5
+bbcode_enabled = true
+text = "[font_size=12]23[/font_size]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="JoinButton" type="Button" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails"]
+custom_minimum_size = Vector2(100, 25)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+text = "Join"
+
+[node name="GameDetails2" type="HBoxContainer" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="GameId" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails2"]
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 5
+bbcode_enabled = true
+text = "[font_size=12]S1WZMO5[/font_size]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Status" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails2"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 5
+theme_override_colors/default_color = Color(0.17540708, 0.5885051, 0.19145653, 1)
+bbcode_enabled = true
+text = "[font_size=12]Active[/font_size]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BuyIn" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails2"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 5
+bbcode_enabled = true
+text = "[font_size=12]$20[/font_size]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ChipRatio" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails2"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 5
+bbcode_enabled = true
+text = "[font_size=12]100:1[/font_size]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Hands" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails2"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 5
+bbcode_enabled = true
+text = "[font_size=12]23[/font_size]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="JoinButton" type="Button" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails2"]
+custom_minimum_size = Vector2(100, 25)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+text = "Join"
+
+[node name="GameDetails3" type="HBoxContainer" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="GameId" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails3"]
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 5
+bbcode_enabled = true
+text = "[font_size=12]S1WZMO5[/font_size]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Status" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails3"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 5
+theme_override_colors/default_color = Color(0.17540708, 0.5885051, 0.19145653, 1)
+bbcode_enabled = true
+text = "[font_size=12]Active[/font_size]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BuyIn" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails3"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 5
+bbcode_enabled = true
+text = "[font_size=12]$20[/font_size]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ChipRatio" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails3"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 5
+bbcode_enabled = true
+text = "[font_size=12]100:1[/font_size]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Hands" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails3"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 5
+bbcode_enabled = true
+text = "[font_size=12]23[/font_size]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="JoinButton" type="Button" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails3"]
+custom_minimum_size = Vector2(100, 25)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+text = "Join"
+
+[node name="GameDetails4" type="HBoxContainer" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="GameId" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails4"]
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 5
+bbcode_enabled = true
+text = "[font_size=12]S1WZMO5[/font_size]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Status" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails4"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 5
+theme_override_colors/default_color = Color(0.17540708, 0.5885051, 0.19145653, 1)
+bbcode_enabled = true
+text = "[font_size=12]Active[/font_size]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BuyIn" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails4"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 5
+bbcode_enabled = true
+text = "[font_size=12]$20[/font_size]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ChipRatio" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails4"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 5
+bbcode_enabled = true
+text = "[font_size=12]100:1[/font_size]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Hands" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails4"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 5
+bbcode_enabled = true
+text = "[font_size=12]23[/font_size]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="JoinButton" type="Button" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails4"]
+custom_minimum_size = Vector2(100, 25)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+text = "Join"
+
+[node name="GameDetails5" type="HBoxContainer" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="GameId" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails5"]
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 5
+bbcode_enabled = true
+text = "[font_size=12]S1WZMO5[/font_size]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Status" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails5"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 5
+theme_override_colors/default_color = Color(0.17540708, 0.5885051, 0.19145653, 1)
+bbcode_enabled = true
+text = "[font_size=12]Active[/font_size]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BuyIn" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails5"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 5
+bbcode_enabled = true
+text = "[font_size=12]$20[/font_size]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ChipRatio" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails5"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 5
+bbcode_enabled = true
+text = "[font_size=12]100:1[/font_size]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Hands" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails5"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 5
+bbcode_enabled = true
+text = "[font_size=12]23[/font_size]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="JoinButton" type="Button" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails5"]
+custom_minimum_size = Vector2(100, 25)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+text = "Join"
+
+[node name="GameDetails6" type="HBoxContainer" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="GameId" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails6"]
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 5
+bbcode_enabled = true
+text = "[font_size=12]S1WZMO5[/font_size]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Status" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails6"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 5
+theme_override_colors/default_color = Color(0.17540708, 0.5885051, 0.19145653, 1)
+bbcode_enabled = true
+text = "[font_size=12]Active[/font_size]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BuyIn" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails6"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 5
+bbcode_enabled = true
+text = "[font_size=12]$20[/font_size]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ChipRatio" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails6"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 5
+bbcode_enabled = true
+text = "[font_size=12]100:1[/font_size]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Hands" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails6"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 5
+bbcode_enabled = true
+text = "[font_size=12]23[/font_size]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="JoinButton" type="Button" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails6"]
+custom_minimum_size = Vector2(100, 25)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+text = "Join"
+
+[node name="GameDetails7" type="HBoxContainer" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="GameId" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails7"]
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 5
+bbcode_enabled = true
+text = "[font_size=12]S1WZMO5[/font_size]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Status" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails7"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 5
+theme_override_colors/default_color = Color(0.17540708, 0.5885051, 0.19145653, 1)
+bbcode_enabled = true
+text = "[font_size=12]Active[/font_size]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BuyIn" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails7"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 5
+bbcode_enabled = true
+text = "[font_size=12]$20[/font_size]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ChipRatio" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails7"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 5
+bbcode_enabled = true
+text = "[font_size=12]100:1[/font_size]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Hands" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails7"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 5
+bbcode_enabled = true
+text = "[font_size=12]23[/font_size]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="JoinButton" type="Button" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/VBoxContainer/GameDetails7"]
+custom_minimum_size = Vector2(100, 25)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+text = "Join"
+
+[node name="HttpRequests" type="Node" parent="."]
+script = ExtResource("2_0wfyh")
+
+[node name="AuthManager" parent="." instance=ExtResource("3_sugp2")]
 
 [node name="DebugOutput" type="TextEdit" parent="."]
 visible = false
@@ -124,99 +814,6 @@ editable = false
 wrap_mode = 1
 indent_wrapped_lines = true
 
-[node name="HttpRequests" type="Node" parent="."]
-script = ExtResource("2_0wfyh")
-
-[node name="AuthManager" parent="." instance=ExtResource("3_sugp2")]
-
-[node name="AccountSection" type="Control" parent="."]
-layout_mode = 1
-anchors_preset = 0
-script = ExtResource("4_jyhfs")
-
-[node name="PlayerCard" type="Node2D" parent="AccountSection"]
-position = Vector2(100, 50)
-script = SubResource("GDScript_tipki")
-
-[node name="DetailsCard" type="Sprite2D" parent="AccountSection/PlayerCard"]
-position = Vector2(99, 48)
-texture = ExtResource("5_tefeu")
-
-[node name="ProfilePicture" type="Sprite2D" parent="AccountSection/PlayerCard"]
-position = Vector2(17, 41)
-texture = ExtResource("6_o6xl0")
-
-[node name="Name" type="RichTextLabel" parent="AccountSection/PlayerCard"]
-clip_contents = false
-offset_left = 71.0
-offset_top = 13.0
-offset_right = 198.0
-offset_bottom = 43.0
-bbcode_enabled = true
-text = "[font_size=16][b]Player 1[/b][/font_size]"
-fit_content = true
-scroll_active = false
-
-[node name="CashAmount" type="RichTextLabel" parent="AccountSection/PlayerCard"]
-clip_contents = false
-offset_left = 71.0
-offset_top = 43.0
-offset_right = 198.0
-offset_bottom = 73.0
-bbcode_enabled = true
-text = "[font_size=16]$50[/font_size]"
-fit_content = true
-scroll_active = false
-
-[node name="HandsPlayed" type="Control" parent="AccountSection/PlayerCard"]
-layout_mode = 3
-anchors_preset = 0
-offset_top = 100.0
-offset_right = 40.0
-offset_bottom = 130.0
-
-[node name="Label" type="RichTextLabel" parent="AccountSection/PlayerCard/HandsPlayed"]
-layout_mode = 1
-offset_left = -21.0
-offset_right = 94.0
-offset_bottom = 30.0
-text = "Hands Played"
-vertical_alignment = 1
-
-[node name="Value" type="RichTextLabel" parent="AccountSection/PlayerCard/HandsPlayed"]
-layout_mode = 0
-offset_left = 115.0
-offset_right = 195.0
-offset_bottom = 30.0
-text = "0"
-horizontal_alignment = 2
-vertical_alignment = 1
-
-[node name="HandsWon" type="Control" parent="AccountSection/PlayerCard"]
-layout_mode = 3
-anchors_preset = 0
-offset_top = 130.0
-offset_right = 40.0
-offset_bottom = 160.0
-
-[node name="Label" type="RichTextLabel" parent="AccountSection/PlayerCard/HandsWon"]
-layout_mode = 1
-offset_left = -21.0
-offset_right = 94.0
-offset_bottom = 30.0
-text = "Hands Won"
-vertical_alignment = 1
-
-[node name="Value" type="RichTextLabel" parent="AccountSection/PlayerCard/HandsWon"]
-layout_mode = 0
-offset_left = 115.0
-offset_right = 195.0
-offset_bottom = 30.0
-text = "0
-"
-horizontal_alignment = 2
-vertical_alignment = 1
-
-[connection signal="pressed" from="Menu/CreateGame/Button" to="." method="_on_create_game_button_pressed"]
-[connection signal="pressed" from="Menu/JoinGame/Button" to="." method="_on_join_game_button_pressed"]
-[connection signal="text_changed" from="Menu/JoinGame/GameCodeInput" to="." method="_on_game_code_input_text_changed"]
+[connection signal="pressed" from="Content/Menu/MarginContainer/VBoxContainer/CreateGameButton" to="." method="_on_create_game_button_pressed"]
+[connection signal="text_changed" from="Content/Menu/MarginContainer/VBoxContainer/HBoxContainer/GameCodeInput" to="." method="_on_game_code_input_text_changed"]
+[connection signal="pressed" from="Content/Menu/MarginContainer/VBoxContainer/HBoxContainer/MarginContainer/JoinGameButton" to="." method="_on_join_game_button_pressed"]

@@ -8,6 +8,7 @@ const GAMES_TABLE = process.env.GAMES_TABLE;
 
 export const handler = async (event) => {
     const accountId = event.requestContext?.authorizer?.jwt?.claims?.sub;
+    console.log("Account id:", accountId);
 
     try {
         const response = await docClient.send(new QueryCommand({
@@ -19,11 +20,15 @@ export const handler = async (event) => {
             }
         }));
 
+        console.log("response:", response);
+
         // Return the current status (Whether PENDING or ACTIVE along with the port)
         return {
             statusCode: 200,
             headers: { "Content-Type": "application/json" },
-            body: response.Items
+            body: JSON.stringify({
+                games: response.Items
+            })
         };
 
     } catch (error) {
