@@ -7,7 +7,7 @@ var value: String
 var suit: String
 
 func clone() -> CardData:
-	var card_clone = CardData.new()
+	var card_clone: CardData = CardData.new()
 	card_clone.id = id
 	card_clone.number = number
 	card_clone.value = value
@@ -23,9 +23,13 @@ func to_dict() -> Dictionary:
 	}
 	
 static func from_dict(dict: Dictionary) -> CardData:
-	var instance = CardData.new()
-	instance.id = dict.get("id")
-	instance.number = dict.get("number")
-	instance.value = dict.get("value")
-	instance.suit = dict.get("suit")
+	var instance: CardData = CardData.new()
+	var instance_id: String = dict.get("id")
+	var instance_number: int = dict.get("id")
+	var instance_value: String = dict.get("value")
+	var instance_suit: String = dict.get("suit")
+	instance.id = instance_id
+	instance.number = instance_number
+	instance.value = instance_value
+	instance.suit = instance_suit
 	return instance

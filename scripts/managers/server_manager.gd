@@ -1,4 +1,5 @@
 extends Node
+class_name ServerManager
 
 var game_manager
 var client_manager

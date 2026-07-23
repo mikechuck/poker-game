@@ -33,9 +33,6 @@ export const handler = async (event) => {
     var updateParams;
     var game;
 
-    console.log("GAME ID:", gameId);
-    console.log("body:", body);
-
     // TODO: update logic to migrate to a new dynamo record if trying to change hosts
     // Maybe best to just create a new endpoint for this...
     // const hostPlayerId = body.hostPlayerId;

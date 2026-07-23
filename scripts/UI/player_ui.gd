@@ -1,4 +1,5 @@
 extends Control
+class_name PlayerUI
 
 ### Scenes
 @export var card_scene: PackedScene = preload("res://scenes/UI/card.tscn")

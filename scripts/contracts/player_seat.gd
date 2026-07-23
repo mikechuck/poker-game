@@ -25,7 +25,7 @@ func reset_hand_data() -> void:
 	is_ready = false
 	
 func clone() -> PlayerSeat:
-	var seat_clone = PlayerSeat.new()
+	var seat_clone: PlayerSeat = PlayerSeat.new()
 	seat_clone.seat_index = seat_index
 	seat_clone.player_id = player_id
 	seat_clone.player_node = player_node
@@ -36,9 +36,9 @@ func clone() -> PlayerSeat:
 	seat_clone.is_big_blind = is_big_blind
 	seat_clone.is_small_blind = is_small_blind
 	seat_clone.final_hand_score = final_hand_score
-	for card in hole_cards:
+	for card: CardData in hole_cards:
 		seat_clone.hole_cards.append(card.clone())
-	for card in sorted_hand_cards:
+	for card: CardData in sorted_hand_cards:
 		seat_clone.sorted_hand_cards.append(card.clone())
 	return seat_clone
 
@@ -64,13 +64,14 @@ func to_dict() -> Dictionary:
 static func from_dict(dict: Dictionary) -> PlayerSeat:
 	var instance = PlayerSeat.new()
 	if dict != {}:
+		var hole_cards_array: Array[Dictionary] = dict.get("hole_cards")
 		instance.seat_index = dict.get("seat_index")
 		instance.player_id = dict.get("player_id")
 		instance.player_node = dict.get("player_node")
 		instance.is_folded = dict.get("is_folded")
 		instance.is_big_blind = dict.get("is_big_blind")
 		instance.is_small_blind = dict.get("is_small_blind")
-		instance.hole_cards = Serializer.deserialize_cards(dict.get("hole_cards"))
+		instance.hole_cards = Serializer.deserialize_cards(hole_cards_array)
 		instance.hand_cash = dict.get("hand_cash")
 		instance.bet_value = dict.get("bet_value")
 		instance.is_ready = dict.get("is_ready")

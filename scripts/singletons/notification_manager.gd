@@ -3,8 +3,8 @@ extends Node
 const NOTIFICATION_CONTAINER_SCENE = preload("res://scenes/UI/notification_container.tscn")
 const NOTIFICATION_ROW_SCENE = preload("res://scenes/UI/notification_row.tscn")
 
-var _notification_container_scene;
-var _notifications_node;
+var _notification_container_scene: Node;
+var _notifications_node: Node;
 
 func _ready() -> void:
 	_notification_container_scene = NOTIFICATION_CONTAINER_SCENE.instantiate()
@@ -12,7 +12,7 @@ func _ready() -> void:
 	_notifications_node = _notification_container_scene.find_child("Notifications")
 	
 func write(message: String, icon: String = "👉", warning: bool = false, error: bool = false):
-	var new_notification_row = NOTIFICATION_ROW_SCENE.instantiate()
+	var new_notification_row: Node = NOTIFICATION_ROW_SCENE.instantiate()
 	var text_node: RichTextLabel = new_notification_row.find_child("Text")
 	var icon_node: RichTextLabel = new_notification_row.find_child("Icon")
 	#

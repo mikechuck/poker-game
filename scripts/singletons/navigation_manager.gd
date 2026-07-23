@@ -26,4 +26,5 @@ func navigate_to_game_scene() -> void:
 
 func navigate_to_login():
 	var login_url = "%s/login?client_id=%s&response_type=code&scope=email+openid&redirect_uri=%s" % [auth_manager.LOGIN_URL, auth_manager.CLIENT_ID, auth_manager.REDIRECT_URI]
-	JavaScriptBridge.eval("window.location.href = '" + login_url + "';")
+	var eval_string: String = "window.location.href = '" + login_url + "';"
+	JavaScriptBridge.eval(eval_string)

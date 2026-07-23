@@ -1,16 +1,17 @@
 extends Node
+class_name AuthManager
 
-@onready var get_tokens_http_request = $GetTokens
-@onready var refresh_tokens_http_request = $RefreshToken
+@onready var get_tokens_http_request: HTTPRequest = $GetTokens
+@onready var refresh_tokens_http_request: HTTPRequest = $RefreshToken
 
-const CLIENT_ID = "5nke82c4g3l1256jkhve4vivk3"
-const BASE_URL = "poker.mikechucktingle.net"
-const REDIRECT_URI_HOSTED = "https://%s/" % BASE_URL
-const REDIRECT_URI_LOCAL = "http://localhost:5173/"
-const LOGIN_URL = "https://auth.mikechucktingle.net"
-const TOKEN_URL = "https://auth.mikechucktingle.net/oauth2/token"
-var REDIRECT_URI = ""
-var SERVER_API_TOKEN = ""
+const CLIENT_ID: String = "5nke82c4g3l1256jkhve4vivk3"
+const BASE_URL: String = "poker.mikechucktingle.net"
+const REDIRECT_URI_HOSTED: String = "https://%s/" % BASE_URL
+const REDIRECT_URI_LOCAL: String = "http://localhost:5173/"
+const LOGIN_URL: String = "https://auth.mikechucktingle.net"
+const TOKEN_URL: String = "https://auth.mikechucktingle.net/oauth2/token"
+var REDIRECT_URI: String = ""
+var SERVER_API_TOKEN: String = ""
 
 @export var API_URL = "https://api.mikechucktingle.net"
 @export var PLAYER_DATA = {}
@@ -35,7 +36,7 @@ func _ready() -> void:
 	
 	# Check tokens and code on ready
 	if (get_tree().current_scene.name == "Landing"):
-		var auth_code = get_url_parameter("code")
+		var auth_code: String = get_url_parameter("code")
 		if auth_code != "":
 			exchange_code_for_tokens(auth_code)
 		elif has_auth_tokens():
@@ -50,16 +51,16 @@ func _ready() -> void:
 #### Http request template to manage auth system
 #### This should be used for all HTTP requests to our api
 func api_request(path: String, method: int, callback: Callable, body: String = "", retry_count: int = 0):
-	var url = API_URL + path
-	var http = HTTPRequest.new()
+	var url: String = API_URL + path
+	var http: HTTPRequest = HTTPRequest.new()
 	add_child(http)
 	
-	var headers = [
+	var headers: PackedStringArray = [
 		"Content-Type: application/json",
 		"Authorization: Bearer " + get_id_token()
 	]
 	
-	http.request_completed.connect(func(result, response_code, response_headers, response_body):
+	http.request_completed.connect(func(result, response_code, response_headers, response_body: PackedByteArray):
 		if (response_code == 401 and retry_count < 1):
 			if await refresh_tokens():
 				api_request(path, method, callback, body, retry_count + 1)
@@ -80,16 +81,16 @@ func api_request(path: String, method: int, callback: Callable, body: String = "
 	
 # For api calls from the server, uses api token instead of JWT
 func server_api_request(path: String, method: int, callback: Callable, body: String = ""):
-	var url = API_URL + path
-	var http = HTTPRequest.new()
+	var url: String = API_URL + path
+	var http: HTTPRequest = HTTPRequest.new()
 	add_child(http)
 	
-	var headers = [
+	var headers: PackedStringArray = [
 		"Content-Type: application/json",
 		"x-server-token: " + SERVER_API_TOKEN
 	]
 	
-	http.request_completed.connect(func(result, response_code, response_headers, response_body):
+	http.request_completed.connect(func(result, response_code, response_headers, response_body: PackedByteArray):
 		if (response_code != 200):
 			Log.error("API request failed | Method: %s | Path: %s | Status code: %s | Response: %s" % [
 				method,
@@ -114,8 +115,8 @@ func server_api_request(path: String, method: int, callback: Callable, body: Str
 #### Cognito methods
 
 func exchange_code_for_tokens(code: String):
-	var headers = ["Content-Type: application/x-www-form-urlencoded"]
-	var body = HTTPClient.new().query_string_from_dict({
+	var headers: PackedStringArray = ["Content-Type: application/x-www-form-urlencoded"]
+	var body: String = HTTPClient.new().query_string_from_dict({
 		"grant_type": "authorization_code",
 		"client_id": CLIENT_ID,
 		"code": code,
@@ -127,8 +128,8 @@ func refresh_tokens() -> bool:
 	var current_refresh_token = get_refresh_token()
 	if (current_refresh_token == ""): return false
 	
-	var headers = ["Content-Type: application/x-www-form-urlencoded"]
-	var body = HTTPClient.new().query_string_from_dict({
+	var headers: PackedStringArray = ["Content-Type: application/x-www-form-urlencoded"]
+	var body: String = HTTPClient.new().query_string_from_dict({
 		"grant_type": "refresh_token",
 		"client_id": CLIENT_ID,
 		"refresh_token": get_refresh_token(),
@@ -143,7 +144,7 @@ func refresh_tokens() -> bool:
 	var response = await refresh_tokens_http_request.request_completed
 	var result = response[0]
 	var response_code = response[1]
-	var response_body = response[3]
+	var response_body: PackedByteArray = response[3]
 	
 	if result != HTTPRequest.RESULT_SUCCESS:
 		Log.message("Network error code, returning to landing page")
@@ -156,9 +157,9 @@ func refresh_tokens() -> bool:
 		return false
 		
 	var json = JSON.parse_string(response_body.get_string_from_utf8())
-	var access_token = json["access_token"]
-	var id_token = json["id_token"]
-	var refresh_token = json["refresh_token"]
+	var access_token: String = json["access_token"]
+	var id_token: String = json["id_token"]
+	var refresh_token: String = json["refresh_token"]
 	JavaScriptBridge.eval("localStorage.setItem('access_token', '%s')" % access_token)
 	JavaScriptBridge.eval("localStorage.setItem('id_token', '%s')" % id_token)
 	JavaScriptBridge.eval("localStorage.setItem('refresh_token', '%s')" % refresh_token)
@@ -178,7 +179,7 @@ func save_token_to_cookie(token: String) -> void:
 
 func get_url_parameter(param_name: String) -> String:
 	if OS.has_feature("web"):
-		var js_code = "new URLSearchParams(window.location.search).get('%s')" % param_name
+		var js_code: String = "new URLSearchParams(window.location.search).get('%s')" % param_name
 		var result = JavaScriptBridge.eval(js_code)
 		if result != null:
 			return str(result)
@@ -220,9 +221,9 @@ func _on_get_tokens_request_completed(result: int, response_code: int, headers: 
 		
 	# Handle success
 	var json = JSON.parse_string(body.get_string_from_utf8())
-	var access_token = json["access_token"]
-	var id_token = json["id_token"]
-	var refresh_token = json["refresh_token"]
+	var access_token: String = json["access_token"]
+	var id_token: String = json["id_token"]
+	var refresh_token: String = json["refresh_token"]
 	JavaScriptBridge.eval("localStorage.setItem('access_token', '%s')" % access_token)
 	JavaScriptBridge.eval("localStorage.setItem('id_token', '%s')" % id_token)
 	JavaScriptBridge.eval("localStorage.setItem('refresh_token', '%s')" % refresh_token)

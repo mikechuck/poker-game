@@ -1,6 +1,7 @@
 extends Node2D
+class_name GameSceneManager
 
-@onready var http_request_manager =  get_tree().current_scene.get_node("HttpRequests")
+@onready var http_request_manager: HttpRequestsManager =  get_tree().current_scene.get_node("HttpRequests")
 
 ### Networking fields
 var is_server = false
@@ -13,9 +14,9 @@ var is_server = false
 var player_ui_instance = null
 
 ### Managers
-var server_manager
-var client_manager
-var deck_manager
+var server_manager: ServerManager
+var client_manager: ClientManager
+var deck_manager: DeckManager
 
 ### Signals
 signal game_state_data_updated_signal(old_game_state_data, new_game_state_data)
@@ -60,7 +61,7 @@ func reset_hand() -> void:
 	deck_manager.shuffle_deck()
 	client_manager.update_game_state_data.rpc(game_state_data.to_dict())
 
-func assign_player_to_seat(client_id, seat_number) -> void:
+func assign_player_to_seat(client_id: int, seat_number: int) -> void:
 	# Check to see if seat is already filled
 	seat_number = get_next_free_seat(seat_number)
 	# First remove them from their current seat then put them in the new seat
@@ -144,12 +145,12 @@ func state_setup_hand():
 	# New shuffled deck
 	deck_manager.shuffle_deck()
 	# Reset all player data
-	for player_seat in game_state_data.player_seats.values():
+	for player_seat: PlayerSeat in game_state_data.player_seats.values():
 		player_seat.reset_hand_data()
 	# Reset turn and blinds index
 	# Eventually, going to have to decouple first player turn from small blind seat num since those rotate
 	# Rotating blinds can be done by accessing old game state data from previous round
-	var first_player_seat_index = get_next_active_player_seat_number(1)
+	var first_player_seat_index: int = get_next_active_player_seat_number(1)
 	var second_player_seat_index = get_next_active_player_seat_number(first_player_seat_index + 1)
 	game_state_data.player_seats[first_player_seat_index].is_small_blind = true
 	game_state_data.player_seats[second_player_seat_index].is_big_blind = true
@@ -162,7 +163,7 @@ func check_skip_this_state() -> void:
 		step_next_game_state()
 	
 func state_deal_hole_cards():
-	for player in game_state_data.player_seats.values():
+	for player: Player in game_state_data.player_seats.values():
 		if player.player_id:
 			var hole_card1: CardData = deck_manager.deal_card()
 			var hole_card2: CardData = deck_manager.deal_card()
@@ -208,7 +209,7 @@ func find_winning_seat() -> PlayerSeat:
 	for seat in game_state_data.player_seats.values():
 		if seat.player_id == 0: continue # only evaluate score for filled seats
 		var hand_value: float = 0
-		var full_cards = seat.hole_cards + game_state_data.board_cards
+		var full_cards: Array[CardData] = seat.hole_cards + game_state_data.board_cards
 		full_cards.sort_custom(func(a, b):
 			return a.number > b.number)
 		Log.message("Player hand: [%s%s, %s%s, %s%s, %s%s, %s%s]" % [full_cards[0].value, full_cards[0].suit, full_cards[1].value, full_cards[1].suit, full_cards[2].value, full_cards[2].suit, full_cards[3].value, full_cards[3].suit, full_cards[4].value, full_cards[4].suit])

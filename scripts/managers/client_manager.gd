@@ -1,10 +1,10 @@
 extends Node
+class_name ClientManager
 
-var game_manager
+@onready var game_manager: GameSceneManager = get_parent().get_node("GameManager")
 
 func _ready() -> void:
-	# Don't call managers that are lower on the stack from the _ready() method, they won't exist yet
-	game_manager = get_parent().get_node("GameManager")
+	pass
 	
 func disconnect_from_sever() -> void:
 	multiplayer.multiplayer_peer.close()

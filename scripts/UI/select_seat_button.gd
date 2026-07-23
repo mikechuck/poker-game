@@ -1,4 +1,5 @@
 extends Button
+class_name SeatSelectButton
 
 var game_manager
 var server_manager

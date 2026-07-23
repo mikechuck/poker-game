@@ -1,4 +1,5 @@
 extends Node
+class_name Card
 
 var card_number
 var card_suit

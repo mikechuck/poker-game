@@ -17,7 +17,7 @@ if ($export_name -eq "")
 }
 
 if ($IsWindows) {
-    Godot_v4.5.1-stable_win64_console.exe --headless --export-release $export_name
+    Godot_v4.5.1-stable_win64_console.exe --headless --quiet --export-release $export_name
 } elseif ($IsMacOS) {
     godot --headless --export-release $export_name
 } else {

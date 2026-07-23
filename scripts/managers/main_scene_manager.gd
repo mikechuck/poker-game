@@ -1,12 +1,14 @@
 extends Node
+class_name MainSceneManager
 
-@onready var debug_output_node = $DebugOutput
-@onready var game_code_input_node = $Content/Menu/JoinGame/GameCodeInput
-@onready var account_section = $Content/AccountSection
-@onready var loading_screen = $Loading
-@onready var main_content = $Content
-@onready var auth_manager =  get_tree().current_scene.get_node("AuthManager")
-@onready var http_request_manager =  get_tree().current_scene.get_node("HttpRequests")
+@onready var debug_output_node: Node = $DebugOutput
+@onready var game_code_input_node: Node = $Content/Menu/MarginContainer/VBoxContainer/HBoxContainer/GameCodeInput
+@onready var account_section: Node = $Content/AccountSection
+@onready var games_list_container: Node = $Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/GameDetailsContainer
+@onready var loading_screen: Node = $Loading
+@onready var main_content: Node = $Content
+@onready var auth_manager: AuthManager =  get_tree().current_scene.get_node("AuthManager")
+@onready var http_request_manager: HttpRequestsManager =  get_tree().current_scene.get_node("HttpRequests")
 
 var _game_code = ""
 
@@ -22,6 +24,7 @@ func _ready() -> void:
 			
 			http_request_manager.get_games(func(response_code, data):
 				if (response_code == 200):
+					games_list_container.create_games_list(data["games"])
 					loading_screen.visible = false
 					main_content.visible = true
 			)

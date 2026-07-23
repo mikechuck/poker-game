@@ -1,7 +1,8 @@
 extends Node
+class_name DeckManager
 
 var is_server: bool
-var game_manager = null
+@onready var game_manager: GameSceneManager = get_parent().get_node("GameManager")
 
 ### Deck fields
 var cards: Array[CardData]
@@ -11,8 +12,6 @@ var faces: Dictionary[String, int] = {"J": 11, "Q": 12, "K": 13, "A": 14}
 var deck: Array[CardData]
 
 func _ready():
-	game_manager = get_parent().get_node("GameManager")
-	
 	for suit in suits:
 		for i in range(2, 11):
 			var new_card = CardData.new()
@@ -35,7 +34,7 @@ func shuffle_deck():
 func _shuffle_deck(source_deck: Array[CardData]) -> Array[CardData]:
 	var shuffled_deck: Array[CardData] = []
 	for i in range(0, 52):
-		var randomIndex = randi() % (52 - i)
+		var randomIndex: int = randi() % (52 - i)
 		shuffled_deck.append(source_deck[randomIndex])
 		source_deck.remove_at(randomIndex)
 	return shuffled_deck
@@ -49,7 +48,7 @@ func deal_card() -> CardData:
 
 ######### Helper functions for calulation hand values. Put here to keep game_manager clean #########
 
-func find_highest_hand_value(sorted_cards) -> int: 
+func find_highest_hand_value(sorted_cards: Array[CardData]) -> int: 
 	var hand_value: int = 0
 	
 	hand_value = get_royal_flush(sorted_cards)
@@ -91,7 +90,7 @@ func find_highest_hand_value(sorted_cards) -> int:
 	hand_value = get_high_card_score(sorted_cards)
 	return hand_value
 		
-func get_royal_flush(sorted_cards) -> int:
+func get_royal_flush(sorted_cards: Array[CardData]) -> int:
 	var suit: String = sorted_cards[0].suit
 	for i in sorted_cards.size():
 		# Ensure all the same suit
@@ -109,7 +108,7 @@ func get_royal_flush(sorted_cards) -> int:
 	else:
 		return 0
 
-func get_straight_flush_score(sorted_cards) -> int:
+func get_straight_flush_score(sorted_cards: Array[CardData]) -> int:
 	var suit: String = sorted_cards[0].suit
 	# Ensure all the same suit
 	for i in sorted_cards.size():
@@ -144,7 +143,7 @@ func get_four_kind_score(sorted_cards) -> int:
 			pair_number = card.number
 	return 0
 	
-func get_full_house_score(sorted_cards) -> int:
+func get_full_house_score(sorted_cards: Array[CardData]) -> int:
 	var three_kind_score = get_three_kind_score(sorted_cards)
 	var one_pair_score = get_one_pair_score(sorted_cards)
 	if (three_kind_score > 0 && one_pair_score > 0):
@@ -153,7 +152,7 @@ func get_full_house_score(sorted_cards) -> int:
 		return three_kind_score  * pow(10, HandRanks.Rank.FullHouse)
 	return 0
 	
-func get_flush_score(sorted_cards) -> int:
+func get_flush_score(sorted_cards: Array[CardData]) -> int:
 	var suit = null
 	for card in sorted_cards:
 		if suit == null:
@@ -162,7 +161,7 @@ func get_flush_score(sorted_cards) -> int:
 			return 0
 	return sorted_cards[0].number  * pow(10, HandRanks.Rank.Flush)
 
-func get_straight_score(sorted_cards) -> int:
+func get_straight_score(sorted_cards: Array[CardData]) -> int:
 	for i in range (1, sorted_cards):
 		if sorted_cards[i].number + 1 != sorted_cards[i - 1].number:
 			return 0
@@ -174,7 +173,7 @@ func get_straight_score(sorted_cards) -> int:
 
 	# 1. Check for the special case: Ace-low straight (A-2-3-4-5)
 	# When sorted descending, this unique hand is [14, 5, 4, 3, 2]
-	var test = sorted_cards.has()
+	var test = sorted_cards.has(null)
 	var is_wheel = (
 		sorted_cards[0].number == 14 and
 		sorted_cards[1].number == 5 and
@@ -215,15 +214,15 @@ func get_three_kind_score(sorted_cards) -> int:
 			return kind_number  * pow(10, HandRanks.Rank.ThreeKind)
 	return 0
 	
-func get_two_pair_score(sorted_cards) -> int:
-	var temp_sorted_cards = sorted_cards.duplicate(true)
-	var one_pair_number = get_one_pair_score(temp_sorted_cards)
+func get_two_pair_score(sorted_cards: Array[CardData]) -> int:
+	var temp_sorted_cards: Array[CardData] = sorted_cards.duplicate(true)
+	var one_pair_number: int = get_one_pair_score(temp_sorted_cards)
 	var two_pair_number = get_one_pair_score(temp_sorted_cards, one_pair_number)
 	if (one_pair_number != 0 && two_pair_number != 0):
 		return one_pair_number * pow(10, HandRanks.Rank.TwoPair)
 	return 0
 	
-func get_one_pair_score(sorted_cards, number_to_ignore = 0) -> int:
+func get_one_pair_score(sorted_cards: Array[CardData], number_to_ignore: int = 0) -> int:
 	var previous_number: int = 0
 	var one_pair_number: int = 0
 	for i in sorted_cards.size():

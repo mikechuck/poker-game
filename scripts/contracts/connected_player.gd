@@ -8,7 +8,7 @@ var account_total_cash: int = 0
 var table_cash: int = 0
 
 func clone() -> ConnectedPlayer:
-	var player_clone = ConnectedPlayer.new()
+	var player_clone: ConnectedPlayer = ConnectedPlayer.new()
 	player_clone.id = id
 	player_clone.is_host = is_host
 	player_clone.is_spectating = is_spectating
@@ -26,7 +26,7 @@ func to_dict() -> Dictionary:
 	}
 	
 static func from_dict(dict: Dictionary) -> ConnectedPlayer:
-	var instance = ConnectedPlayer.new()
+	var instance: ConnectedPlayer = ConnectedPlayer.new()
 	instance.id = dict.get("id")
 	instance.is_host = dict.get("is_host")
 	instance.is_spectating = dict.get("is_spectating")

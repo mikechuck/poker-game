@@ -1,6 +1,6 @@
 extends Node
 
-var Enums: RefCounted
+var Enums: Dictionary
 
 func _ready() -> void:
 	load_json_enums("res://shared/enums.json")
@@ -11,8 +11,8 @@ func load_json_enums(file_path: String) -> void:
 		return
 	
 	var file = FileAccess.open(file_path, FileAccess.READ)
-	var json_string = file.get_as_text()
-	var raw_dict = JSON.parse_string(json_string)
+	var json_string: String = file.get_as_text()
+	var raw_dict: Dictionary = JSON.parse_string(json_string)
 	
 	if raw_dict == null:
 		Log.error("Failed to parse enums json")
