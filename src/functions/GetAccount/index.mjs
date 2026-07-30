@@ -1,11 +1,14 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
-import Enums from "./shared/enums.json" with { type: "json" };
+import protobuf from "protobufjs";
 
 const ACCOUNTS_TABLE = process.env.ACCOUNTS_TABLE;
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const pokerApiProto = await protobuf.load(path.join(__dirname, "shared/poker_api.proto"));
 
 export const handler = async (event) => {
     const accountId = event.requestContext?.authorizer?.jwt?.claims?.sub;

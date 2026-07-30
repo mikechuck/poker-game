@@ -5,12 +5,13 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "upload_server_s3_dev": "pwsh -ExecutionPolicy Bypass -File ./powershell/server/export_linux_server.ps1 -env \"dev\" && node aws/upload_server_s3.cjs",
-    "upload_server_s3_prod": "pwsh -ExecutionPolicy Bypass -File ./powershell/server/export_linux_server.ps1 -env \"prod\" && node aws/upload_server_s3.cjs",
+    "generate_proto": "pwsh -ExecutionPolicy Bypass -File ./powershell/generate_proto.ps1",
+    "deploy_frontend_dev": "pwsh -ExecutionPolicy Bypass -File ./powershell/web/export_web.ps1 -env \"dev\"",
     "export_frontend_dev": "pwsh -ExecutionPolicy Bypass -File ./powershell/web/export_web.ps1 -env \"dev\"",
-    "deploy_frontend_dev": "pwsh -ExecutionPolicy Bypass -File ./powershell/web/export_web.ps1 -env \"dev\" && node aws/deploy_frontend.cjs dev",
+    "deploy_server_s3_dev": "pwsh -ExecutionPolicy Bypass -File ./powershell/server/export_linux_server.ps1 -env \"dev\" && node aws/upload_server_s3.cjs",
+    "deploy_server_s3_prod": "pwsh -ExecutionPolicy Bypass -File ./powershell/server/export_linux_server.ps1 -env \"prod\" && node aws/upload_server_s3.cjs",
     "deploy_frontend_prod": "pwsh -ExecutionPolicy Bypass -File ./powershell/web/export_web.ps1 -env \"prod\" && node aws/deploy_frontend.cjs prod",
-    "full_deploy_dev": "npm run upload_server_s3_dev && npm run deploy_frontend_dev && cd terraform && terraform apply -auto-approve -replace=\"aws_instance.poker_server\""
+    "full_deploy_dev": "npm run deploy_server_s3_dev && npm run deploy_frontend_dev && cd terraform && terraform apply -auto-approve -replace=\"aws_instance.poker_server\""
   },
   "repository": {
     "type": "git",
@@ -32,9 +33,11 @@
     "client-ec2": "github:aws-sdk/client-ec2",
     "fs": "^0.0.1-security",
     "jsonwebtoken": "^9.0.3",
-    "mime-types": "^3.0.2"
+    "mime-types": "^3.0.2",
+    "protobufjs": "^8.7.1"
   },
   "devDependencies": {
-    "@types/node": "^24.8.1"
+    "@types/node": "^24.8.1",
+    "cross-env": "^10.1.0"
   }
 }

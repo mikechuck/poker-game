@@ -2,11 +2,16 @@ import { SSMClient, SendCommandCommand, GetCommandInvocationCommand } from "@aws
 import { DynamoDBDocumentClient, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import crypto from "crypto";
-import Enums from "./shared/enums.json" with { type: "json" };
+import protobuf from "protobufjs";
 
 const ssm = new SSMClient();
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const pokerApiProto = await protobuf.load(path.join(__dirname, "shared/poker_api.proto"));
+const GameStatus = pokerApiProto.lookupType("poker_api.GameStatus")
+const GameRecord = pokerApiProto.lookupType("poker_api.GameRecord");
 
 const INSTANCE_ID = process.env.POKER_SERVER_INSTANCE_ID;
 const GAMES_TABLE = process.env.GAMES_TABLE;
@@ -47,19 +52,27 @@ export const handler = async (event) => {
         FilterExpression: "gameStatus <> :endedStatus",
         ExpressionAttributeValues: {
             ":accId": accountId,
-            ":endedStatus": Enums.GameStatus.ENDED
+            ":endedStatus": GameStatus.ENDED
         }
     };
 
     try {
         const command = new QueryCommand(params);
         const response = await docClient.send(command);
-        let game = response?.Items?.[0] ?? null;
+        let existingGame = response?.Items?.[0] ?? null;
 
-        if (game) {  
+        const errMsg = GameRecord.verify(existingGame);
+        if (errMsg) {
+            return {
+                statusCode: 500,
+                body: JSON.stringify({ message: `Server configuration error | Message: ${errMsg}` })
+            };
+        }
+
+        if (existingGame) {  
             return {
                 statusCode: 200,
-                body: JSON.stringify(game)
+                body: JSON.stringify(GameRecord.create(newGameData))
             }
         }
 
@@ -72,11 +85,11 @@ export const handler = async (event) => {
             gameCode += gameCodeChars[Math.floor(Math.random() * gameCodeChars.length)];
         }
 
-        const newGame = {
+        const newGameData = {
             gameId: gameCode,
             hostPlayerId: accountId,
             createTimeEpochMilliseconds: Date.now(),
-            gameStatus: Enums.GameStatus.STARTING,
+            gameStatus: GameStatus.STARTING,
             endTimeEpochMilliseconds: 0,
             connectedPlayers: [],
             port: 0,
@@ -86,9 +99,19 @@ export const handler = async (event) => {
             handsPlayed: 0
         };
 
+        const errMsg = GameRecord.verify(payload);
+        if (errMsg) {
+            return {
+                statusCode: 500,
+                body: JSON.stringify({ message: `Server configuration error | Message: ${errMsg}` })
+            };
+        }
+
+        const newGameRecord = GameRecord.create(newGameData);
+
         await docClient.send(new PutCommand({
             TableName: GAMES_TABLE,
-            Item: newGame
+            Item: newGameRecord
         }));
 
         // Send the command to run our start game script
@@ -107,10 +130,7 @@ export const handler = async (event) => {
         return {
             statusCode: 202,
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ 
-                message: "Game server configuration initialization started", 
-                gameId: newGame.gameId
-            })
+            body: JSON.stringify(newGame)
         };
     } catch (error) {
         console.error("SSM Execution Error:", error);

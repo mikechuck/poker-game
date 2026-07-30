@@ -4,7 +4,7 @@ param (
 
 # Script must be run from the root of the project
 $SrcDir       = "src/functions/$functionName"
-$SharedFile   = "shared/enums.json"
+$SharedFile   = "shared/poker_api.proto"
 $ZipPath      = "exports/lambda/$functionName.zip"
 $StageDir     = "exports/lambda/stage_$functionName"
 

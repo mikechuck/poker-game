@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package poker_api;
+
+// Network
+
+message HttpResponseWrapper {
+    int32 result = 1;
+    int32 response_code = 2;
+    repeated string response_headers = 3;
+    bytes response_body = 4;
+}
+
+// Account
+
+message AccountRecord {
+    string accountId = 1;
+    string playerName = 2;
+    int64 createTimeEpochMilliseconds = 3;
+    string profilePictureUrl = 4;
+    int32 handsWon = 5;
+    int32 handsPlayed = 6;
+    string playerColor = 7; 
+}
+
+// Game
+
+message GameRecord {
+    string gameId = 1;
+    string hostPlayerId = 2;
+    GameStatus gameStatus = 3;
+    int64 createTimeEpochMilliseconds = 4;
+    int64 endTimeEpochMilliseconds = 5;
+    int32 port = 6;
+    int32 blindValue = 7;
+    int32 buyInDollars = 8;
+    int32 chipRatio = 9;
+    int32 handsPlayed = 10; 
+    repeated string connectedPlayers = 11;
+}
+
+enum GameStatus {
+    STARTING = 0;
+    STARTED = 1;
+    ENDED = 2;
+}

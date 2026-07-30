@@ -3,8 +3,8 @@ class_name MainSceneManager
 
 @onready var debug_output_node: Node = $DebugOutput
 @onready var game_code_input_node: Node = $Content/Menu/MarginContainer/VBoxContainer/HBoxContainer/GameCodeInput
-@onready var account_section: Node = $Content/AccountSection
-@onready var games_list_container: Node = $Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/GameDetailsContainer
+@onready var account_section: AccountSection = $Content/AccountSection
+@onready var games_list_container: GameDetailsContainer = $Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/GameDetailsContainer
 @onready var loading_screen: Node = $Loading
 @onready var main_content: Node = $Content
 @onready var auth_manager: AuthManager =  get_tree().current_scene.get_node("AuthManager")
@@ -17,11 +17,10 @@ func _ready() -> void:
 		NavigationManager.navigate_to_game_scene()
 	
 	# Should have auth by now, grab their account data on load
-	http_request_manager.get_account_data(func(response_code, data):
+	http_request_manager.get_account_data(func(response_code: int, data: Array[Contracts.AccountRecord]):
 		if (response_code == 200):
 			DataStore.account_data = data
 			account_section.display_account_data(data)
-			
 			http_request_manager.get_games(func(response_code, data):
 				if (response_code == 200):
 					games_list_container.create_games_list(data["games"])

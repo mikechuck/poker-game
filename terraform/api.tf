@@ -381,8 +381,8 @@ data "archive_file" "get_account_zip" {
         filename = "index.mjs"
     }
     source {
-        content  = file("${path.module}/../shared/enums.json")
-        filename = "shared/enums.json"
+        content  = file("${path.module}/../shared/poker_api.proto")
+        filename = "shared/poker_api.proto"
     }
 }
 
@@ -422,8 +422,8 @@ data "archive_file" "create_game_zip" {
         filename = "index.mjs"
     }
     source {
-        content  = file("${path.module}/../shared/enums.json")
-        filename = "shared/enums.json"
+        content  = file("${path.module}/../poker_api.proto")
+        filename = "shared/poker_api.proto"
     }
 }
 
@@ -464,8 +464,8 @@ data "archive_file" "get_game_zip" {
         filename = "index.mjs"
     }
     source {
-        content  = file("${path.module}/../shared/enums.json")
-        filename = "shared/enums.json"
+        content  = file("${path.module}/../shared/poker_api.proto")
+        filename = "shared/poker_api.proto"
     }
 }
 
@@ -505,8 +505,8 @@ data "archive_file" "get_games_zip" {
         filename = "index.mjs"
     }
     source {
-        content  = file("${path.module}/../shared/enums.json")
-        filename = "shared/enums.json"
+        content  = file("${path.module}/../shared/poker_api.proto")
+        filename = "shared/poker_api.proto"
     }
 }
 
@@ -546,8 +546,8 @@ data "archive_file" "update_game_zip" {
         filename = "index.mjs"
     }
     source {
-        content  = file("${path.module}/../shared/enums.json")
-        filename = "shared/enums.json"
+        content  = file("${path.module}/../shared/poker_api.proto")
+        filename = "shared/poker_api.proto"
     }
 }
 

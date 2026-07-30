@@ -1,4 +1,6 @@
 leftoff: 
+	- finish using proto contracts in all services and places that use the http_request_manager
+	- finished bulding protobuf generator, now continue scritly typing everything in godot engine
 	- continue going through code and type casting everything. Leftoff going with ConnectedPlayer contract
 	- when tokens expire, the redirect url is undefined and can't navigate to logic for some reason
 	- join request not getting all the way to server code, check nginx logs

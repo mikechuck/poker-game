@@ -3,14 +3,14 @@ class_name HttpRequestsManager
 
 @onready var auth_manager: AuthManager =  get_tree().current_scene.get_node("AuthManager")
 
-func get_headers():
+func get_headers() -> Array[String]:
 	var id_token: String = auth_manager.get_id_token()
 	return [
 		"Content-Type: application/json",
 		"Authorization: Bearer %s" % id_token
 	]
 	
-func get_account_data(callback: Callable):
+func get_account_data(callback: Callable) -> void:
 	var path: String = "/account"
 	auth_manager.api_request(
 		path,
@@ -18,7 +18,7 @@ func get_account_data(callback: Callable):
 		callback
 	)
 
-func create_game(callback: Callable):
+func create_game(callback: Callable) -> void:
 	var path: String = "/game"
 	var reqeustBody = {
 		blind = 10
@@ -31,7 +31,7 @@ func create_game(callback: Callable):
 		JSON.stringify(reqeustBody)
 	)
 	
-func get_game(game_id: String, callback: Callable):
+func get_game(game_id: String, callback: Callable) -> void:
 	var path: String = "/game?gameId=%s" % game_id.uri_encode()
 	auth_manager.api_request(
 		path,
@@ -39,7 +39,7 @@ func get_game(game_id: String, callback: Callable):
 		callback
 	)
 
-func get_games(callback: Callable):
+func get_games(callback: Callable) -> void:
 	var path: String = "/games"
 	auth_manager.api_request(
 		path,
@@ -47,7 +47,7 @@ func get_games(callback: Callable):
 		callback
 	)
 	
-func update_game(game_id: String, game_status, callback: Callable):
+func update_game(game_id: String, game_status: int, callback: Callable) -> void:
 	var path: String = "/game?gameId=%s" % game_id.uri_encode()
 	var reqeustBody = {
 		gameStatus = game_status
@@ -62,7 +62,7 @@ func update_game(game_id: String, game_status, callback: Callable):
 	
 # Server methods
 # game_id, game_status = null, port = null, add_players: Array[int] = [], remove_players: Array[int] = []
-func server_update_game(params: Dictionary, callback: Callable = func(): pass):
+func server_update_game(params: Dictionary, callback: Callable = func(): pass) -> void:
 	var game_id: String = params["game_id"]
 	var path: String = "/game?gameId=%s" % game_id.uri_encode()
 	var requestBody = {

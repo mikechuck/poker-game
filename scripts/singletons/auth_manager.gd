@@ -50,7 +50,7 @@ func _ready() -> void:
 			
 #### Http request template to manage auth system
 #### This should be used for all HTTP requests to our api
-func api_request(path: String, method: int, callback: Callable, body: String = "", retry_count: int = 0):
+func api_request(path: String, method: int, request_body: String = "", retry_count: int = 0) -> Contracts.HttpResponseWrapper:
 	var url: String = API_URL + path
 	var http: HTTPRequest = HTTPRequest.new()
 	add_child(http)
@@ -60,24 +60,29 @@ func api_request(path: String, method: int, callback: Callable, body: String = "
 		"Authorization: Bearer " + get_id_token()
 	]
 	
-	http.request_completed.connect(func(result, response_code, response_headers, response_body: PackedByteArray):
+	http.request_completed.connect(func(result: int, response_code: int, response_headers: PackedStringArray, response_body: PackedByteArray):
 		if (response_code == 401 and retry_count < 1):
 			if await refresh_tokens():
-				api_request(path, method, callback, body, retry_count + 1)
+				return api_request(path, method, request_body, retry_count + 1)
 			else:
 				# Something is wrong with our auth, boot user
 				clear_local_storage()
 				NavigationManager.navigate_to_landing()
 			
 			http.queue_free()
-			return
-		
-		var json_data = JSON.parse_string(response_body.get_string_from_utf8())
-		callback.call(response_code, json_data)
-		http.queue_free()
+		else:
+			var http_response: Contracts.HttpResponseWrapper = Contracts.HttpResponseWrapper.new()
+			http_response.result = result
+			http_response.response_code = response_code
+			http_response.append_response_headers(response_headers)
+			http_response.response_body = response_body
+			
+			http.queue_free()
+			return http_response
 	)
 	
-	http.request(url, headers, method, body)
+	http.request(url, headers, method, request_body)
+	return
 	
 # For api calls from the server, uses api token instead of JWT
 func server_api_request(path: String, method: int, callback: Callable, body: String = ""):
@@ -90,7 +95,7 @@ func server_api_request(path: String, method: int, callback: Callable, body: Str
 		"x-server-token: " + SERVER_API_TOKEN
 	]
 	
-	http.request_completed.connect(func(result, response_code, response_headers, response_body: PackedByteArray):
+	http.request_completed.connect(func(result: int, response_code: int, response_headers: PackedStringArray, response_body: PackedByteArray):
 		if (response_code != 200):
 			Log.error("API request failed | Method: %s | Path: %s | Status code: %s | Response: %s" % [
 				method,
@@ -105,7 +110,7 @@ func server_api_request(path: String, method: int, callback: Callable, body: Str
 				response_code,
 				JSON.parse_string(response_body.get_string_from_utf8())
 			])
-			var json_data = JSON.parse_string(response_body.get_string_from_utf8())
+			var json_data: Variant = JSON.parse_string(response_body.get_string_from_utf8())
 			callback.call(response_code, json_data)
 			http.queue_free()
 	)
@@ -125,7 +130,7 @@ func exchange_code_for_tokens(code: String):
 	get_tokens_http_request.request(TOKEN_URL, headers, HTTPClient.METHOD_POST, body)
 		
 func refresh_tokens() -> bool:
-	var current_refresh_token = get_refresh_token()
+	var current_refresh_token: String = get_refresh_token()
 	if (current_refresh_token == ""): return false
 	
 	var headers: PackedStringArray = ["Content-Type: application/x-www-form-urlencoded"]
@@ -135,15 +140,16 @@ func refresh_tokens() -> bool:
 		"refresh_token": get_refresh_token(),
 	})
 	
-	var err = refresh_tokens_http_request.request(TOKEN_URL, headers, HTTPClient.METHOD_POST, body)
+	var err: Error = refresh_tokens_http_request.request(TOKEN_URL, headers, HTTPClient.METHOD_POST, body)
 	if err != OK:
 		("Error sending request, returning to landing page")
 		NavigationManager.navigate_to_landing()
 		return false
 	
+	# Not sure what the type of "response" is...
 	var response = await refresh_tokens_http_request.request_completed
-	var result = response[0]
-	var response_code = response[1]
+	var result: int = response[0]
+	var response_code: int = response[1]
 	var response_body: PackedByteArray = response[3]
 	
 	if result != HTTPRequest.RESULT_SUCCESS:
@@ -156,7 +162,7 @@ func refresh_tokens() -> bool:
 		NavigationManager.navigate_to_landing()
 		return false
 		
-	var json = JSON.parse_string(response_body.get_string_from_utf8())
+	var json: Variant = JSON.parse_string(response_body.get_string_from_utf8())
 	var access_token: String = json["access_token"]
 	var id_token: String = json["id_token"]
 	var refresh_token: String = json["refresh_token"]
@@ -220,7 +226,7 @@ func _on_get_tokens_request_completed(result: int, response_code: int, headers: 
 		return
 		
 	# Handle success
-	var json = JSON.parse_string(body.get_string_from_utf8())
+	var json: Variant = JSON.parse_string(body.get_string_from_utf8())
 	var access_token: String = json["access_token"]
 	var id_token: String = json["id_token"]
 	var refresh_token: String = json["refresh_token"]

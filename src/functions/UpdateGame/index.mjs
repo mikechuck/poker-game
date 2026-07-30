@@ -1,9 +1,13 @@
 import { DynamoDBDocumentClient, UpdateCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import crypto from "crypto";
-import Enums from "./shared/enums.json" with { type: "json" };
+import protobuf from "protobufjs";
 
 const docClient = DynamoDBDocumentClient.from(new DynamoDBClient({}));
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const pokerApiProto = await protobuf.load(path.join(__dirname, "shared/poker_api.proto"));
+const GameStatus = pokerApiProto.lookupType("poker_api.GameStatus")
 
 const GAMES_TABLE = process.env.GAMES_TABLE;
 const SERVER_SECRET_TOKEN = process.env.SERVER_SECRET_TOKEN;
@@ -65,10 +69,10 @@ export const handler = async (event) => {
     let updateValues = {}
 
     if (newGameStatus) {
-        if (newGameStatus == Enums.GameStatus.STARTED) {
+        if (newGameStatus == GameStatus.STARTED) {
             updateExpressions.push("gameStatus = :statusValue");
             updateValues[":statusValue"] = newGameStatus;
-        } else if (newGameStatus == Enums.GameStatus.ENDED) {
+        } else if (newGameStatus == GameStatus.ENDED) {
             updateExpressions.push("gameStatus = :statusValue, endTimeEpochMilliseconds = :endTimeValue");
             updateValues[":statusValue"] = newGameStatus;
             updateValues[":endTimeValue"] = Date.now();

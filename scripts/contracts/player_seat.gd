@@ -62,7 +62,7 @@ func to_dict() -> Dictionary:
 	}
 
 static func from_dict(dict: Dictionary) -> PlayerSeat:
-	var instance = PlayerSeat.new()
+	var instance: PlayerSeat = PlayerSeat.new()
 	if dict != {}:
 		var hole_cards_array: Array[Dictionary] = dict.get("hole_cards")
 		instance.seat_index = dict.get("seat_index")
