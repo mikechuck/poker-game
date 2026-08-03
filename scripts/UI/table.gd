@@ -5,18 +5,17 @@ class_name Table
 @export var seat_select_button_scene: PackedScene = preload("res://scenes/UI/seat_button.tscn")
 @export var card_scene: PackedScene = preload("res://scenes/UI/card.tscn")
 
-var game_manager
-var poker_table_position
-var screen_origin
-var table_radius = 225
+var game_manager: GameSceneManager
+var screen_origin: Vector2
+var table_radius: int = 225
 var player_seats: Dictionary[int, PlayerSeat]
 var seat_nodes: Dictionary[int, Node]
 var player_data: ConnectedPlayer
 var board_card_scale: float = 0.8
 
-@onready var poker_table_node = $PokerTable
-@onready var pot_value_node = $PokerTable/Pot/Value
-@onready var board_cards_node = $PokerTable/Cards
+@onready var poker_table_node: Sprite2D = $PokerTable
+@onready var pot_value_node: RichTextLabel = $PokerTable/Pot/Value
+@onready var board_cards_node: Node2D = $PokerTable/Cards
 
 func _ready() -> void:
 	game_manager = get_parent().get_node("GameManager")
@@ -40,9 +39,10 @@ func handle_game_state_updated():
 			seat.visible = false
 	
 func handle_player_seats_updated():
-	for player_seat in game_manager.game_state_data.player_seats.values():
+	for player_seat: PlayerSeat in game_manager.game_state_data.player_seats.values():
 		if (multiplayer.get_unique_id() == player_seat.player_id && player_seat.player_node):
-			player_seat.player_node.get_node("PlayerCard/CashAmount").text = "$" + str(player_seat.hand_cash)
+			var cash_amount_label: RichTextLabel = player_seat.player_node.get_node("PlayerCard/CashAmount")
+			cash_amount_label.text = "$" + str(player_seat.hand_cash)
 	redraw_table_players()
 
 func handle_player_turn_updated():
@@ -55,10 +55,10 @@ func handle_board_cards_updated():
 			board_cards_node.remove_child(card)
 	if (board_cards.size() > 0):
 		for i in range(5):
-			var card_spot = board_cards_node.get_node("DealerCardSpot" + str(i + 1))
+			var card_spot: Sprite2D = board_cards_node.get_node("DealerCardSpot" + str(i + 1))
 			if i < board_cards.size():
 				var card_data = board_cards[i]
-				var card_instance = card_scene.instantiate()
+				var card_instance: Card = card_scene.instantiate()
 				card_instance.value = card_data.value
 				card_instance.suit = card_data.suit
 				card_instance.position = card_spot.position
@@ -70,7 +70,8 @@ func handle_board_cards_updated():
 				card_spot.visible = true
 	else:
 		for i in range(5):
-			board_cards_node.get_node("DealerCardSpot" + str(i + 1)).visible = true
+			var card_spot_node: Sprite2D = board_cards_node.get_node("DealerCardSpot" + str(i + 1))
+			card_spot_node.visible = true
 		
 func redraw_table_players():
 	# Set pot value
@@ -86,15 +87,16 @@ func redraw_table_players():
 			remove_child(player_seats[seat_id].player_node)
 			player_seats[seat_id].player_node = null
 		if (game_manager.game_state_data.game_state == GameState.State.PreHand):
-			seat_nodes[seat_id].visible = true
+			var seat_node: Sprite2D = seat_nodes[seat_id]
+			seat_node.visible = true
 	
 	# Then spawn any players and hide seat buttons
 	player_seats = game_manager.game_state_data.player_seats
 	for seat_id in player_seats.keys():
 		var seat_data = player_seats[seat_id]
-		var seat_node = seat_nodes[seat_id]
+		var seat_node: Node2D = seat_nodes[seat_id]
 		if seat_data.player_id != 0:
-			var player_instance = player_scene.instantiate()
+			var player_instance: Player = player_scene.instantiate()
 			# Need to transform seat position coords from local scale to global scale (0.4 -> 1)
 			player_instance.position = (poker_table_node.scale * seat_node.position)
 			player_instance.player_id = seat_data.player_id
@@ -108,5 +110,5 @@ func redraw_table_players():
 			player_instance.is_winner = game_manager.game_state_data.winner_player_id == seat_data.player_id
 			seat_data.player_node = player_instance
 			add_child(player_instance)
-			seat_nodes[seat_id].visible = false
+			seat_node.visible = false
 	

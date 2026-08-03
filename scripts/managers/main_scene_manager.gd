@@ -5,29 +5,29 @@ class_name MainSceneManager
 @onready var game_code_input_node: Node = $Content/Menu/MarginContainer/VBoxContainer/HBoxContainer/GameCodeInput
 @onready var account_section: AccountSection = $Content/AccountSection
 @onready var games_list_container: GameDetailsContainer = $Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/GameDetailsContainer
-@onready var loading_screen: Node = $Loading
-@onready var main_content: Node = $Content
+@onready var loading_screen: Control = $Loading
+@onready var main_content: Control = $Content
 @onready var auth_manager: AuthManager =  get_tree().current_scene.get_node("AuthManager")
 @onready var http_request_manager: HttpRequestsManager =  get_tree().current_scene.get_node("HttpRequests")
 
-var _game_code = ""
+var _game_code: String = ""
 
 func _ready() -> void:
+	main_content.visible = false
+	loading_screen.visible = true
 	if (OS.has_feature("server")):
 		NavigationManager.navigate_to_game_scene()
 	
 	# Should have auth by now, grab their account data on load
-	http_request_manager.get_account_data(func(response_code: int, data: Array[Contracts.AccountRecord]):
-		if (response_code == 200):
-			DataStore.account_data = data
-			account_section.display_account_data(data)
-			http_request_manager.get_games(func(response_code, data):
-				if (response_code == 200):
-					games_list_container.create_games_list(data["games"])
-					loading_screen.visible = false
-					main_content.visible = true
-			)
-	)
+	var account_record: Contracts.AccountRecord = await http_request_manager.get_account_data()
+	if (account_record != null):
+		DataStore.account_data = account_record
+		account_section.display_account_data(account_record)
+		var games_list: Array[Contracts.GameRecord] = await http_request_manager.get_games()
+		if (games_list != null):
+			games_list_container.create_games_list(games_list)
+			main_content.visible = true
+			loading_screen.visible = false
 	
 	# If not the server, then we should bounce the user the landing if they don't have
 	multiplayer.connected_to_server.connect(_on_connected)
@@ -35,45 +35,42 @@ func _ready() -> void:
 	multiplayer.server_disconnected.connect(_on_disconnected)
 	
 func wait_for_game_creation(game_id: String):
-	http_request_manager.get_game(game_id, func(response_code, data):
-		if (response_code == 200):
-			if (data["gameStatus"] == Globals.Enums.GameStatus.STARTED):
-				Log.message("Joining game...")
-				connect_to_server(data["port"])
-			else:
-				await get_tree().create_timer(3.0).timeout
-				wait_for_game_creation(game_id)
+	var game_record: Contracts.GameRecord = await http_request_manager.get_game(game_id)
+	if (game_record != null):
+		if (game_record.gameStatus == Contracts.GameStatus.STARTED):
+			Log.message("Joining game...")
+			connect_to_server(game_record.port)
 		else:
-			Log.message("Error getting game status")
-	)
+			await get_tree().create_timer(3.0).timeout
+			wait_for_game_creation(game_id)
+	else:
+		Log.message("Error getting game status")
 
 func _on_create_game_button_pressed() -> void:
 	Log.message("Creating game...")
-	http_request_manager.create_game(func(response_code, data):
-		if (response_code == 202 or response_code == 200):
-			var game_id = data["gameId"]
-			if (game_id):
-				wait_for_game_creation(game_id)
-	)
+	var game_record: Contracts.GameRecord = await http_request_manager.create_game()
+	if (game_record != null):
+		var game_id: String = game_record.gameId
+		if (game_id):
+			wait_for_game_creation(game_id)
 
 func _on_join_game_button_pressed() -> void:
 	Log.message("Joining game code: %s" % _game_code)
-	http_request_manager.get_game(_game_code, func(response_code, data):
-		if (response_code == 200):
-			if (data["gameStatus"] == Globals.Enums.GameStatus.STARTED):
-				connect_to_server(data["port"])
-			else:
-				Log.message("Game not active")
+	var game_record: Contracts.GameRecord = await http_request_manager.get_game(_game_code)
+	if (game_record != null):
+		if (game_record.gameStatus == Contracts.GameStatus.STARTED):
+			connect_to_server(game_record.port)
 		else:
-			Log.message("Error getting game status")
-	)
+			Log.message("Game not active")
+	else:
+		Log.message("Error getting game status")
 
 func _on_game_code_input_text_changed(game_code: String) -> void:
 	_game_code = game_code
 
-func connect_to_server(port):
+func connect_to_server(port: int):
 	Log.message("Connecting to game %s..." % _game_code)
-	var connection_url = "wss://%s/game/%s" % [auth_manager.BASE_URL, int(port)]
+	var connection_url: String = "wss://%s/game/%s" % [auth_manager.BASE_URL, port]
 	var peer = WebSocketMultiplayerPeer.new()
 	multiplayer.multiplayer_peer = null
 	peer.create_client(connection_url)
@@ -81,15 +78,15 @@ func connect_to_server(port):
 	
 func _on_connected():
 	Log.message("Connected to game!")
-	http_request_manager.authenticate_game_player(_game_code, multiplayer.get_unique_id(), func(response_code, data):
-		if (response_code == 200):
-			if (data["gameStatus"] == Globals.Enums.GameStatus.STARTED):
-				connect_to_server(data["port"])
-			else:
-				Log.message("Game not active")
-		else:
-			Log.message("Error getting game status")
-	)
+	#var http_request_manager.authenticate_game_player(_game_code, multiplayer.get_unique_id(), func(response_code, data):
+		#if (response_code == 200):
+			#if (data["gameStatus"] == Contracts.GameStatus.STARTED):
+				#connect_to_server(data["port"])
+			#else:
+				#Log.message("Game not active")
+		#else:
+			#Log.message("Error getting game status")
+	#)
 	NavigationManager.navigate_to_game_scene()
 
 func _on_connection_failed():

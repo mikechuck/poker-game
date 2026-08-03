@@ -2,12 +2,16 @@ import { DynamoDBDocumentClient, UpdateCommand, QueryCommand } from "@aws-sdk/li
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import crypto from "crypto";
 import protobuf from "protobufjs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const docClient = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const pokerApiProto = await protobuf.load(path.join(__dirname, "shared/poker_api.proto"));
-const GameStatus = pokerApiProto.lookupType("poker_api.GameStatus")
+const GameStatus = pokerApiProto.lookupType("poker_api.GameStatus");
+const GameRecord = pokerApiProto.lookupType("poker_api.GameRecord");
+const ErrorResponse = pokerApiProto.lookupType("poker_api.ErrorResponse");
 
 const GAMES_TABLE = process.env.GAMES_TABLE;
 const SERVER_SECRET_TOKEN = process.env.SERVER_SECRET_TOKEN;
@@ -16,14 +20,22 @@ export const handler = async (event) => {
     if (!event.body) {
         return {
             statusCode: 400,
-            body: JSON.stringify({ message: "Missing request body" })
+            body: JSON.stringify(
+                ErrorResponse.create({
+                    message: "Missing request body"
+                })
+            )
         }; 
     }
 
     if (!SERVER_SECRET_TOKEN || !GAMES_TABLE) {
         return {
             statusCode: 500,
-            body: JSON.stringify({ message: "Server configuration error" })
+            body: JSON.stringify(
+                ErrorResponse.create({
+                    message: "Server configuration error"
+                })
+            )
         };
     }
 
@@ -36,13 +48,14 @@ export const handler = async (event) => {
     var hostPlayerId = "";
     var updateParams;
     var game;
+    var gameRecord;
 
     // TODO: update logic to migrate to a new dynamo record if trying to change hosts
     // Maybe best to just create a new endpoint for this...
     // const hostPlayerId = body.hostPlayerId;
 
     try {
-        const response = await docClient.send(new QueryCommand({
+        const queryResponse = await docClient.send(new QueryCommand({
             TableName: GAMES_TABLE,
             KeyConditionExpression: "gameId = :gId",
             ExpressionAttributeValues: {
@@ -50,17 +63,30 @@ export const handler = async (event) => {
             }
         }));
 
-        game = response.Items?.[0] ?? null;
+        game = queryResponse.Items?.[0] ?? null;
 
         if (!game) {
-            return { statusCode: 404, body: JSON.stringify({ message: "Game session not found" }) };
+            return {
+                statusCode: 404,
+                body: JSON.stringify(
+                    ErrorResponse.create({
+                        message: "Game session not found"
+                    })
+                )
+            };
         }
 
-        hostPlayerId = game.hostPlayerId;
+        gameRecord = GameRecord.create(game);
+        hostPlayerId = gameRecord.hostPlayerId;
     } catch (error) {
         return {
             statusCode: 500,
-            body: JSON.stringify({ message: "Failed to fetch game record", error: error.message })
+            body: JSON.stringify(
+                ErrorResponse.create({
+                    message: "Failed to fetch game record",
+                    error: error.message
+                })
+            )
         };
     }
 
@@ -79,7 +105,11 @@ export const handler = async (event) => {
         } else {
             return {
                 statusCode: 403,
-                body: JSON.stringify({ message: "Unmapped gameStatus value" })
+                body: JSON.stringify(
+                    ErrorResponse.create({
+                        message: "Unmapped gameStatus value"
+                    })
+                )
             };
         }
     }
@@ -90,7 +120,7 @@ export const handler = async (event) => {
     }
 
     if (addPlayers && addPlayers.length > 0) {
-        const currentPlayers = game.connectedPlayers;
+        const currentPlayers = gameRecord.connectedPlayers;
         addPlayers.forEach((playerId) => {
             currentPlayers.push(playerId);
         });
@@ -104,7 +134,7 @@ export const handler = async (event) => {
         // ignore id if player doesn't exist in game list
         const playersList = []
         addPlayers.forEach((playerId) => {
-            game.connectedPlayers.forEach((currentPlayerId) => {
+            gameRecord.connectedPlayers.forEach((currentPlayerId) => {
                 if (currentPlayerId != playerId) {
                     playersList.push(currentPlayerId);
                 }
@@ -132,12 +162,17 @@ export const handler = async (event) => {
         
         return {
             statusCode: 200,
-            body: JSON.stringify({ message: "Game updated successfully", attributes: response.Attributes })
+            body: JSON.stringify(GameRecord.create(response.Attributes))
         };
     } catch (error) {
         return {
             statusCode: 500,
-            body: JSON.stringify({ message: "Failed to update game record", error: error.message })
+            body: JSON.stringify(
+                ErrorResponse.create({
+                    message: "Failed to update game record",
+                    error: error.message
+                })
+            )
         };
     }
 };

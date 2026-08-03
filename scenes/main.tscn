@@ -51,7 +51,7 @@ anchor_bottom = 0.5
 grow_horizontal = 2
 grow_vertical = 2
 bbcode_enabled = true
-text = "[font_size=40]Loading account...[/font_size]"
+text = "[font_size=40]Fetching data...[/font_size]"
 horizontal_alignment = 1
 
 [node name="Content" type="Control" parent="."]

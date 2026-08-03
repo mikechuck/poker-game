@@ -4,11 +4,17 @@ package poker_api;
 
 // Network
 
+// Used for client side deserialization
 message HttpResponseWrapper {
     int32 result = 1;
     int32 response_code = 2;
     repeated string response_headers = 3;
     bytes response_body = 4;
+}
+
+message ErrorResponse {
+    string message = 1;
+    string error = 2;
 }
 
 // Account
@@ -21,6 +27,10 @@ message AccountRecord {
     int32 handsWon = 5;
     int32 handsPlayed = 6;
     string playerColor = 7; 
+}
+
+message AccountRecordList {
+  repeated AccountRecord records = 1;
 }
 
 // Game
@@ -37,6 +47,10 @@ message GameRecord {
     int32 chipRatio = 9;
     int32 handsPlayed = 10; 
     repeated string connectedPlayers = 11;
+}
+
+message GameRecordList {
+  repeated GameRecord records = 1;
 }
 
 enum GameStatus {

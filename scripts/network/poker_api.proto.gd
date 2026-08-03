@@ -1,3 +1,4 @@
+extends Node
 @warning_ignore_start("unsafe_property_access", "unsafe_call_argument", "unsafe_method_access")
 # Package: poker_api
 
@@ -151,6 +152,84 @@ class HttpResponseWrapper extends Message:
 
 # =========================================
 
+class ErrorResponse extends Message:
+	#1 : message
+	var message: String = ""
+
+	#2 : error
+	var error: String = ""
+
+
+	## Init message field values to default value
+	func Init() -> void:
+		self.message = ""
+		self.error = ""
+
+	## Create a new message instance
+	## Returns: Message - New message instance
+	func New() -> Message:
+		var msg = ErrorResponse.new()
+		return msg
+
+	## Message ProtoName
+	## Returns: String - ProtoName
+	func ProtoName() -> String:
+		return "poker_api.ErrorResponse"
+
+	func MergeFrom(other : Message) -> void:
+		if other is ErrorResponse:
+			self.message += other.message
+			self.error += other.error
+ 
+	func SerializeToBytes(buffer: PackedByteArray = PackedByteArray()) -> PackedByteArray:
+		if self.message != "":
+			GDScriptUtils.encode_tag(buffer, 1, 9)
+			GDScriptUtils.encode_string(buffer, self.message)
+		if self.error != "":
+			GDScriptUtils.encode_tag(buffer, 2, 9)
+			GDScriptUtils.encode_string(buffer, self.error)
+		return buffer
+ 
+	func ParseFromBytes(data: PackedByteArray) -> int:
+		var size = data.size()
+		var pos = 0
+ 
+		while pos < size:
+			var tag = GDScriptUtils.decode_tag(data, pos)
+			var field_number = tag[GDScriptUtils.VALUE_KEY]
+			pos += tag[GDScriptUtils.SIZE_KEY]
+ 
+			match field_number:
+				1:
+					var field_value = GDScriptUtils.decode_string(data, pos, self)
+					self.message = field_value[GDScriptUtils.VALUE_KEY]
+					pos += field_value[GDScriptUtils.SIZE_KEY]
+				2:
+					var field_value = GDScriptUtils.decode_string(data, pos, self)
+					self.error = field_value[GDScriptUtils.VALUE_KEY]
+					pos += field_value[GDScriptUtils.SIZE_KEY]
+				_:
+					pass
+
+		return pos
+
+	func SerializeToDictionary() -> Dictionary:
+		var dict = {}
+		dict["message"] = self.message
+		dict["error"] = self.error
+		return dict
+
+	func ParseFromDictionary(dict: Dictionary) -> void:
+		if dict == null:
+			return
+
+		if dict.has("message"):
+			self.message = dict.get("message")
+		if dict.has("error"):
+			self.error = dict.get("error")
+
+# =========================================
+
 class AccountRecord extends Message:
 	#1 : accountId
 	var accountId: String = ""
@@ -301,6 +380,108 @@ class AccountRecord extends Message:
 			self.handsPlayed = dict.get("handsPlayed")
 		if dict.has("playerColor"):
 			self.playerColor = dict.get("playerColor")
+
+# =========================================
+
+class AccountRecordList extends Message:
+	#1 : records
+	var _records: Array[AccountRecord] = []
+	var _records_size: int = 0
+	## Size of _records
+	func records_size() -> int:
+		return self._records_size
+	## Get _records
+	func records() -> Array[AccountRecord]:
+		return self._records.slice(0, self._records_size)
+	## Get _records item 
+	func get_records(index: int) -> AccountRecord: # index begin from 1
+		if index > 0 and index <= _records_size and index <= _records.size():
+			return self._records[index - 1]
+		return null
+	## Add _records
+	func add_records(item: AccountRecord) -> AccountRecord:
+		if self._records_size >= 0 and self._records_size < self._records.size():
+			self._records[self._records_size] = item
+		else:
+			self._records.append(item)
+		self._records_size += 1
+		return item
+	## Append _records
+	func append_records(item_array: Array):
+		for item in item_array:
+			if item is AccountRecord:
+				self.add_records(item)
+	## Clean _records 
+	func clear_records() -> void:
+		self._records_size = 0
+
+
+	## Init message field values to default value
+	func Init() -> void:
+		self.clear_records
+
+	## Create a new message instance
+	## Returns: Message - New message instance
+	func New() -> Message:
+		var msg = AccountRecordList.new()
+		return msg
+
+	## Message ProtoName
+	## Returns: String - ProtoName
+	func ProtoName() -> String:
+		return "poker_api.AccountRecordList"
+
+	func MergeFrom(other : Message) -> void:
+		if other is AccountRecordList:
+			self._records = self._records.slice(0, _records_size)
+			self._records.append_array(other._records.slice(0, other._records_size))
+			self._records_size += other._records_size
+ 
+	func SerializeToBytes(buffer: PackedByteArray = PackedByteArray()) -> PackedByteArray:
+		for item in self._records:
+			GDScriptUtils.encode_tag(buffer, 1, 11)
+			GDScriptUtils.encode_message(buffer, item)
+		return buffer
+ 
+	func ParseFromBytes(data: PackedByteArray) -> int:
+		var size = data.size()
+		var pos = 0
+ 
+		while pos < size:
+			var tag = GDScriptUtils.decode_tag(data, pos)
+			var field_number = tag[GDScriptUtils.VALUE_KEY]
+			pos += tag[GDScriptUtils.SIZE_KEY]
+ 
+			match field_number:
+				1:
+					var sub__records = AccountRecord.new()
+					var field_value = GDScriptUtils.decode_message(data, pos, sub__records)
+					self.add_records(field_value[GDScriptUtils.VALUE_KEY])
+					pos += field_value[GDScriptUtils.SIZE_KEY]
+				_:
+					pass
+
+		return pos
+
+	func SerializeToDictionary() -> Dictionary:
+		var dict = {}
+		dict["records"] = []
+		for index in range(1, self._records_size + 1):
+			var item = self.get_records(index)
+			dict["records"].append(item.SerializeToDictionary())
+		return dict
+
+	func ParseFromDictionary(dict: Dictionary) -> void:
+		if dict == null:
+			return
+
+		self.clear_records()
+		if dict.has("records"):
+			var list = dict["records"]
+			for item in list:
+				var item_msg = AccountRecord.new()
+				item_msg.ParseFromDictionary(item)
+				self.add_records(item_msg)
 
 # =========================================
 
@@ -549,3 +730,107 @@ class GameRecord extends Message:
 				self.add_connectedPlayers(item)
 
 # =========================================
+
+class GameRecordList extends Message:
+	#1 : records
+	var _records: Array[GameRecord] = []
+	var _records_size: int = 0
+	## Size of _records
+	func records_size() -> int:
+		return self._records_size
+	## Get _records
+	func records() -> Array[GameRecord]:
+		return self._records.slice(0, self._records_size)
+	## Get _records item 
+	func get_records(index: int) -> GameRecord: # index begin from 1
+		if index > 0 and index <= _records_size and index <= _records.size():
+			return self._records[index - 1]
+		return null
+	## Add _records
+	func add_records(item: GameRecord) -> GameRecord:
+		if self._records_size >= 0 and self._records_size < self._records.size():
+			self._records[self._records_size] = item
+		else:
+			self._records.append(item)
+		self._records_size += 1
+		return item
+	## Append _records
+	func append_records(item_array: Array):
+		for item in item_array:
+			if item is GameRecord:
+				self.add_records(item)
+	## Clean _records 
+	func clear_records() -> void:
+		self._records_size = 0
+
+
+	## Init message field values to default value
+	func Init() -> void:
+		self.clear_records
+
+	## Create a new message instance
+	## Returns: Message - New message instance
+	func New() -> Message:
+		var msg = GameRecordList.new()
+		return msg
+
+	## Message ProtoName
+	## Returns: String - ProtoName
+	func ProtoName() -> String:
+		return "poker_api.GameRecordList"
+
+	func MergeFrom(other : Message) -> void:
+		if other is GameRecordList:
+			self._records = self._records.slice(0, _records_size)
+			self._records.append_array(other._records.slice(0, other._records_size))
+			self._records_size += other._records_size
+ 
+	func SerializeToBytes(buffer: PackedByteArray = PackedByteArray()) -> PackedByteArray:
+		for item in self._records:
+			GDScriptUtils.encode_tag(buffer, 1, 11)
+			GDScriptUtils.encode_message(buffer, item)
+		return buffer
+ 
+	func ParseFromBytes(data: PackedByteArray) -> int:
+		var size = data.size()
+		var pos = 0
+ 
+		while pos < size:
+			var tag = GDScriptUtils.decode_tag(data, pos)
+			var field_number = tag[GDScriptUtils.VALUE_KEY]
+			pos += tag[GDScriptUtils.SIZE_KEY]
+ 
+			match field_number:
+				1:
+					var sub__records = GameRecord.new()
+					var field_value = GDScriptUtils.decode_message(data, pos, sub__records)
+					self.add_records(field_value[GDScriptUtils.VALUE_KEY])
+					pos += field_value[GDScriptUtils.SIZE_KEY]
+				_:
+					pass
+
+		return pos
+
+	func SerializeToDictionary() -> Dictionary:
+		var dict = {}
+		dict["records"] = []
+		for index in range(1, self._records_size + 1):
+			var item = self.get_records(index)
+			dict["records"].append(item.SerializeToDictionary())
+		return dict
+
+	func ParseFromDictionary(dict: Dictionary) -> void:
+		if dict == null:
+			return
+
+		self.clear_records()
+		if dict.has("records"):
+			var list = dict["records"]
+			for item in list:
+				var item_msg = GameRecord.new()
+				item_msg.ParseFromDictionary(item)
+				self.add_records(item_msg)
+
+# =========================================
+
+

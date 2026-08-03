@@ -10,7 +10,8 @@ static func serialize_player_seats(player_seats: Dictionary[int, PlayerSeat]) ->
 static func deserialize_player_seats(new_player_seats: Dictionary) -> Dictionary[int, PlayerSeat]:
 	var deserialized_player_seats: Dictionary[int, PlayerSeat] = {}
 	for id in new_player_seats.keys():
-		deserialized_player_seats[id] = PlayerSeat.from_dict(new_player_seats[id])
+		var seat_data: Dictionary = new_player_seats[id]
+		deserialized_player_seats[id] = PlayerSeat.from_dict(seat_data)
 	return deserialized_player_seats
 	
 static func serialize_connected_players(connected_players: Dictionary[int, ConnectedPlayer]) -> Dictionary:
@@ -22,7 +23,8 @@ static func serialize_connected_players(connected_players: Dictionary[int, Conne
 static func deserialize_connected_players(new_connected_players: Dictionary) -> Dictionary[int, ConnectedPlayer]:
 	var deserialized_connected_players: Dictionary[int, ConnectedPlayer] = {}
 	for id in new_connected_players.keys():
-		deserialized_connected_players[id] = ConnectedPlayer.from_dict(new_connected_players[id])
+		var seat_data: Dictionary = new_connected_players[id]
+		deserialized_connected_players[id] = ConnectedPlayer.from_dict(seat_data)
 	return deserialized_connected_players
 	
 static func serialize_cards(cards: Array[CardData]) -> Array[Dictionary]:

@@ -6,12 +6,12 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "generate_proto": "pwsh -ExecutionPolicy Bypass -File ./powershell/generate_proto.ps1",
-    "deploy_frontend_dev": "pwsh -ExecutionPolicy Bypass -File ./powershell/web/export_web.ps1 -env \"dev\"",
-    "export_frontend_dev": "pwsh -ExecutionPolicy Bypass -File ./powershell/web/export_web.ps1 -env \"dev\"",
-    "deploy_server_s3_dev": "pwsh -ExecutionPolicy Bypass -File ./powershell/server/export_linux_server.ps1 -env \"dev\" && node aws/upload_server_s3.cjs",
-    "deploy_server_s3_prod": "pwsh -ExecutionPolicy Bypass -File ./powershell/server/export_linux_server.ps1 -env \"prod\" && node aws/upload_server_s3.cjs",
+    "stage_lambda_exports": "pwsh -ExecutionPolicy Bypass -File ./powershell/lambda/stage_lambda_exports.ps1",
+    "deploy_server_dev": "pwsh -ExecutionPolicy Bypass -File ./powershell/server/export_linux_server.ps1 -env \"dev\" && node aws/upload_server_s3.cjs",
+    "deploy_server_prod": "pwsh -ExecutionPolicy Bypass -File ./powershell/server/export_linux_server.ps1 -env \"prod\" && node aws/upload_server_s3.cjs",
+    "deploy_frontend_dev": "pwsh -ExecutionPolicy Bypass -File ./powershell/web/export_web.ps1 -env \"dev\" && node aws/deploy_frontend.cjs dev",
     "deploy_frontend_prod": "pwsh -ExecutionPolicy Bypass -File ./powershell/web/export_web.ps1 -env \"prod\" && node aws/deploy_frontend.cjs prod",
-    "full_deploy_dev": "npm run deploy_server_s3_dev && npm run deploy_frontend_dev && cd terraform && terraform apply -auto-approve -replace=\"aws_instance.poker_server\""
+    "full_deploy_dev": "npm run stage_lambda_exports && npm run deploy_server_dev && npm run deploy_frontend_dev && cd terraform && terraform apply -auto-approve -replace=\"aws_instance.poker_server\""
   },
   "repository": {
     "type": "git",

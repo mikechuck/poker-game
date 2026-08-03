@@ -20,15 +20,12 @@ func _ready() -> void:
 	if (OS.has_feature("local")):
 		REDIRECT_URI = REDIRECT_URI_LOCAL
 		API_URL += "/dev"
-		Log.message("Dev mode enabled")
 	if OS.has_feature("dev"):
 		REDIRECT_URI = REDIRECT_URI_HOSTED
 		API_URL += "/dev"
-		Log.message("Dev mode enabled")
 	else:
 		REDIRECT_URI = REDIRECT_URI_HOSTED
 		API_URL += "/prod"
-		Log.message("Prod mode enabled")
 		
 	# No need for further setup for server
 	if (OS.has_feature("server")):
@@ -49,7 +46,7 @@ func _ready() -> void:
 			NavigationManager.navigate_to_landing()
 			
 #### Http request template to manage auth system
-#### This should be used for all HTTP requests to our api
+#### This should be used for all client HTTP requests to our api
 func api_request(path: String, method: int, request_body: String = "", retry_count: int = 0) -> Contracts.HttpResponseWrapper:
 	var url: String = API_URL + path
 	var http: HTTPRequest = HTTPRequest.new()
@@ -60,32 +57,41 @@ func api_request(path: String, method: int, request_body: String = "", retry_cou
 		"Authorization: Bearer " + get_id_token()
 	]
 	
-	http.request_completed.connect(func(result: int, response_code: int, response_headers: PackedStringArray, response_body: PackedByteArray):
-		if (response_code == 401 and retry_count < 1):
-			if await refresh_tokens():
-				return api_request(path, method, request_body, retry_count + 1)
-			else:
-				# Something is wrong with our auth, boot user
-				clear_local_storage()
-				NavigationManager.navigate_to_landing()
-			
-			http.queue_free()
-		else:
-			var http_response: Contracts.HttpResponseWrapper = Contracts.HttpResponseWrapper.new()
-			http_response.result = result
-			http_response.response_code = response_code
-			http_response.append_response_headers(response_headers)
-			http_response.response_body = response_body
-			
-			http.queue_free()
-			return http_response
-	)
+	# Call api
+	var err = http.request(url, headers, method, request_body)
+	if err != OK:
+		http.queue_free()
+		Log.error("HTTP Request failed to initiate: %d" % err)
+		return null
+
+	# Await the signal asynchronously (returns an Array of signal arguments)
+	var args: Array = await http.request_completed
+	var result: int = args[0]
+	var response_code: int = args[1]
+	var response_headers: PackedStringArray = args[2]
+	var response_body: PackedByteArray = args[3]
+	http.queue_free()
 	
-	http.request(url, headers, method, request_body)
-	return
+	if (response_code == 401 and retry_count < 1):
+		if await refresh_tokens():
+			return await api_request(path, method, request_body, retry_count + 1)
+		else:
+			# Something is wrong with our auth, boot user
+			clear_local_storage()
+			NavigationManager.navigate_to_landing()
+			return null
+	else:
+		if (response_code >= 300):
+			Log.error("HTTP response error code: %s" % response_code)
+		var http_response: Contracts.HttpResponseWrapper = Contracts.HttpResponseWrapper.new()
+		http_response.result = result
+		http_response.response_code = response_code
+		http_response.append_response_headers(response_headers)
+		http_response.response_body = response_body
+		return http_response
 	
 # For api calls from the server, uses api token instead of JWT
-func server_api_request(path: String, method: int, callback: Callable, body: String = ""):
+func server_api_request(path: String, method: int, body: String = "") -> Contracts.HttpResponseWrapper:
 	var url: String = API_URL + path
 	var http: HTTPRequest = HTTPRequest.new()
 	add_child(http)
@@ -95,27 +101,36 @@ func server_api_request(path: String, method: int, callback: Callable, body: Str
 		"x-server-token: " + SERVER_API_TOKEN
 	]
 	
-	http.request_completed.connect(func(result: int, response_code: int, response_headers: PackedStringArray, response_body: PackedByteArray):
-		if (response_code != 200):
-			Log.error("API request failed | Method: %s | Path: %s | Status code: %s | Response: %s" % [
-				method,
-				path,
-				response_code,
-				JSON.parse_string(response_body.get_string_from_utf8())
-			])
-		else:
-			Log.message("API request succeeded | Method: %s | Path: %s | Status code: %s | Response: %s" % [
-				method,
-				path,
-				response_code,
-				JSON.parse_string(response_body.get_string_from_utf8())
-			])
-			var json_data: Variant = JSON.parse_string(response_body.get_string_from_utf8())
-			callback.call(response_code, json_data)
-			http.queue_free()
-	)
-	
 	http.request(url, headers, method, body)
+	var args: Array = await http.request_completed
+	var result: int = args[0]
+	var response_code: int = args[1]
+	var response_headers: PackedStringArray = args[2]
+	var response_body: PackedByteArray = args[3]
+	http.queue_free()
+	
+	if (response_code != 200):
+		Log.error("API request failed | Method: %s | Path: %s | Status code: %s | Response: %s" % [
+			method,
+			path,
+			response_code,
+			JSON.parse_string(response_body.get_string_from_utf8())
+		])
+		return null
+	else:
+		Log.message("API request succeeded | Method: %s | Path: %s | Status code: %s | Response: %s" % [
+			method,
+			path,
+			response_code,
+			JSON.parse_string(response_body.get_string_from_utf8())
+		])
+		
+		var http_response: Contracts.HttpResponseWrapper = Contracts.HttpResponseWrapper.new()
+		http_response.result = result
+		http_response.response_code = response_code
+		http_response.append_response_headers(response_headers)
+		http_response.response_body = response_body
+		return http_response
 
 #### Cognito methods
 

@@ -1,15 +1,15 @@
 extends Node
 class_name ServerManager
 
-var game_manager
-var client_manager
-var GAME_ID
-var PORT = 12000
-const IDLE_TIMEOUT_SECONDS : float = 3000.0 # 5 minute timeout
+var game_manager: GameSceneManager
+var client_manager: ClientManager
+var GAME_ID: String
+var PORT: int = 12000
+const IDLE_TIMEOUT_SECONDS: float = 3000.0 # 5 minute timeout
 
 @onready var idle_timer : Timer = Timer.new()
-@onready var http_request_manager =  get_tree().current_scene.get_node("HttpRequests")
-@onready var auth_manager =  get_tree().current_scene.get_node("AuthManager")
+@onready var http_request_manager: HttpRequestsManager =  get_tree().current_scene.get_node("HttpRequests")
+@onready var auth_manager: AuthManager =  get_tree().current_scene.get_node("AuthManager")
 
 func _ready() -> void:
 	# Don't call managers that are lower on the stack from _ready(), they won't exist yet
@@ -57,11 +57,11 @@ func _on_peer_connected(id):
 		connected_player.is_host = true
 		
 	# Update the db record with the new player ID
-	var update_request = {
+	var update_request: Dictionary = {
 		"game_id": GAME_ID,
 		"add_players": [id]
 	}
-	http_request_manager.server_update_game(update_request, func (response_code, data): pass)
+	var response_code: int = http_request_manager.server_update_game(update_request)
 		
 	client_manager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
 	Log.message("Number of players connected: %s" % [game_manager.game_state_data.connected_players.size()])
@@ -91,11 +91,11 @@ func _on_peer_disconnected(id):
 	if game_manager.game_state_data.connected_players.size() == 0:
 		game_manager.reset_hand()
 		
-	var update_request = {
+	var update_request: Dictionary = {
 		"game_id": GAME_ID,
 		"remove_players": [id]
 	}
-	http_request_manager.server_update_game(update_request)
+	var response_code: int = http_request_manager.server_update_game(update_request)
 	
 	client_manager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
 	Log.message("Number of players connected: %s" % [game_manager.game_state_data.connected_players.size()])
@@ -108,13 +108,13 @@ func _on_peer_disconnected(id):
 func update_server_startup_info() -> void:
 	var update_request: Dictionary = {
 		"game_id": GAME_ID,
-		"game_status": Globals.Enums.GameStatus.STARTED,
+		"game_status": Contracts.GameStatus.STARTED,
 		"port": PORT
 	}
 	http_request_manager.server_update_game(update_request)
 	
-func update_db_player_connected() -> void:
-	http_request_manager.server_update_game(GAME_ID, )
+#func update_db_player_connected() -> void:
+	#http_request_manager.server_update_game(GAME_ID, )
 		
 func _on_idle_timeout() -> void:
 	# If no players are in the game after the timeout, end the game
@@ -123,14 +123,15 @@ func _on_idle_timeout() -> void:
 		Log.message("game is empty, update db shutting down")
 		var update_request: Dictionary = {
 			"game_id": GAME_ID,
-			"game_status": Globals.Enums.GameStatus.ENDED,
+			"game_status": Contracts.GameStatus.ENDED,
 			"port": PORT
 		}
 		
-		http_request_manager.server_update_game(update_request, func(response_code, data):
-			Log.message("Game server instance shutting down. Goodbye.")
-			get_tree().quit()
-		)
+		var response_code: int = await http_request_manager.server_update_game(update_request)
+		if response_code != 200:
+			Log.error("Error updating game instance from server.")
+		Log.message("Game server instance shutting down. Goodbye.")
+		get_tree().quit()
 
 ### RPC Functions
 
@@ -140,7 +141,7 @@ func request_game_state_publish():
 
 @rpc("reliable", "any_peer")
 func request_seat(seat_number: int):
-	var client_id = multiplayer.get_remote_sender_id()
+	var client_id: int = multiplayer.get_remote_sender_id()
 	game_manager.assign_player_to_seat(client_id, seat_number)
 	
 @rpc("reliable", "any_peer")
@@ -149,7 +150,7 @@ func set_ready_status(is_ready: bool):
 	client_manager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
 		
 @rpc("reliable", "any_peer")
-func player_action_taken(player_action: int, action_value = null):
+func player_action_taken(player_action: int, action_value: int):
 	game_manager.player_action_taken(player_action, action_value)
 	
 @rpc("reliable", "any_peer")

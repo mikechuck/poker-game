@@ -4,16 +4,16 @@ class_name Player
 ### Scenes
 @export var card_scene: PackedScene = preload("res://scenes/UI/card.tscn")
 
-@onready var player_card_node = $PlayerCard
-@onready var player_name_label_node = $PlayerCard/Name
-@onready var turn_indicator_node = $PlayerCard/TurnIndicator
-@onready var cash_amount_node = $PlayerCard/CashAmount
-@onready var folded_badge_node = $PlayerCard/FoldBadge
-@onready var winner_badge_node = $PlayerCard/WinnerBadge
-@onready var bet_badge_node = $PlayerCard/BetBadge
-@onready var card_back_1 = $PlayerCard/CardBack1
-@onready var card_back_2 = $PlayerCard/CardBack2
-@onready var game_manager = get_tree().root.get_node("Game/GameManager")
+@onready var player_card_node: Node2D = $PlayerCard
+@onready var player_name_label_node: RichTextLabel = $PlayerCard/Name
+@onready var turn_indicator_node: Sprite2D = $PlayerCard/TurnIndicator
+@onready var cash_amount_node: RichTextLabel = $PlayerCard/CashAmount
+@onready var folded_badge_node: Sprite2D = $PlayerCard/FoldBadge
+@onready var winner_badge_node: Sprite2D = $PlayerCard/WinnerBadge
+@onready var bet_badge_node: Sprite2D = $PlayerCard/BetBadge
+@onready var card_back_1: Sprite2D = $PlayerCard/CardBack1
+@onready var card_back_2: Sprite2D = $PlayerCard/CardBack2
+@onready var game_manager: GameSceneManager = get_tree().root.get_node("Game/GameManager")
 
 var card_front_1 = null
 var card_front_2 = null
@@ -45,13 +45,16 @@ func _ready() -> void:
 	elif (is_ante_turn && bet_value == 0):
 		if is_small_blind:
 			bet_badge_node.visible = true
-			bet_badge_node.get_node("Text").text = "SB"
+			var bet_badge_text: RichTextLabel = bet_badge_node.get_node("Text")
+			bet_badge_text.text = "SB"
 		elif is_big_blind:
 			bet_badge_node.visible = true
-			bet_badge_node.get_node("Text").text = "BB"
+			var bet_badge_text: RichTextLabel = bet_badge_node.get_node("Text")
+			bet_badge_text.text = "BB"
 	elif (game_manager.game_state_data.game_state != GameState.State.PreHand):
 		bet_badge_node.visible = true
-		bet_badge_node.get_node("Text").text = "$%s" % bet_value
+		var bet_badge_text: RichTextLabel = bet_badge_node.get_node("Text")
+		bet_badge_text.text = "$%s" % bet_value
 	
 	# Cards logic
 	if (game_manager.game_state_data.game_state >= GameState.State.HandOver):
@@ -69,7 +72,7 @@ func _ready() -> void:
 		for i in range(1, 3):
 			var card_back_node = player_card_node.get_node("CardBack" + str(i))
 			var card_data = hole_cards[i - 1]
-			var card_instance = card_scene.instantiate()
+			var card_instance: Card = card_scene.instantiate()
 			card_instance.value = card_data.value
 			card_instance.suit = card_data.suit
 			card_instance.position = card_back_node.position

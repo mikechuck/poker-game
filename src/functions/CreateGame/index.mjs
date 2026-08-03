@@ -3,6 +3,8 @@ import { DynamoDBDocumentClient, PutCommand, QueryCommand } from "@aws-sdk/lib-d
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import crypto from "crypto";
 import protobuf from "protobufjs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const ssm = new SSMClient();
 const client = new DynamoDBClient({});
@@ -10,8 +12,9 @@ const docClient = DynamoDBDocumentClient.from(client);
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const pokerApiProto = await protobuf.load(path.join(__dirname, "shared/poker_api.proto"));
-const GameStatus = pokerApiProto.lookupType("poker_api.GameStatus")
+const GameStatus = pokerApiProto.lookupType("poker_api.GameStatus");
 const GameRecord = pokerApiProto.lookupType("poker_api.GameRecord");
+const ErrorResponse = pokerApiProto.lookupType("poker_api.ErrorResponse");
 
 const INSTANCE_ID = process.env.POKER_SERVER_INSTANCE_ID;
 const GAMES_TABLE = process.env.GAMES_TABLE;
@@ -20,7 +23,11 @@ export const handler = async (event) => {
     if (!event.body) {
         return {
             statusCode: 400,
-            body: JSON.stringify({ message: "Missing request body" })
+            body: JSON.stringify(
+                ErrorResponse.create({
+                    message: "Missing request body" 
+                })
+            )
         }; 
     }
 
@@ -33,14 +40,22 @@ export const handler = async (event) => {
     if (!accountId) {
         return {
             statusCode: 401,
-            body: JSON.stringify({ message: "Unauthorized" })
+            body: JSON.stringify(
+                ErrorResponse.create({
+                    message: "Unauthorized" 
+                })
+            )
         };
     }
 
     if (!INSTANCE_ID || !GAMES_TABLE) {
         return {
             statusCode: 500,
-            body: JSON.stringify({ message: "Server configuration error" })
+            body: JSON.stringify(
+                ErrorResponse.create({
+                    message: "Server configuration error"
+                })
+            )
         };
     }
 
@@ -61,18 +76,10 @@ export const handler = async (event) => {
         const response = await docClient.send(command);
         let existingGame = response?.Items?.[0] ?? null;
 
-        const errMsg = GameRecord.verify(existingGame);
-        if (errMsg) {
-            return {
-                statusCode: 500,
-                body: JSON.stringify({ message: `Server configuration error | Message: ${errMsg}` })
-            };
-        }
-
         if (existingGame) {  
             return {
                 statusCode: 200,
-                body: JSON.stringify(GameRecord.create(newGameData))
+                body: JSON.stringify(GameRecord.create(existingGame))
             }
         }
 
@@ -103,7 +110,12 @@ export const handler = async (event) => {
         if (errMsg) {
             return {
                 statusCode: 500,
-                body: JSON.stringify({ message: `Server configuration error | Message: ${errMsg}` })
+                body: JSON.stringify(
+                    ErrorResponse.create({ 
+                        message: "Server configuration error",
+                        error: errMsg 
+                    })
+                )
             };
         }
 
@@ -130,13 +142,18 @@ export const handler = async (event) => {
         return {
             statusCode: 202,
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newGame)
+            body: JSON.stringify(newGameRecord)
         };
     } catch (error) {
         console.error("SSM Execution Error:", error);
         return {
             statusCode: 500,
-            body: JSON.stringify({ message: "Failed to spin up game server session", error: error.message })
+            body: JSON.stringify(
+                ErrorResponse.create({ 
+                    message: "Failed to spin up game server session",
+                    error: error.message 
+                })
+            )
         };
     }
 };

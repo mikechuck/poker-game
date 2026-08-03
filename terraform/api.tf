@@ -422,7 +422,7 @@ data "archive_file" "create_game_zip" {
         filename = "index.mjs"
     }
     source {
-        content  = file("${path.module}/../poker_api.proto")
+        content  = file("${path.module}/../shared/poker_api.proto")
         filename = "shared/poker_api.proto"
     }
 }

@@ -9,23 +9,23 @@ func _init() -> void:
 func message(log_text: Variant, notification_icon: String = "🤖", write_to_notifications: bool = true) -> void:
 	var log_text_string: String = JSON.stringify(log_text)
 	var scene_name = get_tree().current_scene.name
-	var message: String = "[%s] [%s] MESSAGE - %s" % [logger_name, scene_name, log_text_string]
-	print(message)
+	var text: String = "[%s] [%s] MESSAGE - %s" % [logger_name, scene_name, log_text_string]
+	print(text)
 	if (write_to_notifications):
-		NotificationManager.write(message, notification_icon)
+		NotificationManager.write(text, notification_icon)
 		
 func warning(log_text: Variant, notification_icon: String = "⚠️", write_to_notifications: bool = true) -> void:
 	var log_text_string: String = JSON.stringify(log_text)
 	var scene_name = get_tree().current_scene.name
-	var message: String = "[%s] [%s] WARNING - %s" % [logger_name, scene_name, log_text_string]
-	print(message)
+	var text: String = "[%s] [%s] WARNING - %s" % [logger_name, scene_name, log_text_string]
+	print(text)
 	if (write_to_notifications):
-		NotificationManager.write(message, notification_icon, true)
+		NotificationManager.write(text, notification_icon, true)
 
 func error(log_text: String, notification_icon: String = "⛔", write_to_notifications: bool = true) -> void:
 	var log_text_string: String = JSON.stringify(log_text)
 	var scene_name = get_tree().current_scene.name
-	var message: String = "[%s] [%s] ERROR - %s" % [logger_name, scene_name, log_text_string]
-	print(message)
+	var text: String = "[%s] [%s] ERROR - %s" % [logger_name, scene_name, log_text_string]
+	print(text)
 	if (write_to_notifications):
-		NotificationManager.write(message, notification_icon, false, true)
+		NotificationManager.write(text, notification_icon, false, true)

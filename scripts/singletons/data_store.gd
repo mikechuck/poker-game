@@ -1,3 +1,3 @@
 extends Node
 
-var account_data;
+var account_data: Contracts.AccountRecord;

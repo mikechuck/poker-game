@@ -18,6 +18,7 @@ exports/web/dev/*
 exports/web/prod/*
 exports/server/linux/*
 exports/server/windows/*
+exports/lambda/*
 /node_modules/
 package-lock.json
 
