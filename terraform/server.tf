@@ -134,7 +134,7 @@ data "template_file" "lambda_source" {
 
 data "archive_file" "server_edge_auth_zip" {
     type        = "zip"
-    output_path = "${path.module}/exports/lambda/ServeEdgeAuthorizer.zip"
+    output_path = "${path.module}/../exports/lambda/ServeEdgeAuthorizer.zip"
     source {
         content  = data.template_file.lambda_source.rendered
         filename = "index.js"

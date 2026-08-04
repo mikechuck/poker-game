@@ -1,4 +1,6 @@
-leftoff: 
+leftoff:
+	- almost done moving cicd stuff to a just file instead of npm scripts.
+		- Finish moving all zipping out of tf files (i.e. server.tf edge auth function)
 	- Does terraform pull the lambd exports from the right exports folder? Theres one in the terraform dir
 	- finish authenticate game player flow:
 		- create new endpoint

@@ -1,22 +1,24 @@
+param (
+    [string]$functionName = ""
+)
+
+
 # Get all function directory names from ./src/functions
 $functions = Get-ChildItem -Path "./src/functions" -Directory | Select-Object -ExpandProperty Name
 
 foreach ($functionDirName in $functions) {
-
-    # if ($functionName -and $functionName -ne functionDirName) {
-    #     continue;
-    # }
-
-    if ( (Test-Path "Variable:functionName") -and ($functionName -ne $functionDirName) ) {
+    if ( ($functionName -ne "") -and ($functionName -ne $functionDirName) ) {
         continue;
     }
 
     Write-Host "Staging Lambda function: $functionDirName" -ForegroundColor Cyan
+    $StageDir     = "exports/lambda/$functionDirName"
 
     # Clean & recreate the function's staging directory
     if (Test-Path $StageDir) { 
         Remove-Item -Recurse -Force $StageDir 
     }
+
     New-Item -ItemType Directory -Path "$StageDir/shared" -Force | Out-Null
     New-Item -ItemType Directory -Path "$StageDir/node_modules" -Force | Out-Null
 
@@ -34,12 +36,19 @@ foreach ($functionDirName in $functions) {
     if (Test-Path "node_modules/protobufjs") {
         Copy-Item -Recurse "node_modules/protobufjs" "$StageDir/node_modules/protobufjs"
     }
+
     if (Test-Path "node_modules/@protobufjs") {
         Copy-Item -Recurse "node_modules/@protobufjs" "$StageDir/node_modules/@protobufjs"
     }
+
     if (Test-Path "node_modules/long") {
         Copy-Item -Recurse "node_modules/long" "$StageDir/node_modules/long"
     }
+
+    # Zip lambda files
+    $zipPath = "exports/lambda/$functionDirName.zip"
+    if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
+    Compress-Archive -Path "$stageDir/*" -DestinationPath $zipPath -Force
 }
 
-Write-Host "All functions staged successfully in exports/lambda/!" -ForegroundColor Green
+Write-Host "All functions staged in exports/lambda directory" -ForegroundColor Green

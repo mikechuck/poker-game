@@ -332,17 +332,11 @@ resource "aws_lambda_permission" "api_gw_update_game" {
 
 # --- End UpdateGame API Gateway Integration ---
 
-# --- Start Private Authorizer Lambda Function ---
-
-data "archive_file" "server_auth_zip" {
-    type        = "zip"
-    source_dir  = "${path.module}/../src/functions/ServerAuthorizer"
-    output_path = "${path.module}/exports/lambda/ServerAuthorizer.zip"
-}
+# --- Start Private Server Authorizer Lambda Function ---
 
 resource "aws_lambda_function" "server_auth_lambda" {
     function_name = "ServerAuthorizer"
-    filename      = data.archive_file.server_auth_zip.output_path
+    filename      = "${path.module}/../exports/lambda/ServerAuthorizer.zip"
     role          = aws_iam_role.authorizer_lambda_role.arn
     handler       = "index.handler"
     runtime       = "nodejs22.x"
@@ -351,7 +345,7 @@ resource "aws_lambda_function" "server_auth_lambda" {
     provider      = aws.us_east_1
     publish       = true
 
-    source_code_hash = data.archive_file.server_auth_zip.output_base64sha256
+    source_code_hash = filebase64sha256("${path.module}/../exports/lambda/ServerAuthorizer.zip")
 
     environment {
         variables = {
@@ -373,29 +367,16 @@ resource "aws_lambda_permission" "api_gw_to_auth_lambda" {
 
 # --- Start GetAccount Lambda Function ---
 
-data "archive_file" "get_account_zip" {
-    type        = "zip"
-    output_path = "${path.module}/exports/lambda/GetAccount.zip"
-    source {
-        content  = file("${path.module}/../src/functions/GetAccount/index.mjs")
-        filename = "index.mjs"
-    }
-    source {
-        content  = file("${path.module}/../shared/poker_api.proto")
-        filename = "shared/poker_api.proto"
-    }
-}
-
 resource "aws_lambda_function" "get_account" {
     function_name = "GetAccount"
-    filename      = data.archive_file.get_account_zip.output_path
+    filename      = "${path.module}/../exports/lambda/GetAccount.zip"
     role          = aws_iam_role.lambda_integration_role.arn
     handler       = "index.handler"
     runtime       = "nodejs22.x" # Node 22 is the standard current LTS
     timeout       = 10
     memory_size   = 128
 
-    source_code_hash = data.archive_file.get_account_zip.output_base64sha256
+    source_code_hash = filebase64sha256("${path.module}/../exports/lambda/GetAccount.zip")
 
     environment {
         variables = {
@@ -414,29 +395,16 @@ resource "aws_cloudwatch_log_group" "get_account_logs" {
 
 # --- Start CreateGame Lambda Function ---
 
-data "archive_file" "create_game_zip" {
-    type        = "zip"
-    output_path = "${path.module}/exports/lambda/CreateGame.zip"
-    source {
-        content  = file("${path.module}/../src/functions/CreateGame/index.mjs")
-        filename = "index.mjs"
-    }
-    source {
-        content  = file("${path.module}/../shared/poker_api.proto")
-        filename = "shared/poker_api.proto"
-    }
-}
-
 resource "aws_lambda_function" "create_game" {
     function_name = "CreateGame"
-    filename      = data.archive_file.create_game_zip.output_path
+    filename      = "${path.module}/../exports/lambda/CreateGame.zip"
     role          = aws_iam_role.lambda_integration_role.arn
     handler       = "index.handler"
     runtime       = "nodejs22.x" # Node 22 is the standard current LTS
     timeout       = 10
     memory_size   = 512
 
-    source_code_hash = data.archive_file.create_game_zip.output_base64sha256
+    source_code_hash = filebase64sha256("${path.module}/../exports/lambda/CreateGame.zip")
 
     environment {
         variables = {
@@ -456,29 +424,16 @@ resource "aws_cloudwatch_log_group" "create_game_logs" {
 
 # --- Start GetGame Lambda Function ---
 
-data "archive_file" "get_game_zip" {
-    type        = "zip"
-    output_path = "${path.module}/exports/lambda/GetGame.zip"
-    source {
-        content  = file("${path.module}/../src/functions/GetGame/index.mjs")
-        filename = "index.mjs"
-    }
-    source {
-        content  = file("${path.module}/../shared/poker_api.proto")
-        filename = "shared/poker_api.proto"
-    }
-}
-
 resource "aws_lambda_function" "get_game" {
     function_name = "GetGame"
-    filename      = data.archive_file.get_game_zip.output_path
+    filename      = "${path.module}/../exports/lambda/GetGame.zip"
     role          = aws_iam_role.lambda_integration_role.arn
     handler       = "index.handler"
     runtime       = "nodejs22.x" # Node 22 is the standard current LTS
     timeout       = 10
     memory_size   = 512
 
-    source_code_hash = data.archive_file.get_game_zip.output_base64sha256
+    source_code_hash = filebase64sha256("${path.module}/../exports/lambda/GetGame.zip")
 
     environment {
         variables = {
@@ -497,29 +452,16 @@ resource "aws_cloudwatch_log_group" "get_game_logs" {
 
 # --- Start GetGames Lambda Function ---
 
-data "archive_file" "get_games_zip" {
-    type        = "zip"
-    output_path = "${path.module}/exports/lambda/GetGames.zip"
-    source {
-        content  = file("${path.module}/../src/functions/GetGames/index.mjs")
-        filename = "index.mjs"
-    }
-    source {
-        content  = file("${path.module}/../shared/poker_api.proto")
-        filename = "shared/poker_api.proto"
-    }
-}
-
 resource "aws_lambda_function" "get_games" {
     function_name = "GetGames"
-    filename      = data.archive_file.get_games_zip.output_path
+    filename      = "${path.module}/../exports/lambda/GetGames.zip"
     role          = aws_iam_role.lambda_integration_role.arn
     handler       = "index.handler"
     runtime       = "nodejs22.x" # Node 22 is the standard current LTS
     timeout       = 10
     memory_size   = 512
 
-    source_code_hash = data.archive_file.get_games_zip.output_base64sha256
+    source_code_hash = filebase64sha256("${path.module}/../exports/lambda/GetGames.zip")
 
     environment {
         variables = {
@@ -538,29 +480,17 @@ resource "aws_cloudwatch_log_group" "get_games_logs" {
 
 # --- Start UpdateGame Lambda Function ---
 
-data "archive_file" "update_game_zip" {
-    type        = "zip"
-    output_path = "${path.module}/exports/lambda/UpdateGame.zip"
-    source {
-        content  = file("${path.module}/../src/functions/UpdateGame/index.mjs")
-        filename = "index.mjs"
-    }
-    source {
-        content  = file("${path.module}/../shared/poker_api.proto")
-        filename = "shared/poker_api.proto"
-    }
-}
-
 resource "aws_lambda_function" "update_game" {
     function_name = "UpdateGame"
-    filename      = data.archive_file.update_game_zip.output_path
+    filename      = "${path.module}/../exports/lambda/UpdateGame.zip"
     role          = aws_iam_role.lambda_integration_role.arn
     handler       = "index.handler"
     runtime       = "nodejs22.x" # Node 22 is the standard current LTS
     timeout       = 10
     memory_size   = 512
 
-    source_code_hash = data.archive_file.update_game_zip.output_base64sha256
+    # Forces redeployment only if zip contents change
+    source_code_hash = filebase64sha256("${path.module}/../exports/lambda/UpdateGame.zip")
 
     environment {
         variables = {

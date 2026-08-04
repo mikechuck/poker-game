@@ -16,9 +16,6 @@ if ($export_name -eq "")
     return;
 }
 
-# Generate all protobuf contracts before exporting
-& "$PSScriptRoot/../generate_proto.ps1"
-
 if ($IsWindows) {
     Godot_v4.5.1-stable_win64_console.exe --headless --quiet --export-release $export_name
 } elseif ($IsMacOS) {
