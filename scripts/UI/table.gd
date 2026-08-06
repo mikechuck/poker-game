@@ -1,7 +1,7 @@
 extends Control
 class_name Table
 
-@export var player_scene: PackedScene = preload("res://scenes/player.tscn")
+@export var player_scene: PackedScene = preload("res://scenes/UI/player.tscn")
 @export var seat_select_button_scene: PackedScene = preload("res://scenes/UI/seat_button.tscn")
 @export var card_scene: PackedScene = preload("res://scenes/UI/card.tscn")
 

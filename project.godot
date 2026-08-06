@@ -23,6 +23,8 @@ Log="*res://scripts/singletons/log.gd"
 NotificationManager="*res://scripts/singletons/notification_manager.gd"
 DataStore="*res://scripts/singletons/data_store.gd"
 Contracts="*res://scripts/network/poker_api.proto.gd"
+AuthManager="*res://scripts/singletons/auth_manager.gd"
+HttpRequestsManager="*res://scripts/singletons/http_requests_manager.gd"
 
 [debug]
 

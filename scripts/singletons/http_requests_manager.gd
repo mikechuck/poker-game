@@ -1,10 +1,8 @@
 extends Node
-class_name HttpRequestsManager
-
-@onready var auth_manager: AuthManager =  get_tree().current_scene.get_node("AuthManager")
+#class_name HttpRequestsManager
 
 func get_headers() -> Array[String]:
-	var id_token: String = auth_manager.get_id_token()
+	var id_token: String = AuthManager.get_id_token()
 	return [
 		"Content-Type: application/json",
 		"Authorization: Bearer %s" % id_token
@@ -13,7 +11,7 @@ func get_headers() -> Array[String]:
 	
 func get_account_data() -> Contracts.AccountRecord:
 	var path: String = "/account"
-	var http_response: Contracts.HttpResponseWrapper = await auth_manager.api_request(
+	var http_response: Contracts.HttpResponseWrapper = await AuthManager.api_request(
 		path,
 		HTTPClient.METHOD_GET
 	)
@@ -31,7 +29,7 @@ func create_game() -> Contracts.GameRecord:
 		blind = 10
 	}
 	
-	var http_response: Contracts.HttpResponseWrapper = await auth_manager.api_request(
+	var http_response: Contracts.HttpResponseWrapper = await AuthManager.api_request(
 		path,
 		HTTPClient.METHOD_PUT,
 		JSON.stringify(reqeustBody)
@@ -45,7 +43,7 @@ func create_game() -> Contracts.GameRecord:
 	
 func get_game(game_id: String) -> Contracts.GameRecord:
 	var path: String = "/game?gameId=%s" % game_id.uri_encode()
-	var http_response: Contracts.HttpResponseWrapper = await auth_manager.api_request(
+	var http_response: Contracts.HttpResponseWrapper = await AuthManager.api_request(
 		path,
 		HTTPClient.METHOD_GET
 	)
@@ -58,7 +56,7 @@ func get_game(game_id: String) -> Contracts.GameRecord:
 
 func get_games() -> Array[Contracts.GameRecord]:
 	var path: String = "/games"
-	var http_response: Contracts.HttpResponseWrapper = await auth_manager.api_request(
+	var http_response: Contracts.HttpResponseWrapper = await AuthManager.api_request(
 		path,
 		HTTPClient.METHOD_GET
 	)
@@ -75,7 +73,7 @@ func update_game(game_id: String, game_status: int) -> int:
 		gameStatus = game_status
 	}
 	
-	var http_response: Contracts.HttpResponseWrapper = await auth_manager.api_request(
+	var http_response: Contracts.HttpResponseWrapper = await AuthManager.api_request(
 		path,
 		HTTPClient.METHOD_POST,
 		JSON.stringify(reqeustBody)
@@ -95,7 +93,7 @@ func server_update_game(params: Dictionary) -> int:
 		removePlayers = params["remove_players"]
 	}
 	
-	var http_response: Contracts.HttpResponseWrapper = await auth_manager.server_api_request(
+	var http_response: Contracts.HttpResponseWrapper = await AuthManager.server_api_request(
 		path,
 		HTTPClient.METHOD_POST,
 		JSON.stringify(requestBody)

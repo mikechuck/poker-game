@@ -7,8 +7,10 @@ class_name AccountSection
 @onready var player_card_background: Sprite2D = $PlayerCard/DetailsCard
 
 func display_account_data(data: Contracts.AccountRecord):
+	Log.message("displaying account data")
 	var player_color: String = data.playerColor
 	player_name.text = data.playerName
 	hands_played.text = str(data.handsPlayed)
 	hands_won.text = str(data.handsWon)
 	player_card_background.modulate = player_color
+	

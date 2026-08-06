@@ -1,6 +1,5 @@
 extends Node
 
-@onready var auth_manager =  get_tree().current_scene.get_node("AuthManager")
 @onready var _is_server = OS.has_feature("server")
 @onready var _is_landing_scene = get_tree().current_scene.name == "Landing"
 @onready var _is_main_scene = get_tree().current_scene.name == "Main"
@@ -25,6 +24,6 @@ func navigate_to_game_scene() -> void:
 	get_tree().call_deferred("change_scene_to_file", "res://scenes/game.tscn")
 
 func navigate_to_login():
-	var login_url = "%s/login?client_id=%s&response_type=code&scope=email+openid&redirect_uri=%s" % [auth_manager.LOGIN_URL, auth_manager.CLIENT_ID, auth_manager.REDIRECT_URI]
+	var login_url = "%s/login?client_id=%s&response_type=code&scope=email+openid&redirect_uri=%s" % [AuthManager.LOGIN_URL, AuthManager.CLIENT_ID, AuthManager.REDIRECT_URI]
 	var eval_string: String = "window.location.href = '" + login_url + "';"
 	JavaScriptBridge.eval(eval_string)

@@ -1,8 +1,4 @@
 extends Node
-class_name AuthManager
-
-@onready var get_tokens_http_request: HTTPRequest = $GetTokens
-@onready var refresh_tokens_http_request: HTTPRequest = $RefreshToken
 
 const CLIENT_ID: String = "5nke82c4g3l1256jkhve4vivk3"
 const BASE_URL: String = "poker.mikechucktingle.net"
@@ -17,6 +13,10 @@ var SERVER_API_TOKEN: String = ""
 @export var PLAYER_DATA = {}
 
 func _ready() -> void:
+	# Setup HTTP client before anything else
+	var http: HTTPRequest = HTTPRequest.new()
+	add_child(http)
+	
 	if (OS.has_feature("local")):
 		REDIRECT_URI = REDIRECT_URI_LOCAL
 		API_URL += "/dev"
@@ -135,6 +135,8 @@ func server_api_request(path: String, method: int, body: String = "") -> Contrac
 #### Cognito methods
 
 func exchange_code_for_tokens(code: String):
+	var http: HTTPRequest = HTTPRequest.new()
+	add_child(http)
 	var headers: PackedStringArray = ["Content-Type: application/x-www-form-urlencoded"]
 	var body: String = HTTPClient.new().query_string_from_dict({
 		"grant_type": "authorization_code",
@@ -142,9 +144,38 @@ func exchange_code_for_tokens(code: String):
 		"code": code,
 		"redirect_uri": REDIRECT_URI
 	})
-	get_tokens_http_request.request(TOKEN_URL, headers, HTTPClient.METHOD_POST, body)
+	
+	var err: Error = http.request(TOKEN_URL, headers, HTTPClient.METHOD_POST, body)
+	if err != OK:
+		Log.message("Error signing into account | Error: %s" % err)
+		clean_url() # Remove anything from the url so we don't re-trigger the token exchange
+		clear_local_storage()
+		return
+	
+	var response = await http.request_completed
+	var result: int = response[0]
+	var response_code: int = response[1]
+	var response_body: PackedByteArray = response[3]
+	
+	if response_code != 200:
+		Log.message("Error signing into account. Result: %s | ResponseCode: %s" % [result, response_code])
+		clear_local_storage()
+		return
+		
+	# Handle success
+	var json: Variant = JSON.parse_string(response_body.get_string_from_utf8())
+	var access_token: String = json["access_token"]
+	var id_token: String = json["id_token"]
+	var refresh_token: String = json["refresh_token"]
+	JavaScriptBridge.eval("localStorage.setItem('access_token', '%s')" % access_token)
+	JavaScriptBridge.eval("localStorage.setItem('id_token', '%s')" % id_token)
+	JavaScriptBridge.eval("localStorage.setItem('refresh_token', '%s')" % refresh_token)
+	save_token_to_cookie(access_token)
+	NavigationManager.navigate_to_main()
 		
 func refresh_tokens() -> bool:
+	var http: HTTPRequest = HTTPRequest.new()
+	add_child(http)
 	var current_refresh_token: String = get_refresh_token()
 	if (current_refresh_token == ""): return false
 	
@@ -155,14 +186,13 @@ func refresh_tokens() -> bool:
 		"refresh_token": get_refresh_token(),
 	})
 	
-	var err: Error = refresh_tokens_http_request.request(TOKEN_URL, headers, HTTPClient.METHOD_POST, body)
+	var err: Error = http.request(TOKEN_URL, headers, HTTPClient.METHOD_POST, body)
 	if err != OK:
 		("Error sending request, returning to landing page")
 		NavigationManager.navigate_to_landing()
 		return false
 	
-	# Not sure what the type of "response" is...
-	var response = await refresh_tokens_http_request.request_completed
+	var response = await http.request_completed
 	var result: int = response[0]
 	var response_code: int = response[1]
 	var response_body: PackedByteArray = response[3]
@@ -229,24 +259,3 @@ func clear_local_storage():
 	JavaScriptBridge.eval("localStorage.removeItem('access_token')")
 	JavaScriptBridge.eval("localStorage.removeItem('id_token')")
 	JavaScriptBridge.eval("localStorage.removeItem('refresh_token')")
-
-#### Http request callbacks
-
-func _on_get_tokens_request_completed(result: int, response_code: int, headers: PackedStringArray, body: PackedByteArray) -> void:
-	clean_url() # Remove anything from the url so we don't re-trigger the token exchange
-	
-	if result != HTTPRequest.RESULT_SUCCESS || response_code != 200:
-		Log.message("Error signing into account. Result: %s | ResponseCode: %s" % [result, response_code])
-		clear_local_storage()
-		return
-		
-	# Handle success
-	var json: Variant = JSON.parse_string(body.get_string_from_utf8())
-	var access_token: String = json["access_token"]
-	var id_token: String = json["id_token"]
-	var refresh_token: String = json["refresh_token"]
-	JavaScriptBridge.eval("localStorage.setItem('access_token', '%s')" % access_token)
-	JavaScriptBridge.eval("localStorage.setItem('id_token', '%s')" % id_token)
-	JavaScriptBridge.eval("localStorage.setItem('refresh_token', '%s')" % refresh_token)
-	save_token_to_cookie(access_token)
-	NavigationManager.navigate_to_main()

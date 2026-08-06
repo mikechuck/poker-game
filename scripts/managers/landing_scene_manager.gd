@@ -1,8 +1,6 @@
 extends Control
 class_name LandingSceneManager
 
-@onready var auth_manager =  get_tree().current_scene.get_node("AuthManager")
-
 func _ready() -> void:
 	pass
 		

@@ -124,7 +124,7 @@ resource "aws_iam_role_policy_attachment" "server_auth_edge_logs" {
 }
 
 data "template_file" "lambda_source" {
-    template = file("${path.module}/../src/functions/ServerEdgeAuthorizer/index.js.tpl")
+    template = file("${path.module}/../exports/lambda/ServerEdgeAuthorizer/index.js.tpl")
     vars = {
         region         = "us-east-1"
         user_pool_id   = aws_cognito_user_pool.poker_pool.id
@@ -134,11 +134,8 @@ data "template_file" "lambda_source" {
 
 data "archive_file" "server_edge_auth_zip" {
     type        = "zip"
-    output_path = "${path.module}/../exports/lambda/ServeEdgeAuthorizer.zip"
-    source {
-        content  = data.template_file.lambda_source.rendered
-        filename = "index.js"
-    }
+    output_path = "${path.module}/../exports/lambda/ServerEdgeAuthorizer.zip"
+    source_dir  = "${path.module}/../exports/lambda/ServerEdgeAuthorizer"
 }
 
 resource "aws_lambda_function" "server_edge_auth_lambda" {
