@@ -14,6 +14,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const pokerApiProto = await protobuf.load(path.join(__dirname, "shared/poker_api.proto"));
 const GameStatus = pokerApiProto.lookupType("poker_api.GameStatus");
 const GameRecord = pokerApiProto.lookupType("poker_api.GameRecord");
+const GamePrivacy = pokerApiProto.lookupType("poker_api.GamePrivacy");
 const ErrorResponse = pokerApiProto.lookupType("poker_api.ErrorResponse");
 
 const INSTANCE_ID = process.env.POKER_SERVER_INSTANCE_ID;
@@ -35,6 +36,7 @@ export const handler = async (event) => {
     const blindValue = body.blind || 10
     const buyIn = body.buyIn || 0 // 0 is free game
     const chipRatio = body.chipRatio || 1
+    const gamePrivacy = body.gamePrivacy || GamePrivacy.PUBLIC
     const accountId = event.requestContext?.authorizer?.jwt?.claims?.sub;
 
     if (!accountId) {
@@ -103,7 +105,8 @@ export const handler = async (event) => {
             blind: blindValue,
             buyInDollars: buyIn,
             chipRatio: chipRatio,
-            handsPlayed: 0
+            handsPlayed: 0,
+            gamePrivacy: gamePrivacy
         };
 
         const errMsg = GameRecord.verify(payload);

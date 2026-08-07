@@ -47,6 +47,7 @@ message GameRecord {
     int32 chipRatio = 9;
     int32 handsPlayed = 10; 
     repeated string connectedPlayers = 11;
+    GamePrivacy gamePrivacy = 12;
 }
 
 message GameRecordList {
@@ -57,4 +58,11 @@ enum GameStatus {
     STARTING = 0;
     STARTED = 1;
     ENDED = 2;
+}
+
+enum GamePrivacy {
+    PUBLIC = 0; // Anyone can join as long as they know the game id
+    FRIENDS = 1; // Only friends of the host can join
+    INVITE = 2; // Only players with an invite code can join
+    PRIVATE = 3; // Only host can join, play against bots
 }

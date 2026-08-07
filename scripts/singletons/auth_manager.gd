@@ -163,6 +163,7 @@ func exchange_code_for_tokens(code: String):
 		return
 		
 	# Handle success
+	# Tokens are used for api auth, cookies are used for server auth
 	var json: Variant = JSON.parse_string(response_body.get_string_from_utf8())
 	var access_token: String = json["access_token"]
 	var id_token: String = json["id_token"]
@@ -171,6 +172,7 @@ func exchange_code_for_tokens(code: String):
 	JavaScriptBridge.eval("localStorage.setItem('id_token', '%s')" % id_token)
 	JavaScriptBridge.eval("localStorage.setItem('refresh_token', '%s')" % refresh_token)
 	save_token_to_cookie(access_token)
+	clean_url() # Remove anything from the url so we don't re-trigger the token exchange
 	NavigationManager.navigate_to_main()
 		
 func refresh_tokens() -> bool:
@@ -207,6 +209,7 @@ func refresh_tokens() -> bool:
 		NavigationManager.navigate_to_landing()
 		return false
 		
+	Log.message("auth manager response_code: %s" % response_code)
 	var json: Variant = JSON.parse_string(response_body.get_string_from_utf8())
 	var access_token: String = json["access_token"]
 	var id_token: String = json["id_token"]

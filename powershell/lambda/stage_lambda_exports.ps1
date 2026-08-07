@@ -2,12 +2,12 @@ param (
     [string]$functionName = ""
 )
 
-
 # Get all function directory names from ./src/functions
 $functions = Get-ChildItem -Path "./src/functions" -Directory | Select-Object -ExpandProperty Name
 
 foreach ($functionDirName in $functions) {
     if ( ($functionName -ne "") -and ($functionName -ne $functionDirName) ) {
+        Write-Host "Skipping staging for $functionDirName"
         continue;
     }
 

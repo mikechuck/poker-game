@@ -3,26 +3,36 @@ param (
 )
 
 # Script must be run from the root of the project
-$SrcDir       = "src/functions/$functionName"
-$SharedFile   = "shared/poker_api.proto"
-$ZipPath      = "exports/lambda/$functionName.zip"
-$StageDir     = "exports/lambda/stage_$functionName"
+$SharedFile = "shared/poker_api.proto"
+$functions = Get-ChildItem -Path "./src/functions" -Directory | Select-Object -ExpandProperty Name
 
-Write-Host "📦 Preparing deployment package layout for $functionName..."
+foreach ($functionDirName in $functions) {
+    if ( ($functionName -ne "") -and ($functionName -ne $functionDirName) ) {
+        continue;
+    }
 
-& "$PSScriptRoot\stage_lambda_exports.ps1"
+    if ($functionDirName -eq "ServerEdgeAuthorizer") {
+        Write-Host "Skipping ServerEdgeAuthorizer, can only be deployed from terraform" -ForegroundColor Yellow
+        continue;
+    }
 
-Write-Host "🗜️ Zipping staged code into $ZipPath..."
+    $SrcDir       = "src/functions/$functionDirName"
+    $ZipPath      = "exports/lambda/$functionDirName.zip"
+    $StageDir     = "exports/lambda/$functionDirName"
 
-Compress-Archive -Path "$StageDir/*" -DestinationPath $ZipPath -Force
+    Write-Host "Preparing deployment package layout for $functionDirName..." -ForegroundColor Cyan
 
-Remove-Item $StageDir -Recurse -Force
+    Compress-Archive -Path "$StageDir/*" -DestinationPath $ZipPath -Force
 
-Write-Host "🚀 Uploading payload to AWS Lambda ($functionName)..."
+    Remove-Item $StageDir -Recurse -Force
 
-aws lambda update-function-code `
-    --function-name $functionName `
-    --zip-file "fileb://$ZipPath" `
-    --no-cli-pager
+    Write-Host "Uploading payload to AWS Lambda ($functionDirName)..." -ForegroundColor Cyan
 
-Write-Host "✅ Deployment successful!"
+    aws lambda update-function-code `
+        --function-name $functionDirName `
+        --zip-file "fileb://$ZipPath" `
+        --no-cli-pager `
+        > $null
+
+    Write-Host "Deployment to $functionDirName successful." -ForegroundColor Green
+}

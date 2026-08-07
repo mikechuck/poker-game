@@ -832,5 +832,3 @@ class GameRecordList extends Message:
 				self.add_records(item_msg)
 
 # =========================================
-
-

@@ -76,6 +76,7 @@ anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_top = -186.0
+offset_right = 4.0
 grow_horizontal = 2
 grow_vertical = 0
 theme_override_constants/margin_left = 25
@@ -120,84 +121,95 @@ layout_mode = 1
 anchors_preset = 0
 script = ExtResource("4_jyhfs")
 
-[node name="PlayerCard" type="Node2D" parent="Content/AccountSection"]
-position = Vector2(100, 50)
+[node name="MarginContainer" type="MarginContainer" parent="Content/AccountSection"]
+layout_mode = 1
+offset_left = 25.0
+offset_top = 25.0
+offset_right = 300.0
+offset_bottom = 230.0
+
+[node name="ColorRect" type="ColorRect" parent="Content/AccountSection/MarginContainer"]
+layout_mode = 2
+color = Color(1, 1, 1, 0)
+
+[node name="PlayerCard" type="Node2D" parent="Content/AccountSection/MarginContainer"]
 script = SubResource("GDScript_tipki")
 
-[node name="DetailsCard" type="Sprite2D" parent="Content/AccountSection/PlayerCard"]
-modulate = Color(1, 0.5176471, 0.02745098, 1)
-position = Vector2(99, 48)
+[node name="DetailsCard" type="Sprite2D" parent="Content/AccountSection/MarginContainer/PlayerCard"]
+position = Vector2(125, 47)
 texture = ExtResource("5_tefeu")
 
-[node name="ProfilePicture" type="Sprite2D" parent="Content/AccountSection/PlayerCard"]
-position = Vector2(17, 41)
+[node name="ProfilePicture" type="Sprite2D" parent="Content/AccountSection/MarginContainer/PlayerCard"]
+position = Vector2(30, 41)
 texture = ExtResource("6_o6xl0")
 
-[node name="Name" type="RichTextLabel" parent="Content/AccountSection/PlayerCard"]
+[node name="Name" type="RichTextLabel" parent="Content/AccountSection/MarginContainer/PlayerCard"]
 clip_contents = false
-offset_left = 71.0
+offset_left = 84.0
 offset_top = 13.0
-offset_right = 198.0
+offset_right = 211.0
 offset_bottom = 43.0
 bbcode_enabled = true
 text = "[font_size=16][b]Player 1[/b][/font_size]"
 fit_content = true
 scroll_active = false
 
-[node name="CashAmount" type="RichTextLabel" parent="Content/AccountSection/PlayerCard"]
+[node name="CashAmount" type="RichTextLabel" parent="Content/AccountSection/MarginContainer/PlayerCard"]
 clip_contents = false
-offset_left = 71.0
+offset_left = 84.0
 offset_top = 43.0
-offset_right = 198.0
+offset_right = 211.0
 offset_bottom = 73.0
 bbcode_enabled = true
 text = "[font_size=16]$50[/font_size]"
 fit_content = true
 scroll_active = false
 
-[node name="HandsPlayed" type="Control" parent="Content/AccountSection/PlayerCard"]
+[node name="HandsPlayed" type="Control" parent="Content/AccountSection/MarginContainer/PlayerCard"]
 layout_mode = 3
 anchors_preset = 0
+offset_left = 15.0
 offset_top = 100.0
-offset_right = 40.0
+offset_right = 225.0
 offset_bottom = 130.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
 
-[node name="Label" type="RichTextLabel" parent="Content/AccountSection/PlayerCard/HandsPlayed"]
+[node name="Label" type="RichTextLabel" parent="Content/AccountSection/MarginContainer/PlayerCard/HandsPlayed"]
 layout_mode = 1
-offset_left = -21.0
-offset_right = 94.0
+offset_right = 115.0
 offset_bottom = 30.0
 text = "Hands Played"
 vertical_alignment = 1
 
-[node name="Value" type="RichTextLabel" parent="Content/AccountSection/PlayerCard/HandsPlayed"]
+[node name="Value" type="RichTextLabel" parent="Content/AccountSection/MarginContainer/PlayerCard/HandsPlayed"]
 layout_mode = 0
-offset_left = 115.0
-offset_right = 195.0
+offset_left = 125.0
+offset_right = 205.0
 offset_bottom = 30.0
 text = "0"
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="HandsWon" type="Control" parent="Content/AccountSection/PlayerCard"]
+[node name="HandsWon" type="Control" parent="Content/AccountSection/MarginContainer/PlayerCard"]
 layout_mode = 3
 anchors_preset = 0
+offset_left = 15.0
 offset_top = 130.0
-offset_right = 40.0
+offset_right = 225.0
 offset_bottom = 160.0
 
-[node name="Label" type="RichTextLabel" parent="Content/AccountSection/PlayerCard/HandsWon"]
+[node name="Label" type="RichTextLabel" parent="Content/AccountSection/MarginContainer/PlayerCard/HandsWon"]
 layout_mode = 1
-offset_left = -21.0
-offset_right = 94.0
+offset_right = 115.0
 offset_bottom = 30.0
 text = "Hands Won"
 vertical_alignment = 1
 
-[node name="Value" type="RichTextLabel" parent="Content/AccountSection/PlayerCard/HandsWon"]
+[node name="Value" type="RichTextLabel" parent="Content/AccountSection/MarginContainer/PlayerCard/HandsWon"]
 layout_mode = 0
-offset_left = 115.0
-offset_right = 195.0
+offset_left = 125.0
+offset_right = 205.0
 offset_bottom = 30.0
 text = "0
 "
@@ -318,6 +330,7 @@ size_flags_vertical = 2
 script = ExtResource("5_85g3d")
 
 [node name="GameDetails" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/GameDetailsContainer" instance=ExtResource("6_choun")]
+visible = false
 layout_mode = 2
 
 [node name="DebugOutput" type="TextEdit" parent="."]

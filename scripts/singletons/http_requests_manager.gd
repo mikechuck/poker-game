@@ -18,8 +18,10 @@ func get_account_data() -> Contracts.AccountRecord:
 	
 	var account_record: Contracts.AccountRecord = Contracts.AccountRecord.new()
 	if (http_response.response_code == 200):
-		account_record.ParseFromBytes(http_response.response_body)
-		return account_record
+		var dict: Dictionary = JSON.parse_string(http_response.response_body.get_string_from_utf8())
+		if dict:
+			account_record.ParseFromDictionary(dict)
+			return account_record
 	return null
 
 
@@ -37,7 +39,10 @@ func create_game() -> Contracts.GameRecord:
 	
 	var game_record: Contracts.GameRecord = Contracts.GameRecord.new()
 	if (http_response.response_code == 200 or http_response.response_code == 202):
-		game_record.ParseFromBytes(http_response.response_body)
+		var dict: Dictionary = JSON.parse_string(http_response.response_body.get_string_from_utf8())
+		if dict:
+			game_record.ParseFromDictionary(dict)
+			return game_record
 	return game_record
 	
 	
@@ -50,7 +55,9 @@ func get_game(game_id: String) -> Contracts.GameRecord:
 	
 	var game_record: Contracts.GameRecord = Contracts.GameRecord.new()
 	if http_response.response_code == 200:
-		game_record.ParseFromBytes(http_response.response_body)
+		var dict: Dictionary = JSON.parse_string(http_response.response_body.get_string_from_utf8())
+		if dict:
+			game_record.ParseFromDictionary(dict)
 	return game_record
 
 
@@ -63,7 +70,9 @@ func get_games() -> Array[Contracts.GameRecord]:
 	
 	var games_list: Contracts.GameRecordList = Contracts.GameRecordList.new()
 	if (http_response.response_code == 200):
-		games_list.ParseFromBytes(http_response.response_body)
+		var dict: Dictionary = JSON.parse_string(http_response.response_body.get_string_from_utf8())
+		if dict:
+			games_list.ParseFromDictionary(dict)
 	return games_list.records()
 	
 	
@@ -80,6 +89,18 @@ func update_game(game_id: String, game_status: int) -> int:
 	)
 	
 	return http_response.response_code
+	
+func join_game(game_id: String) -> String:
+	var path: String = "/game?gameId=%s" % game_id.uri_encode()
+	var http_response: Contracts.HttpResponseWrapper = await AuthManager.api_request(
+		path,
+		HTTPClient.METHOD_GET
+	)
+	
+	# Return the join game code so the client can send it to the server after connecting
+	if (http_response.response_code == 200):
+		return http_response.response_body.get_string_from_utf8()
+	return ""
 	
 # Server methods
 # game_id, game_status = null, port = null, add_players: Array[int] = [], remove_players: Array[int] = []
