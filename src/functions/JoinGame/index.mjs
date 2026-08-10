@@ -3,6 +3,7 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import protobuf from "protobufjs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { GetGameRecord } from "./shared/utilities.js";
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
@@ -13,6 +14,7 @@ const GameRecord = pokerApiProto.lookupType("poker_api.GameRecord");
 const ErrorResponse = pokerApiProto.lookupType("poker_api.ErrorResponse");
 
 const GAMES_TABLE = process.env.GAMES_TABLE;
+const JOIN_TOKENS_TABLE = process.env.JOIN_TOKENS_TABLE;
 
 export const handler = async (event) => {
     const gameId = event.queryStringParameters?.gameId;
@@ -29,32 +31,14 @@ export const handler = async (event) => {
     }
 
     try {
-        const queryResponse = await docClient.send(new QueryCommand({
-            TableName: GAMES_TABLE,
-            KeyConditionExpression: "gameId = :gId",
-            ExpressionAttributeValues: {
-                ":gId": gameId
-            }
-        }));
+        // 1. Query dynamo Games table for the game_id record, get gamePrivacy value and hostAccountId value
+        // 2. Check game privacy 
+        // - if PUBLIC, generate join token and create join association in dynamo
+        // - if FRIENDS, query the friends table to see if the requesting user is friends with the host. If so, create a join token
+        // - if INVITE, deny connection for now
+        // - if PRIVATE, query game table to see if player is host, if so create join token
 
-        const game = queryResponse.Items?.[0] ?? null;
-
-        if (!game) {
-            return {
-                statusCode: 404,
-                body: JSON.stringify(
-                    ErrorResponse.create({
-                        message: "Game session not found"
-                    })
-                )
-            };
-        }
-
-        return {
-            statusCode: 200,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(GameRecord.create(game))
-        };
+        const game = await GetGameRecord(gameId, GAMES_TABLE);
 
     } catch (error) {
         return {

@@ -31,6 +31,15 @@ deploy-frontend env="dev": generate-proto
     ./powershell/web/export_web.ps1 -env "{{env}}"
     node aws/deploy_frontend.cjs {{env}}
 
+# Deplopy server files to S3
+deploy-server-files env="dev": generate-proto
+    ./powershell/server/export_linux_server.ps1 -env "{{env}}"
+    node aws/upload_server_s3_files.cjs {{env}}
+
+# Plan terraform without deploying
+plan-terraform: generate-proto stage-lambda-exports
+    cd {{tf_dir}} && terraform plan
+
 # Full Deployment Pipeline. Params: env (optional) takes dev or prod
-full-deploy env="dev": upload-lambda-functions
+full-deploy env="dev": upload-lambda-functions (deploy-frontend env)
     cd {{tf_dir}} && terraform apply -auto-approve -replace="aws_instance.poker_server"

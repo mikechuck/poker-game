@@ -4,16 +4,16 @@ import crypto from "crypto";
 import protobuf from "protobufjs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { GetGameRecord } from "./shared/utilities.js";
 
 const docClient = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const pokerApiProto = await protobuf.load(path.join(__dirname, "shared/poker_api.proto"));
-const GameStatus = pokerApiProto.lookupType("poker_api.GameStatus");
+const GameStatus = pokerApiProto.lookupEnum("poker_api.GameStatus");
 const GameRecord = pokerApiProto.lookupType("poker_api.GameRecord");
 const ErrorResponse = pokerApiProto.lookupType("poker_api.ErrorResponse");
 
-const GAMES_TABLE = process.env.GAMES_TABLE;
 const SERVER_SECRET_TOKEN = process.env.SERVER_SECRET_TOKEN;
 
 export const handler = async (event) => {
@@ -28,7 +28,7 @@ export const handler = async (event) => {
         }; 
     }
 
-    if (!SERVER_SECRET_TOKEN || !GAMES_TABLE) {
+    if (!SERVER_SECRET_TOKEN) {
         return {
             statusCode: 500,
             body: JSON.stringify(
@@ -45,39 +45,20 @@ export const handler = async (event) => {
     const newPort = body.port
     const addPlayers = body.addPlayers;
     const removePlayers = body.removePlayers;
-    var hostPlayerId = "";
+    var hostAccountId = "";
     var updateParams;
     var game;
     var gameRecord;
 
     // TODO: update logic to migrate to a new dynamo record if trying to change hosts
     // Maybe best to just create a new endpoint for this...
-    // const hostPlayerId = body.hostPlayerId;
+    // const hostAccountId = body.hostAccountId;
 
     try {
-        const queryResponse = await docClient.send(new QueryCommand({
-            TableName: GAMES_TABLE,
-            KeyConditionExpression: "gameId = :gId",
-            ExpressionAttributeValues: {
-                ":gId": gameId
-            }
-        }));
-
-        game = queryResponse.Items?.[0] ?? null;
-
-        if (!game) {
-            return {
-                statusCode: 404,
-                body: JSON.stringify(
-                    ErrorResponse.create({
-                        message: "Game session not found"
-                    })
-                )
-            };
-        }
+        const game = await GetGameRecord(gameId);
 
         gameRecord = GameRecord.create(game);
-        hostPlayerId = gameRecord.hostPlayerId;
+        hostAccountId = gameRecord.hostAccountId;
     } catch (error) {
         return {
             statusCode: 500,
@@ -95,10 +76,10 @@ export const handler = async (event) => {
     let updateValues = {}
 
     if (newGameStatus) {
-        if (newGameStatus == GameStatus.STARTED) {
+        if (newGameStatus == GameStatus.values.STARTED) {
             updateExpressions.push("gameStatus = :statusValue");
             updateValues[":statusValue"] = newGameStatus;
-        } else if (newGameStatus == GameStatus.ENDED) {
+        } else if (newGameStatus == GameStatus.values.ENDED) {
             updateExpressions.push("gameStatus = :statusValue, endTimeEpochMilliseconds = :endTimeValue");
             updateValues[":statusValue"] = newGameStatus;
             updateValues[":endTimeValue"] = Date.now();
@@ -121,8 +102,8 @@ export const handler = async (event) => {
 
     if (addPlayers && addPlayers.length > 0) {
         const currentPlayers = gameRecord.connectedPlayers;
-        addPlayers.forEach((playerId) => {
-            currentPlayers.push(playerId);
+        addPlayers.forEach((accountId) => {
+            currentPlayers.push(accountId);
         });
 
         updateExpressions.push("connectedPlayers = :connectedPlayers");
@@ -133,10 +114,10 @@ export const handler = async (event) => {
         // get players, find player id, remove from list, update
         // ignore id if player doesn't exist in game list
         const playersList = []
-        addPlayers.forEach((playerId) => {
-            gameRecord.connectedPlayers.forEach((currentPlayerId) => {
-                if (currentPlayerId != playerId) {
-                    playersList.push(currentPlayerId);
+        addPlayers.forEach((accountId) => {
+            gameRecord.connectedPlayers.forEach((currentAccountId) => {
+                if (currentAccountId != accountId) {
+                    playersList.push(currentAccountId);
                 }
             })
         });
@@ -149,7 +130,7 @@ export const handler = async (event) => {
         TableName: GAMES_TABLE,
         Key: {
             gameId: gameId,
-            hostPlayerId: hostPlayerId
+            hostAccountId: hostAccountId
         },
         UpdateExpression: "SET " + updateExpressions.join(", "),
         ExpressionAttributeValues: updateValues,

@@ -47,7 +47,7 @@ func create_game() -> Contracts.GameRecord:
 	
 	
 func get_game(game_id: String) -> Contracts.GameRecord:
-	var path: String = "/game?gameId=%s" % game_id.uri_encode()
+	var path: String = "/game/%s" % game_id.uri_encode()
 	var http_response: Contracts.HttpResponseWrapper = await AuthManager.api_request(
 		path,
 		HTTPClient.METHOD_GET
@@ -77,7 +77,7 @@ func get_games() -> Array[Contracts.GameRecord]:
 	
 	
 func update_game(game_id: String, game_status: int) -> int:
-	var path: String = "/game?gameId=%s" % game_id.uri_encode()
+	var path: String = "/game/%s" % game_id.uri_encode()
 	var reqeustBody = {
 		gameStatus = game_status
 	}
@@ -91,7 +91,7 @@ func update_game(game_id: String, game_status: int) -> int:
 	return http_response.response_code
 	
 func join_game(game_id: String) -> String:
-	var path: String = "/game?gameId=%s" % game_id.uri_encode()
+	var path: String = "/game/%s/join" % game_id.uri_encode()
 	var http_response: Contracts.HttpResponseWrapper = await AuthManager.api_request(
 		path,
 		HTTPClient.METHOD_GET
@@ -105,13 +105,13 @@ func join_game(game_id: String) -> String:
 # Server methods
 # game_id, game_status = null, port = null, add_players: Array[int] = [], remove_players: Array[int] = []
 func server_update_game(params: Dictionary) -> int:
-	var game_id: String = params["game_id"]
-	var path: String = "/game?gameId=%s" % game_id.uri_encode()
+	var game_id: String = params.get("game_id", "")
+	var path: String = "/game/%s" % game_id.uri_encode()
 	var requestBody = {
-		gameStatus = params["game_status"],
-		port = params["port"],
-		addPlayers = params["add_players"],
-		removePlayers = params["remove_players"]
+		gameStatus = params.get("game_status"),
+		port = params.get("port"),
+		addPlayers = params.get("add_players"),
+		removePlayers = params.get("remove_players")
 	}
 	
 	var http_response: Contracts.HttpResponseWrapper = await AuthManager.server_api_request(

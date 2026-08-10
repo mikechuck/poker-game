@@ -20,8 +20,8 @@ export const handler = async (event) => {
     try {
         const queryResponse = await docClient.send(new QueryCommand({
             TableName: GAMES_TABLE,
-            IndexName: "HostPlayerIdIndex", 
-            KeyConditionExpression: "hostPlayerId = :hId",
+            IndexName: "HostAccountIdIndex", 
+            KeyConditionExpression: "hostAccountId = :hId",
             ExpressionAttributeValues: {
                 ":hId": accountId
             }

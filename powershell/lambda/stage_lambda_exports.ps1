@@ -25,12 +25,19 @@ foreach ($functionDirName in $functions) {
     # Copy the Lambda handler and shared Proto file. Handles all file endings
     $handlerFile = Get-ChildItem -Path "src/functions/$functionDirName" -Filter "index.*" | Select-Object -First 1
     if ($handlerFile) {
-        Copy-Item $handlerFile.FullName "$StageDir/$($handlerFile.Name)"
+        # Edge authorizers can't use environment variables, need to export it is as a template
+        # file so that terraform can inject variables properly
+        if ($functionDirName -eq "ServerEdgeAuthorizer") {
+            Copy-Item $handlerFile.FullName "$StageDir/$($handlerFile.Name).tpl"
+        } else {
+            Copy-Item $handlerFile.FullName "$StageDir/$($handlerFile.Name)"
+        }
     } else {
         Write-Warning "No index file found for $functionDirName!"
     }
    
     Copy-Item "shared/poker_api.proto" "$StageDir/shared/poker_api.proto"
+    Copy-Item "shared/utilities.js" "$StageDir/shared/utilities.js"
 
     # Copy protobufjs & required scoped dependencies from root node_modules
     if (Test-Path "node_modules/protobufjs") {

@@ -3,6 +3,7 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import protobuf from "protobufjs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { GetGameRecord } from "./shared/utilities.js";
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
@@ -28,43 +29,11 @@ export const handler = async (event) => {
         };
     }
 
-    try {
-        const queryResponse = await docClient.send(new QueryCommand({
-            TableName: GAMES_TABLE,
-            KeyConditionExpression: "gameId = :gId",
-            ExpressionAttributeValues: {
-                ":gId": gameId
-            }
-        }));
+    const game = await GetGameRecord(gameId, GAMES_TABLE);
 
-        const game = queryResponse.Items?.[0] ?? null;
-
-        if (!game) {
-            return {
-                statusCode: 404,
-                body: JSON.stringify(
-                    ErrorResponse.create({
-                        message: "Game session not found"
-                    })
-                )
-            };
-        }
-
-        return {
-            statusCode: 200,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(GameRecord.create(game))
-        };
-
-    } catch (error) {
-        return {
-            statusCode: 500,
-            body: JSON.stringify(
-                ErrorResponse.create({ 
-                    message: "Internal server error",
-                    error: error.message
-                })
-            )
-        };
-    }
+    return {
+        statusCode: 200,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(GameRecord.create(game))
+    };
 };

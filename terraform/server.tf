@@ -128,7 +128,9 @@ data "template_file" "lambda_source" {
     vars = {
         region         = "us-east-1"
         user_pool_id   = aws_cognito_user_pool.poker_pool.id
-        app_client_id  = aws_cognito_user_pool_client.poker_client.id
+        app_client_id  = aws_cognito_user_pool_client.poker_client.id,
+        games_table_name = aws_dynamodb_table.games_table.name,
+        join_tokens_table_name = aws_dynamodb_table.join_tokens_table.name
     }
 }
 

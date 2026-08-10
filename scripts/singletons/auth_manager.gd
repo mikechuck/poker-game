@@ -164,10 +164,10 @@ func exchange_code_for_tokens(code: String):
 		
 	# Handle success
 	# Tokens are used for api auth, cookies are used for server auth
-	var json: Variant = JSON.parse_string(response_body.get_string_from_utf8())
-	var access_token: String = json["access_token"]
-	var id_token: String = json["id_token"]
-	var refresh_token: String = json["refresh_token"]
+	var json: Dictionary = JSON.parse_string(response_body.get_string_from_utf8())
+	var access_token: String = json.get("access_token", "")
+	var id_token: String = json.get("id_token", "")
+	var refresh_token: String = json.get("refresh_token")
 	JavaScriptBridge.eval("localStorage.setItem('access_token', '%s')" % access_token)
 	JavaScriptBridge.eval("localStorage.setItem('id_token', '%s')" % id_token)
 	JavaScriptBridge.eval("localStorage.setItem('refresh_token', '%s')" % refresh_token)
@@ -210,14 +210,17 @@ func refresh_tokens() -> bool:
 		return false
 		
 	Log.message("auth manager response_code: %s" % response_code)
-	var json: Variant = JSON.parse_string(response_body.get_string_from_utf8())
-	var access_token: String = json["access_token"]
-	var id_token: String = json["id_token"]
-	var refresh_token: String = json["refresh_token"]
+	var json: Dictionary = JSON.parse_string(response_body.get_string_from_utf8())
+	var access_token: String = json.get("access_token")
+	var id_token: String = json.get("id_token")
 	JavaScriptBridge.eval("localStorage.setItem('access_token', '%s')" % access_token)
 	JavaScriptBridge.eval("localStorage.setItem('id_token', '%s')" % id_token)
-	JavaScriptBridge.eval("localStorage.setItem('refresh_token', '%s')" % refresh_token)
 	save_token_to_cookie(access_token)
+	
+	if (json.get("refresh_token", "") != ""):
+		var refresh_token: String = json["refresh_token"]
+		JavaScriptBridge.eval("localStorage.setItem('refresh_token', '%s')" % refresh_token)
+		
 	return true
 	
 	

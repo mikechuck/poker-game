@@ -69,4 +69,5 @@ custom_minimum_size = Vector2(100, 25)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
+disabled = true
 text = "Join"

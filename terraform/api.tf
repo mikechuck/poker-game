@@ -103,6 +103,7 @@ resource "aws_iam_policy" "dynamo_poker_access" {
                     aws_dynamodb_table.accounts_table.arn,
                     aws_dynamodb_table.debts_table.arn,
                     aws_dynamodb_table.games_table.arn,
+                    aws_dynamodb_table.join_tokens_table.arn,
                     "${aws_dynamodb_table.games_table.arn}/index/*"
                 ]
             }
@@ -249,6 +250,34 @@ resource "aws_lambda_permission" "api_gw_create_game" {
 
 # --- End CreateGame API Gateway Integration ---
 
+# --- Start JoinGame API Gateway Integration ---
+
+resource "aws_apigatewayv2_integration" "join_game_int" {
+    api_id           = aws_apigatewayv2_api.poker_api.id
+    integration_type = "AWS_PROXY"
+    integration_uri  = aws_lambda_function.join_game.invoke_arn
+    payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "join_game_route" {
+    api_id    = aws_apigatewayv2_api.poker_api.id
+    route_key = "POST /game/{gameId}/join"
+
+    target             = "integrations/${aws_apigatewayv2_integration.join_game_int.id}"
+    authorization_type = "JWT"
+    authorizer_id      = aws_apigatewayv2_authorizer.cognito_auth.id
+}
+
+resource "aws_lambda_permission" "api_gw_join_game" {
+    statement_id  = "AllowExecutionFromAPIGateway"
+    action        = "lambda:InvokeFunction"
+    function_name = aws_lambda_function.join_game.function_name
+    principal     = "apigateway.amazonaws.com"
+    source_arn    = "${aws_apigatewayv2_api.poker_api.execution_arn}/*/*/game/*/join"
+}
+
+# --- End JoinGame API Gateway Integration ---
+
 # --- Start GetGame API Gateway Integration ---
 
 resource "aws_apigatewayv2_integration" "get_game_int" {
@@ -260,7 +289,7 @@ resource "aws_apigatewayv2_integration" "get_game_int" {
 
 resource "aws_apigatewayv2_route" "get_game_route" {
     api_id    = aws_apigatewayv2_api.poker_api.id
-    route_key = "GET /game"
+    route_key = "GET /game/{gameId}"
 
     target             = "integrations/${aws_apigatewayv2_integration.get_game_int.id}"
     authorization_type = "JWT"
@@ -272,7 +301,7 @@ resource "aws_lambda_permission" "api_gw_get_game" {
     action        = "lambda:InvokeFunction"
     function_name = aws_lambda_function.get_game.function_name
     principal     = "apigateway.amazonaws.com"
-    source_arn    = "${aws_apigatewayv2_api.poker_api.execution_arn}/*/*/game"
+    source_arn    = "${aws_apigatewayv2_api.poker_api.execution_arn}/*/*/game/*"
 }
 
 # --- End GetGame API Gateway Integration ---
@@ -421,6 +450,35 @@ resource "aws_cloudwatch_log_group" "create_game_logs" {
 }
 
 # --- End CreateGame Lambda Function ---
+
+# --- Start JoinGame Lambda Function ---
+
+resource "aws_lambda_function" "join_game" {
+    function_name = "JoinGame"
+    filename      = "${path.module}/../exports/lambda/JoinGame.zip"
+    role          = aws_iam_role.lambda_integration_role.arn
+    handler       = "index.handler"
+    runtime       = "nodejs22.x" # Node 22 is the standard current LTS
+    timeout       = 10
+    memory_size   = 512
+
+    source_code_hash = filebase64sha256("${path.module}/../exports/lambda/JoinGame.zip")
+
+    environment {
+        variables = {
+            GAMES_TABLE = aws_dynamodb_table.games_table.name,
+            JOIN_TOKENS_TABLE = aws_dynamodb_table.join_tokens_table.name
+        }
+    }
+}
+
+# Create the log group explicitly to control retention
+resource "aws_cloudwatch_log_group" "join_game_logs" {
+    name              = "/aws/lambda/JoinGame"
+    retention_in_days = 7
+}
+
+# --- End GetGame Lambda Function ---
 
 # --- Start GetGame Lambda Function ---
 

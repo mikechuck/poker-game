@@ -12,9 +12,9 @@ const docClient = DynamoDBDocumentClient.from(client);
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const pokerApiProto = await protobuf.load(path.join(__dirname, "shared/poker_api.proto"));
-const GameStatus = pokerApiProto.lookupType("poker_api.GameStatus");
+const GameStatus = pokerApiProto.lookupEnum("poker_api.GameStatus");
 const GameRecord = pokerApiProto.lookupType("poker_api.GameRecord");
-const GamePrivacy = pokerApiProto.lookupType("poker_api.GamePrivacy");
+const GamePrivacy = pokerApiProto.lookupEnum("poker_api.GamePrivacy");
 const ErrorResponse = pokerApiProto.lookupType("poker_api.ErrorResponse");
 
 const INSTANCE_ID = process.env.POKER_SERVER_INSTANCE_ID;
@@ -36,7 +36,7 @@ export const handler = async (event) => {
     const blindValue = body.blind || 10
     const buyIn = body.buyIn || 0 // 0 is free game
     const chipRatio = body.chipRatio || 1
-    const gamePrivacy = body.gamePrivacy || GamePrivacy.PUBLIC
+    const gamePrivacy = body.gamePrivacy || GamePrivacy.values.PUBLIC
     const accountId = event.requestContext?.authorizer?.jwt?.claims?.sub;
 
     if (!accountId) {
@@ -64,12 +64,12 @@ export const handler = async (event) => {
     // Get all active games for this player
     const params = {
         TableName: GAMES_TABLE,
-        IndexName: "HostPlayerIdIndex", 
-        KeyConditionExpression: "hostPlayerId = :accId",
+        IndexName: "HostAccountIdIndex", 
+        KeyConditionExpression: "hostAccountId = :accId",
         FilterExpression: "gameStatus <> :endedStatus",
         ExpressionAttributeValues: {
             ":accId": accountId,
-            ":endedStatus": GameStatus.ENDED
+            ":endedStatus": GameStatus.values.ENDED
         }
     };
 
@@ -96,9 +96,9 @@ export const handler = async (event) => {
 
         const newGameData = {
             gameId: gameCode,
-            hostPlayerId: accountId,
+            hostAccountId: accountId,
             createTimeEpochMilliseconds: Date.now(),
-            gameStatus: GameStatus.STARTING,
+            gameStatus: GameStatus.values.STARTING,
             endTimeEpochMilliseconds: 0,
             connectedPlayers: [],
             port: 0,
@@ -109,7 +109,7 @@ export const handler = async (event) => {
             gamePrivacy: gamePrivacy
         };
 
-        const errMsg = GameRecord.verify(payload);
+        const errMsg = GameRecord.verify(newGameData);
         if (errMsg) {
             return {
                 statusCode: 500,
@@ -134,13 +134,15 @@ export const handler = async (event) => {
             InstanceIds: [INSTANCE_ID],
             DocumentName: "AWS-RunShellScript",
             Parameters: {
-                'commands': [`sudo -u ec2-user /home/ec2-user/start_game_session.sh "${GAMES_TABLE}" "${newGame.gameId}" "${accountId}" "${blindValue}"`]
+                'commands': [`sudo -u ec2-user /home/ec2-user/start_game_session.sh "${GAMES_TABLE}" "${newGameRecord.gameId}" "${accountId}" "${blindValue}"`]
             },
             CloudWatchOutputConfig: {
                 CloudWatchLogGroupName: "/apps/poker-game",
                 CloudWatchOutputEnabled: true
             }
         }));
+
+        console.log("SSM sendRes:", sendRes)
 
         return {
             statusCode: 202,

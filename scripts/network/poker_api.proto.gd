@@ -11,6 +11,13 @@ enum GameStatus {
 	ENDED = 2,
 } 
  
+enum GamePrivacy {
+	PUBLIC = 0,
+	FRIENDS = 1,
+	INVITE = 2,
+	PRIVATE = 3,
+} 
+ 
 class HttpResponseWrapper extends Message:
 	#1 : result
 	var result: int = 0
@@ -489,8 +496,8 @@ class GameRecord extends Message:
 	#1 : gameId
 	var gameId: String = ""
 
-	#2 : hostPlayerId
-	var hostPlayerId: String = ""
+	#2 : hostAccountId
+	var hostAccountId: String = ""
 
 	#3 : gameStatus
 	var gameStatus: GameStatus = 0
@@ -547,11 +554,14 @@ class GameRecord extends Message:
 	func clear_connectedPlayers() -> void:
 		self._connectedPlayers_size = 0
 
+	#12 : gamePrivacy
+	var gamePrivacy: GamePrivacy = 0
+
 
 	## Init message field values to default value
 	func Init() -> void:
 		self.gameId = ""
-		self.hostPlayerId = ""
+		self.hostAccountId = ""
 		self.gameStatus = 0
 		self.createTimeEpochMilliseconds = 0
 		self.endTimeEpochMilliseconds = 0
@@ -561,6 +571,7 @@ class GameRecord extends Message:
 		self.chipRatio = 0
 		self.handsPlayed = 0
 		self.clear_connectedPlayers
+		self.gamePrivacy = 0
 
 	## Create a new message instance
 	## Returns: Message - New message instance
@@ -576,7 +587,7 @@ class GameRecord extends Message:
 	func MergeFrom(other : Message) -> void:
 		if other is GameRecord:
 			self.gameId += other.gameId
-			self.hostPlayerId += other.hostPlayerId
+			self.hostAccountId += other.hostAccountId
 			self.gameStatus = other.gameStatus
 			self.createTimeEpochMilliseconds += other.createTimeEpochMilliseconds
 			self.endTimeEpochMilliseconds += other.endTimeEpochMilliseconds
@@ -588,14 +599,15 @@ class GameRecord extends Message:
 			self._connectedPlayers = self._connectedPlayers.slice(0, _connectedPlayers_size)
 			self._connectedPlayers.append_array(other._connectedPlayers.slice(0, other._connectedPlayers_size))
 			self._connectedPlayers_size += other._connectedPlayers_size
+			self.gamePrivacy = other.gamePrivacy
  
 	func SerializeToBytes(buffer: PackedByteArray = PackedByteArray()) -> PackedByteArray:
 		if self.gameId != "":
 			GDScriptUtils.encode_tag(buffer, 1, 9)
 			GDScriptUtils.encode_string(buffer, self.gameId)
-		if self.hostPlayerId != "":
+		if self.hostAccountId != "":
 			GDScriptUtils.encode_tag(buffer, 2, 9)
-			GDScriptUtils.encode_string(buffer, self.hostPlayerId)
+			GDScriptUtils.encode_string(buffer, self.hostAccountId)
 		if self.gameStatus != 0:
 			GDScriptUtils.encode_tag(buffer, 3, 14)
 			GDScriptUtils.encode_varint(buffer, self.gameStatus)
@@ -623,6 +635,9 @@ class GameRecord extends Message:
 		for item in self._connectedPlayers:
 			GDScriptUtils.encode_tag(buffer, 11, 9)
 			GDScriptUtils.encode_string(buffer, item)
+		if self.gamePrivacy != 0:
+			GDScriptUtils.encode_tag(buffer, 12, 14)
+			GDScriptUtils.encode_varint(buffer, self.gamePrivacy)
 		return buffer
  
 	func ParseFromBytes(data: PackedByteArray) -> int:
@@ -641,7 +656,7 @@ class GameRecord extends Message:
 					pos += field_value[GDScriptUtils.SIZE_KEY]
 				2:
 					var field_value = GDScriptUtils.decode_string(data, pos, self)
-					self.hostPlayerId = field_value[GDScriptUtils.VALUE_KEY]
+					self.hostAccountId = field_value[GDScriptUtils.VALUE_KEY]
 					pos += field_value[GDScriptUtils.SIZE_KEY]
 				3:
 					var field_value = GDScriptUtils.decode_varint(data, pos, self)
@@ -679,6 +694,10 @@ class GameRecord extends Message:
 					var field_value = GDScriptUtils.decode_string(data, pos, self)
 					self.add_connectedPlayers(field_value[GDScriptUtils.VALUE_KEY])
 					pos += field_value[GDScriptUtils.SIZE_KEY]
+				12:
+					var field_value = GDScriptUtils.decode_varint(data, pos, self)
+					self.gamePrivacy = field_value[GDScriptUtils.VALUE_KEY]
+					pos += field_value[GDScriptUtils.SIZE_KEY]
 				_:
 					pass
 
@@ -687,7 +706,7 @@ class GameRecord extends Message:
 	func SerializeToDictionary() -> Dictionary:
 		var dict = {}
 		dict["gameId"] = self.gameId
-		dict["hostPlayerId"] = self.hostPlayerId
+		dict["hostAccountId"] = self.hostAccountId
 		dict["gameStatus"] = self.gameStatus
 		dict["createTimeEpochMilliseconds"] = self.createTimeEpochMilliseconds
 		dict["endTimeEpochMilliseconds"] = self.endTimeEpochMilliseconds
@@ -697,6 +716,7 @@ class GameRecord extends Message:
 		dict["chipRatio"] = self.chipRatio
 		dict["handsPlayed"] = self.handsPlayed
 		dict["connectedPlayers"] = self._connectedPlayers
+		dict["gamePrivacy"] = self.gamePrivacy
 		return dict
 
 	func ParseFromDictionary(dict: Dictionary) -> void:
@@ -705,8 +725,8 @@ class GameRecord extends Message:
 
 		if dict.has("gameId"):
 			self.gameId = dict.get("gameId")
-		if dict.has("hostPlayerId"):
-			self.hostPlayerId = dict.get("hostPlayerId")
+		if dict.has("hostAccountId"):
+			self.hostAccountId = dict.get("hostAccountId")
 		if dict.has("gameStatus"):
 			self.gameStatus = dict.get("gameStatus")
 		if dict.has("createTimeEpochMilliseconds"):
@@ -728,6 +748,8 @@ class GameRecord extends Message:
 			var list = dict["connectedPlayers"]
 			for item in list:
 				self.add_connectedPlayers(item)
+		if dict.has("gamePrivacy"):
+			self.gamePrivacy = dict.get("gamePrivacy")
 
 # =========================================
 
@@ -832,3 +854,113 @@ class GameRecordList extends Message:
 				self.add_records(item_msg)
 
 # =========================================
+
+class JoinTokenRecord extends Message:
+	#1 : playerId
+	var playerId: String = ""
+
+	#2 : gameId
+	var gameId: String = ""
+
+	#3 : joinToken
+	var joinToken: String = ""
+
+	#4 : expirationTimeEpochMilliseconds
+	var expirationTimeEpochMilliseconds: int = 0
+
+
+	## Init message field values to default value
+	func Init() -> void:
+		self.playerId = ""
+		self.gameId = ""
+		self.joinToken = ""
+		self.expirationTimeEpochMilliseconds = 0
+
+	## Create a new message instance
+	## Returns: Message - New message instance
+	func New() -> Message:
+		var msg = JoinTokenRecord.new()
+		return msg
+
+	## Message ProtoName
+	## Returns: String - ProtoName
+	func ProtoName() -> String:
+		return "poker_api.JoinTokenRecord"
+
+	func MergeFrom(other : Message) -> void:
+		if other is JoinTokenRecord:
+			self.playerId += other.playerId
+			self.gameId += other.gameId
+			self.joinToken += other.joinToken
+			self.expirationTimeEpochMilliseconds += other.expirationTimeEpochMilliseconds
+ 
+	func SerializeToBytes(buffer: PackedByteArray = PackedByteArray()) -> PackedByteArray:
+		if self.playerId != "":
+			GDScriptUtils.encode_tag(buffer, 1, 9)
+			GDScriptUtils.encode_string(buffer, self.playerId)
+		if self.gameId != "":
+			GDScriptUtils.encode_tag(buffer, 2, 9)
+			GDScriptUtils.encode_string(buffer, self.gameId)
+		if self.joinToken != "":
+			GDScriptUtils.encode_tag(buffer, 3, 9)
+			GDScriptUtils.encode_string(buffer, self.joinToken)
+		if self.expirationTimeEpochMilliseconds != 0:
+			GDScriptUtils.encode_tag(buffer, 4, 3)
+			GDScriptUtils.encode_varint(buffer, self.expirationTimeEpochMilliseconds)
+		return buffer
+ 
+	func ParseFromBytes(data: PackedByteArray) -> int:
+		var size = data.size()
+		var pos = 0
+ 
+		while pos < size:
+			var tag = GDScriptUtils.decode_tag(data, pos)
+			var field_number = tag[GDScriptUtils.VALUE_KEY]
+			pos += tag[GDScriptUtils.SIZE_KEY]
+ 
+			match field_number:
+				1:
+					var field_value = GDScriptUtils.decode_string(data, pos, self)
+					self.playerId = field_value[GDScriptUtils.VALUE_KEY]
+					pos += field_value[GDScriptUtils.SIZE_KEY]
+				2:
+					var field_value = GDScriptUtils.decode_string(data, pos, self)
+					self.gameId = field_value[GDScriptUtils.VALUE_KEY]
+					pos += field_value[GDScriptUtils.SIZE_KEY]
+				3:
+					var field_value = GDScriptUtils.decode_string(data, pos, self)
+					self.joinToken = field_value[GDScriptUtils.VALUE_KEY]
+					pos += field_value[GDScriptUtils.SIZE_KEY]
+				4:
+					var field_value = GDScriptUtils.decode_varint(data, pos, self)
+					self.expirationTimeEpochMilliseconds = field_value[GDScriptUtils.VALUE_KEY]
+					pos += field_value[GDScriptUtils.SIZE_KEY]
+				_:
+					pass
+
+		return pos
+
+	func SerializeToDictionary() -> Dictionary:
+		var dict = {}
+		dict["playerId"] = self.playerId
+		dict["gameId"] = self.gameId
+		dict["joinToken"] = self.joinToken
+		dict["expirationTimeEpochMilliseconds"] = self.expirationTimeEpochMilliseconds
+		return dict
+
+	func ParseFromDictionary(dict: Dictionary) -> void:
+		if dict == null:
+			return
+
+		if dict.has("playerId"):
+			self.playerId = dict.get("playerId")
+		if dict.has("gameId"):
+			self.gameId = dict.get("gameId")
+		if dict.has("joinToken"):
+			self.joinToken = dict.get("joinToken")
+		if dict.has("expirationTimeEpochMilliseconds"):
+			self.expirationTimeEpochMilliseconds = dict.get("expirationTimeEpochMilliseconds")
+
+# =========================================
+
+

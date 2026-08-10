@@ -37,7 +37,7 @@ message AccountRecordList {
 
 message GameRecord {
     string gameId = 1;
-    string hostPlayerId = 2;
+    string hostAccountId = 2;
     GameStatus gameStatus = 3;
     int64 createTimeEpochMilliseconds = 4;
     int64 endTimeEpochMilliseconds = 5;
@@ -65,4 +65,13 @@ enum GamePrivacy {
     FRIENDS = 1; // Only friends of the host can join
     INVITE = 2; // Only players with an invite code can join
     PRIVATE = 3; // Only host can join, play against bots
+}
+
+// JoinToken
+
+message JoinTokenRecord {
+    string playerId = 1;
+    string gameId = 2;
+    string joinToken = 3;
+    int64 expirationTimeEpochMilliseconds = 4;
 }

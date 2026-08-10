@@ -7,6 +7,8 @@ class_name MainSceneManager
 @onready var games_list_container: GameDetailsContainer = $Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/GameDetailsContainer
 @onready var loading_screen: Control = $Loading
 @onready var main_content: Control = $Content
+@onready var NO_GAMES_CONTAINER = $Content/GamesList/MarginContainer/MarginContainer/Table/NoRecordsContainer
+@onready var GAMES_LIST_CONTAINER = $Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer
 
 var _game_code: String = ""
 
@@ -23,9 +25,12 @@ func _ready() -> void:
 		account_section.display_account_data(account_record)
 		var games_list: Array[Contracts.GameRecord] = await HttpRequestsManager.get_games()
 		if (games_list != null):
-			games_list_container.create_games_list(games_list)
-			main_content.visible = true
-			loading_screen.visible = false
+			if (len(games_list) > 0):
+				NO_GAMES_CONTAINER.visible = false
+				GAMES_LIST_CONTAINER.visible = true
+				games_list_container.create_games_list(games_list)
+		main_content.visible = true
+		loading_screen.visible = false
 	
 	# If not the server, then we should bounce the user the landing if they don't have
 	multiplayer.connected_to_server.connect(_on_connected)

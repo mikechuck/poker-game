@@ -26,7 +26,7 @@ resource "aws_dynamodb_table" "games_table" {
     billing_mode   = "PAY_PER_REQUEST"
     
     hash_key       = "gameId"
-    range_key      = "hostPlayerId"
+    range_key      = "hostAccountId"
 
     attribute {
         name = "gameId"
@@ -34,7 +34,7 @@ resource "aws_dynamodb_table" "games_table" {
     }
 
     attribute {
-        name = "hostPlayerId"
+        name = "hostAccountId"
         type = "S"
     }
 
@@ -46,8 +46,8 @@ resource "aws_dynamodb_table" "games_table" {
     tags = { Name = "PokerGames" }
 
     global_secondary_index {
-        name               = "HostPlayerIdIndex"
-        hash_key           = "hostPlayerId"       # Make the Host the search key here
+        name               = "HostAccountIdIndex"
+        hash_key           = "hostAccountId"
         projection_type    = "ALL"      # Copies all game details into the index view
         range_key          = "endTimeEpochMilliseconds"
     }
@@ -70,8 +70,6 @@ resource "aws_dynamodb_table" "debts_table" {
         type = "S"
     }
 
-    # GSIs are the ONLY place where you might see key_schema requirements 
-    # depending on your provider version, but hash_key/range_key is safer here too:
     global_secondary_index {
         name            = "CreditorIndex"
         hash_key        = "creditorId"
@@ -80,5 +78,31 @@ resource "aws_dynamodb_table" "debts_table" {
     }
 
     tags = { Name = "PokerDebts" }
+}
+
+resource "aws_dynamodb_table" "join_tokens_table" {
+    name        = "JoinTokens"
+    billing_mode   = "PAY_PER_REQUEST"
+    
+    hash_key       = "accountId"
+
+    attribute {
+        name = "accountId"
+        type = "S"
+    }
+
+    attribute {
+        name = "gameId"
+        type = "S"
+    }
+
+    global_secondary_index {
+        name            = "GameIdIndex"
+        hash_key        = "gameId"
+        range_key       = "accountId"
+        projection_type = "ALL"
+    }
+
+    tags = { Name = "PokerJoinTokens" }
 }
 # --- End DynamoDB Config ---
