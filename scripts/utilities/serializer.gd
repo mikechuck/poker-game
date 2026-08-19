@@ -1,10 +1,10 @@
-extends Node
+extends RefCounted
 class_name Serializer
 
 static func serialize_player_seats(player_seats: Dictionary[int, PlayerSeat]) -> Dictionary:
 	var player_seats_dict = {}
-	for player_id in player_seats:
-		player_seats_dict[player_id] = player_seats[player_id].to_dict()
+	for peer_id in player_seats:
+		player_seats_dict[peer_id] = player_seats[peer_id].to_dict()
 	return player_seats_dict
 	
 static func deserialize_player_seats(new_player_seats: Dictionary) -> Dictionary[int, PlayerSeat]:
@@ -16,8 +16,8 @@ static func deserialize_player_seats(new_player_seats: Dictionary) -> Dictionary
 	
 static func serialize_connected_players(connected_players: Dictionary[int, ConnectedPlayer]) -> Dictionary:
 	var connected_players_dict = {}
-	for player_id in connected_players:
-		connected_players_dict[player_id] = connected_players[player_id].to_dict()
+	for peer_id in connected_players:
+		connected_players_dict[peer_id] = connected_players[peer_id].to_dict()
 	return connected_players_dict
 	
 static func deserialize_connected_players(new_connected_players: Dictionary) -> Dictionary[int, ConnectedPlayer]:

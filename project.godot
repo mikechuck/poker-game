@@ -59,4 +59,4 @@ ui/toolbar/run_overall=true
 
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
-environment/defaults/default_clear_color=Color(0, 0, 0, 1)
+environment/defaults/default_clear_color=Color(0.047058824, 0.17254902, 0.21568628, 1)

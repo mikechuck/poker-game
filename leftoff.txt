@@ -1,27 +1,8 @@
 leftoff:
-	- Pri
-	- finish authenticate game player flow:
-		- create new endpoint "CreateJoinToken"
-			- endpoint creates an auth code to send back to player
-			- inserts into JoinCodeTokens table: game id, join code, and account id 
-		- client receives code and sends it in rpc request to server FIRST THING after it completes the connection attempt
-		- server will take that code, send it to new endpoint "ValidateJoinToken"
-
-	- join request not getting all the way to server code, check nginx logs
-	- remove tfstate files from git. delete from repo
-	- add player list to Game record in db, add and remove when players connect or disconnect
-	- authentication	
-		- finish fixing tcp auth. wait for replicated lambda to finish OR fix terraform to ditch the resources. Do a terraform apply to see the error about the role (might need to untrack it)
-	- refresh flow is borked, it tried to access response_body even though response code is 401. Added log statement, investigate next time it refresh errors
-
-	- Main scene:
-		- list active games, be able to join them:
-			- new lambda function for getGames,
-			- add new endpoint and lambda to api.tf
-			- in godot, call GetGames, show a ui icon for code, number of players in it, and a join button
-			- in Games table during creation and whenever someone joins or leaves, call UpdateGame with new number of players
-
-	
+	- Finish account section and hook up data in game scene show it shows color etc
+	- players list is not updated when leaving a game
+	- send player to main menu on RPC connection failure (server shut down)
+	- server is ending even when players are still in the game
 
 	- When game is over:
 		- call lambda to update dybamo to:
@@ -29,32 +10,6 @@ leftoff:
 			- set expiration time
 		- debt tracking:
 			- do debt tracking call when a player LEAVES the game
-			- initiate debt settling when game finishes
-	- Add reading blind value from server exe startup inside godot code, added the same way as port value
-	- finish create game flow: 
-		- Double check CreateGame function against EC2 startup script
-		- figure out how to add logging to EC2 instance so we have visibility into how it's acting
-		- create dynamo table and inserts/reads, etc
-		- test call from lambda, read output and save to dynamo
-		- return back data to user so they can display and connect from client
-	- APIs to create:
-		- /account
-			- update name
-			- upload profile picture (store into S3)
-		- /orchestration
-			- create game - lambda needs to be able to talk to EC2 to spawn a new process, then return the url and port information to the client so they can connect
-
-	- Now that ALB is created, figure out how to best setup websocket requests to ALB using subdomain and /game path
-	- Do we ned to set up origins and behaviors in cloudfront (poker.mct.net), or is it fine to request alb directly using server.*?
-
-Create game flow:
-- user calls POST on /game endpoint
-- lambda function:
-	- if Games table doesn't have a record for this player, create one with pending status
-	- if Games table DOES have a record, just return back the game data (port, etc)
-	- Creates record in "Games" table for uuid and "creation pending"
-	- lambda sends command to SSM to start up game
-	- lambda polls
 
 
 Todo:
@@ -103,9 +58,5 @@ Helpful linux commands:
 - Read game server process log: sudo tail -f /var/log/poker_server.log
 - Start game server instance: sudo sh -c 'sudo -u ec2-user /home/ec2-user/poker_server.x86_64 --server --headless --port=12001 > /home/ec2-user/poker_server.log 2>&1 & '
 - Kill server: sudo pkill -9 -f poker_server.x86_64
-
-
-Todo for server setup:
-- Need to enable https for EC2 *without* using load balancer...
 
 

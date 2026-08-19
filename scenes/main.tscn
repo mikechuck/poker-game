@@ -1,15 +1,11 @@
-[gd_scene load_steps=9 format=3 uid="uid://b7ckdfv84qrn2"]
+[gd_scene load_steps=6 format=3 uid="uid://b7ckdfv84qrn2"]
 
 [ext_resource type="Script" uid="uid://dvefjfvnac0ds" path="res://scripts/managers/main_scene_manager.gd" id="1_o5qli"]
-[ext_resource type="Script" uid="uid://cnbwlolh7w646" path="res://scripts/UI/account_section.gd" id="4_jyhfs"]
+[ext_resource type="PackedScene" uid="uid://cr8vvixudbsoq" path="res://scenes/UI/account_section.tscn" id="2_jyhfs"]
 [ext_resource type="Script" uid="uid://pbt3e5ngffq3" path="res://scripts/UI/game_details_container.gd" id="5_85g3d"]
-[ext_resource type="Texture2D" uid="uid://ddlkeu1b8yhay" path="res://assets/PlayerCard/DetailsCard.png" id="5_tefeu"]
 [ext_resource type="PackedScene" uid="uid://68tyc31vsq17" path="res://scenes/UI/game_details.tscn" id="6_choun"]
-[ext_resource type="Texture2D" uid="uid://3pvy2qjel0j0" path="res://assets/PlayerCard/ProfilePicture.png" id="6_o6xl0"]
 
 [sub_resource type="Theme" id="Theme_o6xl0"]
-
-[sub_resource type="GDScript" id="GDScript_tipki"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -61,12 +57,16 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Menu" type="Control" parent="Content"]
+visible = false
 layout_mode = 1
-anchors_preset = 2
+anchors_preset = 3
+anchor_left = 1.0
 anchor_top = 1.0
+anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = -400.0
 offset_top = -500.0
-offset_right = 400.0
+grow_horizontal = 0
 grow_vertical = 0
 
 [node name="MarginContainer" type="MarginContainer" parent="Content/Menu"]
@@ -75,8 +75,7 @@ anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -186.0
-offset_right = 4.0
+offset_top = -380.0
 grow_horizontal = 2
 grow_vertical = 0
 theme_override_constants/margin_left = 25
@@ -88,27 +87,111 @@ theme_override_constants/margin_bottom = 25
 layout_mode = 2
 alignment = 2
 
-[node name="CreateGameButton" type="Button" parent="Content/Menu/MarginContainer/VBoxContainer"]
+[node name="HostGameMenu" type="VBoxContainer" parent="Content/Menu/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="BuyInContainer" type="HBoxContainer" parent="Content/Menu/MarginContainer/VBoxContainer/HostGameMenu"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Content/Menu/MarginContainer/VBoxContainer/HostGameMenu/BuyInContainer"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+text = "Buy-in"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SpinBox" type="SpinBox" parent="Content/Menu/MarginContainer/VBoxContainer/HostGameMenu/BuyInContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_default_cursor_shape = 1
+alignment = 1
+prefix = "$"
+
+[node name="ChipRatioContainer" type="HBoxContainer" parent="Content/Menu/MarginContainer/VBoxContainer/HostGameMenu"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Content/Menu/MarginContainer/VBoxContainer/HostGameMenu/ChipRatioContainer"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+text = "Chips per $"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SpinBox" type="SpinBox" parent="Content/Menu/MarginContainer/VBoxContainer/HostGameMenu/ChipRatioContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_default_cursor_shape = 1
+alignment = 1
+suffix = "Chips"
+
+[node name="BlindContainer" type="HBoxContainer" parent="Content/Menu/MarginContainer/VBoxContainer/HostGameMenu"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Content/Menu/MarginContainer/VBoxContainer/HostGameMenu/BlindContainer"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+text = "Blind"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SpinBox" type="SpinBox" parent="Content/Menu/MarginContainer/VBoxContainer/HostGameMenu/BlindContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_default_cursor_shape = 1
+alignment = 1
+suffix = "Chips"
+
+[node name="PrivacyContainer" type="HBoxContainer" parent="Content/Menu/MarginContainer/VBoxContainer/HostGameMenu"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Content/Menu/MarginContainer/VBoxContainer/HostGameMenu/PrivacyContainer"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+text = "Privacy"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="OptionButton" type="OptionButton" parent="Content/Menu/MarginContainer/VBoxContainer/HostGameMenu/PrivacyContainer"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 0
+mouse_default_cursor_shape = 2
+alignment = 1
+selected = 1
+item_count = 4
+popup/item_0/text = "Public"
+popup/item_0/id = 0
+popup/item_1/text = "Friends"
+popup/item_1/id = 1
+popup/item_1/disabled = true
+popup/item_2/text = "Invite"
+popup/item_2/id = 2
+popup/item_2/disabled = true
+popup/item_3/text = "Private"
+popup/item_3/id = 3
+
+[node name="CreateGameButton" type="Button" parent="Content/Menu/MarginContainer/VBoxContainer/HostGameMenu"]
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 mouse_default_cursor_shape = 2
 text = "Host Game
 "
 
-[node name="HBoxContainer" type="HBoxContainer" parent="Content/Menu/MarginContainer/VBoxContainer"]
+[node name="JoinGameMenu" type="HBoxContainer" parent="Content/Menu/MarginContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="GameCodeInput" type="LineEdit" parent="Content/Menu/MarginContainer/VBoxContainer/HBoxContainer"]
+[node name="GameCodeInput" type="LineEdit" parent="Content/Menu/MarginContainer/VBoxContainer/JoinGameMenu"]
 custom_minimum_size = Vector2(200, 52)
 layout_mode = 2
 placeholder_text = "Game Code"
 alignment = 1
 
-[node name="MarginContainer" type="MarginContainer" parent="Content/Menu/MarginContainer/VBoxContainer/HBoxContainer"]
+[node name="MarginContainer" type="MarginContainer" parent="Content/Menu/MarginContainer/VBoxContainer/JoinGameMenu"]
 layout_mode = 2
 theme_override_constants/margin_bottom = 2
 
-[node name="JoinGameButton" type="Button" parent="Content/Menu/MarginContainer/VBoxContainer/HBoxContainer/MarginContainer"]
+[node name="JoinGameButton" type="Button" parent="Content/Menu/MarginContainer/VBoxContainer/JoinGameMenu/MarginContainer"]
 custom_minimum_size = Vector2(150, 50)
 layout_mode = 2
 mouse_default_cursor_shape = 2
@@ -116,126 +199,25 @@ theme = SubResource("Theme_o6xl0")
 text = "Join Game
 "
 
-[node name="AccountSection" type="Control" parent="Content"]
-layout_mode = 1
-anchors_preset = 0
-script = ExtResource("4_jyhfs")
-
-[node name="MarginContainer" type="MarginContainer" parent="Content/AccountSection"]
-layout_mode = 1
-offset_left = 25.0
-offset_top = 25.0
-offset_right = 300.0
-offset_bottom = 230.0
-
-[node name="ColorRect" type="ColorRect" parent="Content/AccountSection/MarginContainer"]
-visible = false
-layout_mode = 2
-color = Color(1, 1, 1, 0)
-
-[node name="PlayerCard" type="Node2D" parent="Content/AccountSection/MarginContainer"]
-script = SubResource("GDScript_tipki")
-
-[node name="DetailsCard" type="Sprite2D" parent="Content/AccountSection/MarginContainer/PlayerCard"]
-position = Vector2(138, 47)
-texture = ExtResource("5_tefeu")
-
-[node name="ProfilePicture" type="Sprite2D" parent="Content/AccountSection/MarginContainer/PlayerCard"]
-position = Vector2(43, 41)
-texture = ExtResource("6_o6xl0")
-
-[node name="Name" type="RichTextLabel" parent="Content/AccountSection/MarginContainer/PlayerCard"]
-clip_contents = false
-offset_left = 97.0
-offset_top = 13.0
-offset_right = 224.0
-offset_bottom = 43.0
-bbcode_enabled = true
-text = "[font_size=16][b]Player 1[/b][/font_size]"
-fit_content = true
-scroll_active = false
-
-[node name="CashAmount" type="RichTextLabel" parent="Content/AccountSection/MarginContainer/PlayerCard"]
-clip_contents = false
-offset_left = 97.0
-offset_top = 43.0
-offset_right = 224.0
-offset_bottom = 73.0
-bbcode_enabled = true
-text = "[font_size=16]$50[/font_size]"
-fit_content = true
-scroll_active = false
-
-[node name="HandsPlayed" type="Control" parent="Content/AccountSection/MarginContainer/PlayerCard"]
-layout_mode = 3
-anchors_preset = 0
-offset_left = 15.0
-offset_top = 100.0
-offset_right = 225.0
-offset_bottom = 130.0
-size_flags_horizontal = 3
-size_flags_vertical = 3
-
-[node name="Label" type="RichTextLabel" parent="Content/AccountSection/MarginContainer/PlayerCard/HandsPlayed"]
-layout_mode = 1
-offset_left = 13.0
-offset_right = 128.0
-offset_bottom = 30.0
-text = "Hands Played"
-vertical_alignment = 1
-
-[node name="Value" type="RichTextLabel" parent="Content/AccountSection/MarginContainer/PlayerCard/HandsPlayed"]
+[node name="AccountSection" parent="Content" instance=ExtResource("2_jyhfs")]
 layout_mode = 0
-offset_left = 138.0
-offset_right = 218.0
-offset_bottom = 30.0
-text = "0"
-horizontal_alignment = 2
-vertical_alignment = 1
-
-[node name="HandsWon" type="Control" parent="Content/AccountSection/MarginContainer/PlayerCard"]
-layout_mode = 3
-anchors_preset = 0
-offset_left = 15.0
-offset_top = 130.0
-offset_right = 225.0
-offset_bottom = 160.0
-
-[node name="Label" type="RichTextLabel" parent="Content/AccountSection/MarginContainer/PlayerCard/HandsWon"]
-layout_mode = 1
-offset_left = 13.0
-offset_right = 128.0
-offset_bottom = 30.0
-text = "Hands Won"
-vertical_alignment = 1
-
-[node name="Value" type="RichTextLabel" parent="Content/AccountSection/MarginContainer/PlayerCard/HandsWon"]
-layout_mode = 0
-offset_left = 138.0
-offset_right = 218.0
-offset_bottom = 30.0
-text = "0
-"
-horizontal_alignment = 2
-vertical_alignment = 1
 
 [node name="GamesList" type="Control" parent="Content"]
 layout_mode = 1
-anchors_preset = 3
-anchor_left = 1.0
+anchors_preset = 2
 anchor_top = 1.0
-anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -700.0
-offset_top = -300.0
-grow_horizontal = 0
+offset_top = -500.0
+offset_right = 815.0
 grow_vertical = 0
+script = ExtResource("5_85g3d")
 
 [node name="MarginContainer" type="MarginContainer" parent="Content/GamesList"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_right = 28.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/margin_left = 25
@@ -245,7 +227,7 @@ theme_override_constants/margin_bottom = 25
 
 [node name="ColorRect" type="ColorRect" parent="Content/GamesList/MarginContainer"]
 layout_mode = 2
-color = Color(1, 1, 1, 0.019607844)
+color = Color(0.078431375, 0.12941177, 0.14509805, 1)
 
 [node name="MarginContainer" type="MarginContainer" parent="Content/GamesList/MarginContainer"]
 layout_mode = 2
@@ -257,11 +239,18 @@ theme_override_constants/margin_bottom = 25
 [node name="Table" type="VBoxContainer" parent="Content/GamesList/MarginContainer/MarginContainer"]
 layout_mode = 2
 
+[node name="RichTextLabel" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+text = "Games"
+fit_content = true
+horizontal_alignment = 1
+
 [node name="ColumnTitles" type="HBoxContainer" parent="Content/GamesList/MarginContainer/MarginContainer/Table"]
 layout_mode = 2
 
 [node name="GameIdHeader" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ColumnTitles"]
-custom_minimum_size = Vector2(0, 30)
+custom_minimum_size = Vector2(50, 30)
 layout_mode = 2
 size_flags_horizontal = 3
 bbcode_enabled = true
@@ -271,11 +260,38 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="StatusHeader" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ColumnTitles"]
+custom_minimum_size = Vector2(65, 0)
+layout_mode = 2
+bbcode_enabled = true
+text = "[font_size=12][b]Status[/b][/font_size]"
+fit_content = true
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Players" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ColumnTitles"]
+custom_minimum_size = Vector2(55, 30)
+layout_mode = 2
+bbcode_enabled = true
+text = "[font_size=12][b]Players[/b][/font_size]"
+fit_content = true
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HandsHeader" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ColumnTitles"]
+custom_minimum_size = Vector2(55, 30)
+layout_mode = 2
+bbcode_enabled = true
+text = "[font_size=12][b]Hands[/b][/font_size]"
+fit_content = true
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PrivacyHeader" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ColumnTitles"]
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 size_flags_horizontal = 3
 bbcode_enabled = true
-text = "[font_size=12][b]Status[/b][/font_size]"
+text = "[font_size=12][b]Privacy[/b][/font_size]"
 fit_content = true
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -290,22 +306,24 @@ fit_content = true
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ChipRatioHeader" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ColumnTitles"]
+[node name="BlindHeader" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ColumnTitles"]
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 size_flags_horizontal = 3
 bbcode_enabled = true
-text = "[font_size=12][b]Chip Ratio[/b][/font_size]"
+text = "[font_size=12][b]Blind[/b][/font_size]"
 fit_content = true
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="HandsHeader" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ColumnTitles"]
+[node name="ChipRatioHeader" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ColumnTitles"]
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 size_flags_horizontal = 3
+tooltip_text = "How many chips are equal to one dollar"
+mouse_default_cursor_shape = 16
 bbcode_enabled = true
-text = "[font_size=12][b]Hands[/b][/font_size]"
+text = "[font_size=12][b]Chip Value[/b][/font_size]"
 fit_content = true
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -321,24 +339,64 @@ fit_content = true
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ScrollContainer" type="ScrollContainer" parent="Content/GamesList/MarginContainer/MarginContainer/Table"]
-visible = false
+[node name="MarginContainer" type="MarginContainer" parent="Content/GamesList/MarginContainer/MarginContainer/Table"]
+clip_contents = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Content/GamesList/MarginContainer/MarginContainer/Table/MarginContainer"]
+clip_contents = false
 layout_mode = 2
 size_flags_vertical = 3
 vertical_scroll_mode = 4
 
-[node name="GameDetailsContainer" type="VBoxContainer" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer"]
+[node name="GameDetailsContainer" type="VBoxContainer" parent="Content/GamesList/MarginContainer/MarginContainer/Table/MarginContainer/ScrollContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 2
-script = ExtResource("5_85g3d")
 
-[node name="GameDetails" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ScrollContainer/GameDetailsContainer" instance=ExtResource("6_choun")]
-visible = false
+[node name="GameDetails" parent="Content/GamesList/MarginContainer/MarginContainer/Table/MarginContainer/ScrollContainer/GameDetailsContainer" instance=ExtResource("6_choun")]
+layout_mode = 2
+
+[node name="GameDetails2" parent="Content/GamesList/MarginContainer/MarginContainer/Table/MarginContainer/ScrollContainer/GameDetailsContainer" instance=ExtResource("6_choun")]
+layout_mode = 2
+
+[node name="GameDetails3" parent="Content/GamesList/MarginContainer/MarginContainer/Table/MarginContainer/ScrollContainer/GameDetailsContainer" instance=ExtResource("6_choun")]
+layout_mode = 2
+
+[node name="GameDetails4" parent="Content/GamesList/MarginContainer/MarginContainer/Table/MarginContainer/ScrollContainer/GameDetailsContainer" instance=ExtResource("6_choun")]
+layout_mode = 2
+
+[node name="GameDetails5" parent="Content/GamesList/MarginContainer/MarginContainer/Table/MarginContainer/ScrollContainer/GameDetailsContainer" instance=ExtResource("6_choun")]
+layout_mode = 2
+
+[node name="GameDetails6" parent="Content/GamesList/MarginContainer/MarginContainer/Table/MarginContainer/ScrollContainer/GameDetailsContainer" instance=ExtResource("6_choun")]
+layout_mode = 2
+
+[node name="GameDetails7" parent="Content/GamesList/MarginContainer/MarginContainer/Table/MarginContainer/ScrollContainer/GameDetailsContainer" instance=ExtResource("6_choun")]
+layout_mode = 2
+
+[node name="GameDetails8" parent="Content/GamesList/MarginContainer/MarginContainer/Table/MarginContainer/ScrollContainer/GameDetailsContainer" instance=ExtResource("6_choun")]
+layout_mode = 2
+
+[node name="GameDetails9" parent="Content/GamesList/MarginContainer/MarginContainer/Table/MarginContainer/ScrollContainer/GameDetailsContainer" instance=ExtResource("6_choun")]
+layout_mode = 2
+
+[node name="GameDetails10" parent="Content/GamesList/MarginContainer/MarginContainer/Table/MarginContainer/ScrollContainer/GameDetailsContainer" instance=ExtResource("6_choun")]
+layout_mode = 2
+
+[node name="GameDetails11" parent="Content/GamesList/MarginContainer/MarginContainer/Table/MarginContainer/ScrollContainer/GameDetailsContainer" instance=ExtResource("6_choun")]
+layout_mode = 2
+
+[node name="GameDetails12" parent="Content/GamesList/MarginContainer/MarginContainer/Table/MarginContainer/ScrollContainer/GameDetailsContainer" instance=ExtResource("6_choun")]
 layout_mode = 2
 
 [node name="NoRecordsContainer" type="Control" parent="Content/GamesList/MarginContainer/MarginContainer/Table"]
-custom_minimum_size = Vector2(0, 160)
+visible = false
+clip_contents = true
+custom_minimum_size = Vector2(0, 275)
 layout_mode = 2
 
 [node name="RichTextLabel" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/NoRecordsContainer"]
@@ -360,6 +418,493 @@ text = "[font_size=12]No games yet...[/font_size]"
 horizontal_alignment = 1
 vertical_alignment = 1
 
+[node name="Spacer" type="Control" parent="Content/GamesList/MarginContainer/MarginContainer/Table"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+
+[node name="GameControls" type="HBoxContainer" parent="Content/GamesList/MarginContainer/MarginContainer/Table"]
+layout_mode = 2
+size_flags_vertical = 8
+alignment = 1
+
+[node name="GameCodeInput" type="LineEdit" parent="Content/GamesList/MarginContainer/MarginContainer/Table/GameControls"]
+custom_minimum_size = Vector2(86, 31)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 12
+placeholder_text = "Game Id"
+alignment = 1
+
+[node name="JoinGameButton" type="Button" parent="Content/GamesList/MarginContainer/MarginContainer/Table/GameControls"]
+custom_minimum_size = Vector2(86, 30)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+theme = SubResource("Theme_o6xl0")
+theme_override_font_sizes/font_size = 16
+text = "Join"
+
+[node name="Status" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/GameControls"]
+custom_minimum_size = Vector2(86, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+bbcode_enabled = true
+text = "[font_size=12]|[/font_size]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Privacy" type="OptionButton" parent="Content/GamesList/MarginContainer/MarginContainer/Table/GameControls"]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+theme_override_font_sizes/font_size = 16
+disabled = true
+alignment = 1
+selected = 1
+item_count = 4
+popup/item_0/text = "Public"
+popup/item_0/id = 0
+popup/item_1/text = "Friends"
+popup/item_1/id = 1
+popup/item_1/disabled = true
+popup/item_2/text = "Invite"
+popup/item_2/id = 2
+popup/item_2/disabled = true
+popup/item_3/text = "Private"
+popup/item_3/id = 3
+
+[node name="BuyIn" type="SpinBox" parent="Content/GamesList/MarginContainer/MarginContainer/Table/GameControls"]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 1
+max_value = 10000.0
+alignment = 1
+
+[node name="Blind" type="SpinBox" parent="Content/GamesList/MarginContainer/MarginContainer/Table/GameControls"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+mouse_default_cursor_shape = 1
+max_value = 10000.0
+alignment = 1
+
+[node name="ChipRatio" type="SpinBox" parent="Content/GamesList/MarginContainer/MarginContainer/Table/GameControls"]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 1
+max_value = 10000.0
+alignment = 1
+
+[node name="CreateButton" type="Button" parent="Content/GamesList/MarginContainer/MarginContainer/Table/GameControls"]
+custom_minimum_size = Vector2(100, 31)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+text = "Create"
+
+[node name="Blank" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/GameControls"]
+custom_minimum_size = Vector2(2, 0)
+layout_mode = 2
+size_flags_vertical = 4
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FriendsList" type="Control" parent="Content"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -400.0
+offset_top = -500.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="MarginContainer" type="MarginContainer" parent="Content/FriendsList"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 25
+theme_override_constants/margin_top = 25
+theme_override_constants/margin_right = 25
+theme_override_constants/margin_bottom = 25
+
+[node name="ColorRect" type="ColorRect" parent="Content/FriendsList/MarginContainer"]
+layout_mode = 2
+color = Color(0.078431375, 0.12941177, 0.14509805, 1)
+
+[node name="MarginContainer" type="MarginContainer" parent="Content/FriendsList/MarginContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 25
+theme_override_constants/margin_top = 25
+theme_override_constants/margin_right = 25
+theme_override_constants/margin_bottom = 25
+
+[node name="Table" type="VBoxContainer" parent="Content/FriendsList/MarginContainer/MarginContainer"]
+clip_contents = true
+layout_mode = 2
+
+[node name="RichTextLabel" type="RichTextLabel" parent="Content/FriendsList/MarginContainer/MarginContainer/Table"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+text = "Friends
+"
+fit_content = true
+horizontal_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Content/FriendsList/MarginContainer/MarginContainer/Table"]
+layout_mode = 2
+size_flags_vertical = 3
+vertical_scroll_mode = 4
+
+[node name="FriendDetailsContainer" type="VBoxContainer" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 2
+
+[node name="FriendDetails" type="Control" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer/FriendDetails"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PlayerColor" type="ColorRect" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer/FriendDetails/HBoxContainer"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+color = Color(0.99607843, 0.42745098, 0.4509804, 1)
+
+[node name="NameContainer" type="MarginContainer" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer/FriendDetails/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 10
+
+[node name="Name" type="RichTextLabel" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer/FriendDetails/HBoxContainer/NameContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "jeegerson"
+vertical_alignment = 1
+
+[node name="Status" type="RichTextLabel" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer/FriendDetails/HBoxContainer"]
+custom_minimum_size = Vector2(50, 25)
+layout_mode = 2
+size_flags_horizontal = 4
+bbcode_enabled = true
+text = "[font_size=10]Pending[/font_size]"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FriendDetails2" type="Control" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer/FriendDetails2"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PlayerColor" type="ColorRect" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer/FriendDetails2/HBoxContainer"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+color = Color(0.13333334, 0.4862745, 0.6156863, 1)
+
+[node name="NameContainer" type="MarginContainer" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer/FriendDetails2/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 10
+
+[node name="Name" type="RichTextLabel" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer/FriendDetails2/HBoxContainer/NameContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Tianok465"
+vertical_alignment = 1
+
+[node name="Status" type="RichTextLabel" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer/FriendDetails2/HBoxContainer"]
+custom_minimum_size = Vector2(50, 25)
+layout_mode = 2
+size_flags_horizontal = 4
+bbcode_enabled = true
+text = "[font_size=10]Pending[/font_size]"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FriendDetails3" type="Control" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer/FriendDetails3"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PlayerColor" type="ColorRect" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer/FriendDetails3/HBoxContainer"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+color = Color(1, 0.79607844, 0.46666667, 1)
+
+[node name="NameContainer" type="MarginContainer" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer/FriendDetails3/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 10
+
+[node name="Name" type="RichTextLabel" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer/FriendDetails3/HBoxContainer/NameContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "ToughLuck"
+vertical_alignment = 1
+
+[node name="Status" type="RichTextLabel" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer/FriendDetails3/HBoxContainer"]
+custom_minimum_size = Vector2(50, 25)
+layout_mode = 2
+size_flags_horizontal = 4
+bbcode_enabled = true
+text = "[font_size=10]Pending[/font_size]"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FriendDetails4" type="Control" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer/FriendDetails4"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PlayerColor" type="ColorRect" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer/FriendDetails4/HBoxContainer"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+color = Color(0.09019608, 0.7647059, 0.69803923, 1)
+
+[node name="NameContainer" type="MarginContainer" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer/FriendDetails4/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 10
+
+[node name="Name" type="RichTextLabel" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer/FriendDetails4/HBoxContainer/NameContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "ToughLuck"
+vertical_alignment = 1
+
+[node name="Status" type="RichTextLabel" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer/FriendDetails4/HBoxContainer"]
+custom_minimum_size = Vector2(50, 25)
+layout_mode = 2
+size_flags_horizontal = 4
+bbcode_enabled = true
+text = "[font_size=10]Pending[/font_size]"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FriendDetails5" type="Control" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer/FriendDetails5"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PlayerColor" type="ColorRect" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer/FriendDetails5/HBoxContainer"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+color = Color(0.99607843, 0.9764706, 0.9372549, 1)
+
+[node name="NameContainer" type="MarginContainer" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer/FriendDetails5/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 10
+
+[node name="Name" type="RichTextLabel" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer/FriendDetails5/HBoxContainer/NameContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "ToughLuck"
+vertical_alignment = 1
+
+[node name="Status" type="RichTextLabel" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer/FriendDetails5/HBoxContainer"]
+custom_minimum_size = Vector2(50, 25)
+layout_mode = 2
+size_flags_horizontal = 4
+bbcode_enabled = true
+text = "[font_size=10]Pending[/font_size]"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FriendDetails6" type="Control" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer/FriendDetails6"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PlayerColor" type="ColorRect" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer/FriendDetails6/HBoxContainer"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+color = Color(1, 0.79607844, 0.46666667, 1)
+
+[node name="NameContainer" type="MarginContainer" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer/FriendDetails6/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 10
+
+[node name="Name" type="RichTextLabel" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer/FriendDetails6/HBoxContainer/NameContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "ToughLuck"
+vertical_alignment = 1
+
+[node name="Status" type="RichTextLabel" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer/FriendDetails6/HBoxContainer"]
+custom_minimum_size = Vector2(50, 25)
+layout_mode = 2
+size_flags_horizontal = 4
+bbcode_enabled = true
+text = "[font_size=10]Pending[/font_size]"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FriendDetails7" type="Control" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer/FriendDetails7"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PlayerColor" type="ColorRect" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer/FriendDetails7/HBoxContainer"]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+color = Color(1, 0.79607844, 0.46666667, 1)
+
+[node name="NameContainer" type="MarginContainer" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer/FriendDetails7/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 10
+
+[node name="Name" type="RichTextLabel" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer/FriendDetails7/HBoxContainer/NameContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "ToughLuck"
+vertical_alignment = 1
+
+[node name="Status" type="RichTextLabel" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer/FriendDetails7/HBoxContainer"]
+custom_minimum_size = Vector2(50, 25)
+layout_mode = 2
+size_flags_horizontal = 4
+bbcode_enabled = true
+text = "[font_size=10]Pending[/font_size]"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="NoRecordsContainer" type="Control" parent="Content/FriendsList/MarginContainer/MarginContainer/Table"]
+visible = false
+custom_minimum_size = Vector2(0, 160)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="RichTextLabel" type="RichTextLabel" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/NoRecordsContainer"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -100.0
+offset_top = -25.0
+offset_right = 100.0
+offset_bottom = 25.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/default_color = Color(1, 1, 1, 0.5411765)
+bbcode_enabled = true
+text = "[font_size=12]No friends yet...[/font_size]"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Spacer" type="Control" parent="Content/FriendsList/MarginContainer/MarginContainer/Table"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Content/FriendsList/MarginContainer/MarginContainer/Table"]
+layout_mode = 2
+
+[node name="RichTextLabel" type="RichTextLabel" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/HBoxContainer"]
+custom_minimum_size = Vector2(115, 0)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_colors/default_color = Color(1, 1, 1, 0.5411765)
+bbcode_enabled = true
+text = "
+"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FriendCodeInput" type="LineEdit" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/HBoxContainer"]
+custom_minimum_size = Vector2(100, 31)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_font_sizes/font_size = 12
+placeholder_text = "Friend Code"
+alignment = 1
+
+[node name="AddFriendButton" type="Button" parent="Content/FriendsList/MarginContainer/MarginContainer/Table/HBoxContainer"]
+custom_minimum_size = Vector2(86, 30)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_default_cursor_shape = 2
+theme = SubResource("Theme_o6xl0")
+theme_override_font_sizes/font_size = 16
+text = "Add
+"
+
 [node name="DebugOutput" type="TextEdit" parent="."]
 visible = false
 layout_mode = 0
@@ -371,6 +916,9 @@ editable = false
 wrap_mode = 1
 indent_wrapped_lines = true
 
-[connection signal="pressed" from="Content/Menu/MarginContainer/VBoxContainer/CreateGameButton" to="." method="_on_create_game_button_pressed"]
-[connection signal="text_changed" from="Content/Menu/MarginContainer/VBoxContainer/HBoxContainer/GameCodeInput" to="." method="_on_game_code_input_text_changed"]
-[connection signal="pressed" from="Content/Menu/MarginContainer/VBoxContainer/HBoxContainer/MarginContainer/JoinGameButton" to="." method="_on_join_game_button_pressed"]
+[connection signal="pressed" from="Content/Menu/MarginContainer/VBoxContainer/HostGameMenu/CreateGameButton" to="." method="_on_create_game_button_pressed"]
+[connection signal="text_changed" from="Content/Menu/MarginContainer/VBoxContainer/JoinGameMenu/GameCodeInput" to="." method="_on_game_code_input_text_changed"]
+[connection signal="pressed" from="Content/Menu/MarginContainer/VBoxContainer/JoinGameMenu/MarginContainer/JoinGameButton" to="." method="_on_join_game_button_pressed"]
+[connection signal="text_changed" from="Content/GamesList/MarginContainer/MarginContainer/Table/GameControls/GameCodeInput" to="Content/GamesList" method="_on_game_code_input_text_changed"]
+[connection signal="pressed" from="Content/GamesList/MarginContainer/MarginContainer/Table/GameControls/JoinGameButton" to="Content/GamesList" method="_on_join_game_button_pressed"]
+[connection signal="pressed" from="Content/GamesList/MarginContainer/MarginContainer/Table/GameControls/CreateButton" to="Content/GamesList" method="_on_create_button_pressed"]

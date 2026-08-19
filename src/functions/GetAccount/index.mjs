@@ -6,8 +6,9 @@ import { fileURLToPath } from "node:url";
 
 const ACCOUNTS_TABLE = process.env.ACCOUNTS_TABLE;
 
-const client = new DynamoDBClient({});
-const docClient = DynamoDBDocumentClient.from(client);
+const docClient = DynamoDBDocumentClient.from(new DynamoDBClient({
+    region: "us-east-1"
+}));
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const pokerApiProto = await protobuf.load(path.join(__dirname, "shared/poker_api.proto"));
@@ -16,8 +17,18 @@ const AccountRecord = pokerApiProto.lookupType("poker_api.AccountRecord");
 const ErrorResponse = pokerApiProto.lookupType("poker_api.ErrorResponse");
 
 export const handler = async (event) => {
-    const accountId = event.requestContext?.authorizer?.jwt?.claims?.sub;
-    const username = event.requestContext?.authorizer?.jwt?.claims["cognito:username"];
+    let accountId = ""
+    let username = ""
+
+    // If invoked from server
+    if (event.pathParameters?.accountId) {
+        accountId = event.pathParameters.accountId;
+    } 
+    // If invoked from client
+    else if (event.requestContext?.authorizer?.jwt?.claims?.sub) {
+        accountId = event.requestContext.authorizer.jwt.claims.sub;
+        username = event.requestContext?.authorizer?.jwt?.claims["cognito:username"];
+    }
 
     if (!accountId) {
         return {
@@ -45,8 +56,31 @@ export const handler = async (event) => {
         let account = response?.Items?.[0] ?? null;
         let accountRecord;
 
-        // Account not found, create one with initial values
+        var friendCode = "";
+        var friendCodeLength = 7;
+        var friendCodeChars = "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+        for (let i = 0; i < friendCodeLength; i++) {
+            friendCode += friendCodeChars[Math.floor(Math.random() * friendCodeChars.length)];
+        }
+
+        const colorOptions = ["#227C9D", "#17C3B2", "#FFCB77", "#FEF9EF", "#FE6D73"];
+        const newPlayerColor = colorOptions[Math.random(0, 4)];
+
+        // Account not found, create one with initial values if we have sub data
         if (account == null) {
+            if (username == "") {
+                return {
+                    statusCode: 404,
+                    body: JSON.stringify(
+                        ErrorResponse.create({ 
+                            message: "Account not found", 
+                            error: error.message 
+                        })
+                    )
+                };
+            }
+
             accountRecord = AccountRecord.create({
                 accountId: accountId,
                 playerName: username,
@@ -54,20 +88,26 @@ export const handler = async (event) => {
                 profilePictureUrl: "",
                 handsWon: 0,
                 handsPlayed: 0,
-                playerColor: "#ff8407"
+                playerColor: "#ff8407",
+                friendCode: friendCode
             });
 
             await docClient.send(new PutCommand({
                 TableName: ACCOUNTS_TABLE,
-                Item: newAccount
+                Item: accountRecord
             }));
         } else {
             accountRecord = AccountRecord.create(account);
         }
 
+        const accountRecordObject = AccountRecord.toObject(accountRecord, {
+            enums: Number,
+            defaults: true
+        });
+
         return {
             statusCode: 200,
-            body: JSON.stringify(accountRecord),
+            body: JSON.stringify(accountRecordObject),
         };
     } catch (error) {
         return {

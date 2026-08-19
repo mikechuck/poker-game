@@ -4,9 +4,11 @@ import crypto from "crypto";
 import protobuf from "protobufjs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { GetGameRecord } from "./shared/utilities.js";
+import { GetGameRecord } from "./shared/utilities.mjs";
 
-const docClient = DynamoDBDocumentClient.from(new DynamoDBClient({}));
+const docClient = DynamoDBDocumentClient.from(new DynamoDBClient({
+    region: "us-east-1"
+}));
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const pokerApiProto = await protobuf.load(path.join(__dirname, "shared/poker_api.proto"));
@@ -14,6 +16,7 @@ const GameStatus = pokerApiProto.lookupEnum("poker_api.GameStatus");
 const GameRecord = pokerApiProto.lookupType("poker_api.GameRecord");
 const ErrorResponse = pokerApiProto.lookupType("poker_api.ErrorResponse");
 
+const GAMES_TABLE = process.env.GAMES_TABLE;
 const SERVER_SECRET_TOKEN = process.env.SERVER_SECRET_TOKEN;
 
 export const handler = async (event) => {
@@ -39,7 +42,7 @@ export const handler = async (event) => {
         };
     }
 
-    const gameId = event.queryStringParameters?.gameId;
+    const gameId = event.pathParameters?.gameId;
     const body = JSON.parse(event.body)
     const newGameStatus = body.gameStatus;
     const newPort = body.port
@@ -48,17 +51,25 @@ export const handler = async (event) => {
     var hostAccountId = "";
     var updateParams;
     var game;
-    var gameRecord;
+    var gameRecordRaw;
 
     // TODO: update logic to migrate to a new dynamo record if trying to change hosts
     // Maybe best to just create a new endpoint for this...
     // const hostAccountId = body.hostAccountId;
 
     try {
-        const game = await GetGameRecord(gameId);
-
-        gameRecord = GameRecord.create(game);
-        hostAccountId = gameRecord.hostAccountId;
+        gameRecordRaw = await GetGameRecord(gameId, GAMES_TABLE);
+        if (!gameRecordRaw) {
+            return {
+                statusCode: 400,
+                body: JSON.stringify(
+                    ErrorResponse.create({
+                        message: "Invalid gameId" 
+                    })
+                )
+            };
+        }
+        hostAccountId = gameRecordRaw.hostAccountId;
     } catch (error) {
         return {
             statusCode: 500,
@@ -71,12 +82,18 @@ export const handler = async (event) => {
         };
     }
 
+    const gameRecord = GameRecord.toObject(gameRecordRaw, {
+        enums: Number,
+        longs: Number,
+        defaults: true
+    });
+
     // Add all of our update values
     let updateExpressions = []
     let updateValues = {}
 
     if (newGameStatus) {
-        if (newGameStatus == GameStatus.values.STARTED) {
+        if (newGameStatus == GameStatus.values.ACTIVE) {
             updateExpressions.push("gameStatus = :statusValue");
             updateValues[":statusValue"] = newGameStatus;
         } else if (newGameStatus == GameStatus.values.ENDED) {
@@ -100,30 +117,35 @@ export const handler = async (event) => {
         updateValues[":newPort"] = newPort;
     }
 
-    if (addPlayers && addPlayers.length > 0) {
-        const currentPlayers = gameRecord.connectedPlayers;
-        addPlayers.forEach((accountId) => {
-            currentPlayers.push(accountId);
-        });
+    let playersChanged = false;
+    let currentPlayers = gameRecord.connectedPlayers || [];
 
-        updateExpressions.push("connectedPlayers = :connectedPlayers");
-        updateValues[":connectedPlayers"] = currentPlayers
+    if (Array.isArray(addPlayers) && addPlayers.length > 0) {
+        const playerSet = new Set(currentPlayers);
+        addPlayers.forEach(id => playerSet.add(id));
+        currentPlayers = Array.from(playerSet);
+        playersChanged = true;
     }
 
-    if (removePlayers && removePlayers.length > 0) {
-        // get players, find player id, remove from list, update
-        // ignore id if player doesn't exist in game list
-        const playersList = []
-        addPlayers.forEach((accountId) => {
-            gameRecord.connectedPlayers.forEach((currentAccountId) => {
-                if (currentAccountId != accountId) {
-                    playersList.push(currentAccountId);
-                }
-            })
-        });
+    if (Array.isArray(removePlayers) && removePlayers.length > 0) {
+        const playersToRemove = new Set(removePlayers);
+        currentPlayers = currentPlayers.filter(id => !playersToRemove.has(id));
+        playersChanged = true;
+    }
 
+    if (playersChanged) {
         updateExpressions.push("connectedPlayers = :connectedPlayers");
-        updateValues[":connectedPlayers"] = playersList
+        updateValues[":connectedPlayers"] = currentPlayers;
+    }
+
+    if (updateExpressions.length === 0) {
+        return {
+            statusCode: 200,
+            body: JSON.stringify(GameRecord.toObject(gameRecordRaw, { 
+                enums: Number,
+                defaults: true
+            }))
+        };
     }
 
     updateParams = {
@@ -139,11 +161,15 @@ export const handler = async (event) => {
 
     try {
         const response = await docClient.send(new UpdateCommand(updateParams));
+        const gameRecord = GameRecord.create(response.Attributes);
         console.log("[Lambda] Game record updated successfully.");
         
         return {
             statusCode: 200,
-            body: JSON.stringify(GameRecord.create(response.Attributes))
+            body: JSON.stringify(GameRecord.toObject(gameRecord, {
+                enums: Number,
+                defaults: true
+            }))
         };
     } catch (error) {
         return {

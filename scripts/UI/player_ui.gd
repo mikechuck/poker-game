@@ -6,8 +6,8 @@ class_name PlayerUI
 
 ### Managers
 @onready var game_manager: GameSceneManager = get_parent().get_node("GameManager")
-@onready var client_manager: ClientManager = get_parent().get_node("ServerManager")
-@onready var server_manager: ServerManager = get_parent().get_node("ClientManager")
+@onready var client_manager: ClientManager = get_parent().get_node("ClientManager")
+@onready var server_manager: ServerManager = get_parent().get_node("ServerManager")
 
 ### UI nodes
 @onready var player_actions_pre_game_host_node: Control = $PlayerActionsPreHandHost
@@ -26,9 +26,7 @@ class_name PlayerUI
 @onready var call_button: Button = $PlayerActionsGame/Call/CallButton
 @onready var fold_button: Button = $PlayerActionsGame/Fold/FoldButton
 @onready var ante_button: Button = $PlayerActionsAnte/Ante/AnteButton
-@onready var player_name_node: RichTextLabel = $PlayerName/Value
-@onready var player_is_host_node: RichTextLabel = $IsHost/Value
-@onready var game_state_label: RichTextLabel = $Debug/GameState
+@onready var game_state_label: RichTextLabel = $Debug/Container/GameState
 
 func _ready() -> void:
 	game_manager.game_state_data_updated_signal.connect(_on_game_state_data_updated)
@@ -43,6 +41,8 @@ func _on_game_state_data_updated(old_game_state_data: GameStateData, new_game_st
 		handle_player_seats_updated(old_game_state_data.player_seats, new_game_state_data.player_seats)
 	if (old_game_state_data.player_turn != new_game_state_data.player_turn):
 		handle_player_turn_updated()
+		
+	game_state_label.text = "Game state: %s" % GameState.State.keys()[game_manager.game_state_data.game_state]
 
 func handle_connected_players_updated() -> void:
 	set_player_buttons()
@@ -53,7 +53,7 @@ func handle_game_state_change() -> void:
 
 func handle_player_seats_updated(old_player_seats: Dictionary[int, PlayerSeat], new_player_seats: Dictionary[int, PlayerSeat]) -> void:
 	for seat: PlayerSeat in new_player_seats.values():
-		if seat.player_id == multiplayer.get_unique_id():
+		if seat.peer_id == multiplayer.get_unique_id():
 			ready_toggle_guest.button_pressed = seat.is_ready
 			ready_toggle_host.button_pressed = seat.is_ready
 	update_hole_cards()
@@ -85,12 +85,13 @@ func set_player_buttons() -> void:
 	# Match on game state to decide which buttons to show
 	match game_manager.game_state_data.game_state:
 		GameState.State.PreHand:
-			if (!game_manager.client_get_player_data().is_spectating):
-				if (game_manager.client_get_player_data().is_host):
+			var player_data: ConnectedPlayer = game_manager.client_get_player_data(DataStore.account_data.accountId)
+			if (!player_data.is_spectating):
+				if (player_data.is_host):
 					player_actions_pre_game_host_node.visible = true
 					# Only enable start button if all players are ready
 					for seat in game_manager.game_state_data.player_seats.values():
-						if seat.player_id != 0 && !seat.is_ready:
+						if seat.peer_id != 0 && !seat.is_ready:
 							start_button_node.disabled = true
 				else:
 					player_actions_pre_game_guest_node.visible = true
@@ -131,7 +132,7 @@ func set_bet_buttons() -> void:
 	
 func update_hole_cards() -> void:
 	for player_seat: PlayerSeat in game_manager.game_state_data.player_seats.values():
-		if player_seat.player_id == game_manager.client_get_player_data().id:
+		if player_seat.peer_id == game_manager.client_get_player_data(DataStore.account_data.accountId).peer_id:
 			if player_seat.hole_cards.size() > 0:
 				for i in range(2):
 					var card_data = player_seat.hole_cards[i]
@@ -145,20 +146,17 @@ func update_hole_cards() -> void:
 					card_instance.add_to_group("hole_cards")
 			else:
 				for card in get_tree().get_nodes_in_group("hole_cards"):
-					hole_cards_node.remove_child(card)
+					card.queue_free()
+					#hole_cards_node.remove_child(card)
 				
 func set_player_data() -> void:
-	player_name_node.clear()
-	player_name_node.append_text(str(game_manager.client_get_player_data().id))
-	player_is_host_node.clear()
-	player_is_host_node.append_text(str(game_manager.client_get_player_data().is_host))
-	
 	## Debug fields
 	game_state_label.text = "Game state: %s" % GameState.State.keys()[game_manager.game_state_data.game_state]
 	
 func is_client_turn() -> bool:
 	if (game_manager.game_state_data.player_turn != 0):
-		return game_manager.game_state_data.player_seats[game_manager.game_state_data.player_turn].player_id == game_manager.client_get_player_data().id
+		var player_data: ConnectedPlayer = game_manager.client_get_player_data(DataStore.account_data.accountId)
+		return game_manager.game_state_data.player_seats[game_manager.game_state_data.player_turn].peer_id == player_data.peer_id
 	else:
 		return false
 		
@@ -166,7 +164,7 @@ func is_client_host() -> bool:
 	return game_manager.game_state_data.connected_players[multiplayer.get_unique_id()].is_host
 		
 func is_client_winner() -> bool:
-	return game_manager.game_state_data.winner_player_id == multiplayer.get_unique_id()
+	return game_manager.game_state_data.winner_peer_id == multiplayer.get_unique_id()
 
 func get_current_turn_seat_data() -> PlayerSeat:
 	return game_manager.game_state_data.player_seats[game_manager.game_state_data.player_turn]
@@ -186,14 +184,14 @@ func _on_debug_deal_flop_pressed() -> void:
 	
 func _on_debug_end_step_pressed() -> void:
 	server_manager.call_debug_end_step.rpc_id(1)
-
+#
 ### PlayerActionsPreHand
 func _on_ready_button_toggled(toggled_on: bool) -> void:
 	server_manager.set_ready_status.rpc_id(1, toggled_on)
 
 func _on_start_button_pressed() -> void:
 	server_manager.player_action_taken.rpc_id(1, PlayerTurnAction.Action.StartGame)
-	
+
 ### PlayerActionsAnte
 func _on_fold_button_pressed() -> void:
 	server_manager.player_action_taken.rpc_id(1, PlayerTurnAction.Action.Fold)
@@ -225,8 +223,5 @@ func _on_start_new_hand_button_pressed() -> void:
 func _on_goto_lobby_button_pressed() -> void:
 	server_manager.goto_lobby.rpc_id(1)
 	
-func _on_leave_game_button_pressed() -> void:
-	client_manager.disconnect_from_sever()
-	get_tree().call_deferred("change_scene_to_file", "res://scenes/main.tscn")
 	
 ## End button signal methods

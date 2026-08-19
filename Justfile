@@ -21,7 +21,7 @@ stage-lambda-exports function_name="":
 upload-lambda-functions function_name="": (stage-lambda-exports function_name)
     ./powershell/lambda/upload_function.ps1 -functionName "{{function_name}}"
 
-# Deploy Game Server. Params: env (optional) takes dev or prod
+# Updload Game Server files. Params: env (optional) takes dev or prod
 upload-server-files env="dev": generate-proto
     ./powershell/server/export_linux_server.ps1 -env "{{env}}"
     node aws/upload_server_s3_files.cjs
@@ -31,15 +31,14 @@ deploy-frontend env="dev": generate-proto
     ./powershell/web/export_web.ps1 -env "{{env}}"
     node aws/deploy_frontend.cjs {{env}}
 
-# Deplopy server files to S3
-deploy-server-files env="dev": generate-proto
-    ./powershell/server/export_linux_server.ps1 -env "{{env}}"
-    node aws/upload_server_s3_files.cjs {{env}}
-
 # Plan terraform without deploying
 plan-terraform: generate-proto stage-lambda-exports
     cd {{tf_dir}} && terraform plan
 
+# Full Deployment without replacing ec2 instances. Params: env (optional) takes dev or prod
+full-deploy-soft env="dev": upload-lambda-functions (deploy-frontend env) upload-server-files
+    cd {{tf_dir}} && terraform apply -auto-approve
+
 # Full Deployment Pipeline. Params: env (optional) takes dev or prod
-full-deploy env="dev": upload-lambda-functions (deploy-frontend env)
+full-deploy env="dev": upload-lambda-functions (deploy-frontend env) upload-server-files
     cd {{tf_dir}} && terraform apply -auto-approve -replace="aws_instance.poker_server"

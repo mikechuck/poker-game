@@ -247,21 +247,38 @@ func clean_url():
 		JavaScriptBridge.eval("window.history.replaceState({}, document.title, '/');")
 	
 func get_id_token():
-	return JavaScriptBridge.eval("localStorage.getItem('id_token')")
+	if OS.has_feature("web"):
+		return JavaScriptBridge.eval("localStorage.getItem('id_token')")
 	
 func get_access_token():
-	return JavaScriptBridge.eval("localStorage.getItem('access_token')")
+	if OS.has_feature("web"):
+		return JavaScriptBridge.eval("localStorage.getItem('access_token')")
 	
 func get_refresh_token():
-	return JavaScriptBridge.eval("localStorage.getItem('refresh_token')")
+	if OS.has_feature("web"):
+		return JavaScriptBridge.eval("localStorage.getItem('refresh_token')")
 
 func has_auth_tokens():
-	var id_token = JavaScriptBridge.eval("localStorage.getItem('id_token')")
-	var access_token = JavaScriptBridge.eval("localStorage.getItem('access_token')")
-	var refresh_token = JavaScriptBridge.eval("localStorage.getItem('refresh_token')")
-	return id_token != null && access_token != null && refresh_token != null
+	if OS.has_feature("web"):
+		var id_token = JavaScriptBridge.eval("localStorage.getItem('id_token')")
+		var access_token = JavaScriptBridge.eval("localStorage.getItem('access_token')")
+		var refresh_token = JavaScriptBridge.eval("localStorage.getItem('refresh_token')")
+		return id_token != null && access_token != null && refresh_token != null
 	
 func clear_local_storage():
-	JavaScriptBridge.eval("localStorage.removeItem('access_token')")
-	JavaScriptBridge.eval("localStorage.removeItem('id_token')")
-	JavaScriptBridge.eval("localStorage.removeItem('refresh_token')")
+	DataStore.account_data = null
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("localStorage.removeItem('access_token')")
+		JavaScriptBridge.eval("localStorage.removeItem('id_token')")
+		JavaScriptBridge.eval("localStorage.removeItem('refresh_token')")
+	
+func clear_cookie():
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("document.cookie = '%s';" % "poker_token=; path=/; max-age=0")
+	
+func logout():
+	DataStore.account_data = null
+	clear_local_storage()
+	clean_url()
+	clear_cookie()
+	NavigationManager.navigate_to_landing()

@@ -26,7 +26,8 @@ message AccountRecord {
     string profilePictureUrl = 4;
     int32 handsWon = 5;
     int32 handsPlayed = 6;
-    string playerColor = 7; 
+    string playerColor = 7;
+    string friendCode = 8;
 }
 
 message AccountRecordList {
@@ -42,8 +43,8 @@ message GameRecord {
     int64 createTimeEpochMilliseconds = 4;
     int64 endTimeEpochMilliseconds = 5;
     int32 port = 6;
-    int32 blindValue = 7;
-    int32 buyInDollars = 8;
+    int32 blindChips = 7;
+    int32 buyInChips = 8;
     int32 chipRatio = 9;
     int32 handsPlayed = 10; 
     repeated string connectedPlayers = 11;
@@ -56,22 +57,44 @@ message GameRecordList {
 
 enum GameStatus {
     STARTING = 0;
-    STARTED = 1;
+    ACTIVE = 1;
     ENDED = 2;
 }
 
 enum GamePrivacy {
     PUBLIC = 0; // Anyone can join as long as they know the game id
     FRIENDS = 1; // Only friends of the host can join
-    INVITE = 2; // Only players with an invite code can join
+    INVITE = 2; // Only players with an invite code can join (TBD)
     PRIVATE = 3; // Only host can join, play against bots
 }
 
 // JoinToken
 
 message JoinTokenRecord {
-    string playerId = 1;
+    string accountId = 1;
     string gameId = 2;
     string joinToken = 3;
     int64 expirationTimeEpochMilliseconds = 4;
+}
+
+// Relationships
+
+message RelationshipRecord {
+    string accountId = 1;
+    string peerAccountId = 2;
+    RelationshipStatus relationshipStatus = 3;
+    string nickname = 4;
+    int64 createTimeEpochMilliseconds = 5;
+}
+
+message RelationshipRecordList {
+    repeated RelationshipRecord relationships = 1;
+}
+
+enum RelationshipStatus {
+    FRIEND = 0;
+    OUTGOING_PENDING = 1;
+    INCOMING_PENDING = 2;
+    BLOCKED = 3;
+    FAVORITE = 4;
 }

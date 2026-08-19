@@ -71,10 +71,12 @@ position = Vector2(83, 37)
 texture = ExtResource("5_67d8n")
 
 [node name="DetailsCard" type="Sprite2D" parent="PlayerCard"]
+modulate = Color(0.078431375, 0.12941177, 0.14509805, 1)
 position = Vector2(99, 48)
 texture = ExtResource("6_71xb3")
 
 [node name="ProfilePicture" type="Sprite2D" parent="PlayerCard"]
+modulate = Color(0.99607843, 0.9764706, 0.9372549, 1)
 position = Vector2(17, 41)
 texture = ExtResource("7_nmq0w")
 
@@ -84,8 +86,9 @@ offset_left = 71.0
 offset_top = 13.0
 offset_right = 198.0
 offset_bottom = 43.0
+theme_override_colors/default_color = Color(1, 1, 1, 1)
 bbcode_enabled = true
-text = "[font_size=16][b]Player 1[/b][/font_size]"
+text = "[font_size=14][b]Player 1[/b][/font_size]"
 fit_content = true
 scroll_active = false
 
@@ -95,6 +98,7 @@ offset_left = 71.0
 offset_top = 43.0
 offset_right = 198.0
 offset_bottom = 73.0
+theme_override_colors/default_color = Color(1, 1, 1, 1)
 bbcode_enabled = true
 text = "[font_size=16]$50[/font_size]"
 fit_content = true

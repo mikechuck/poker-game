@@ -85,7 +85,7 @@ resource "aws_iam_role" "lambda_integration_role" {
 
 resource "aws_iam_policy" "dynamo_poker_access" {
     name        = "poker-dynamo-access-policy"
-    description = "Allows poker lambdas to read/write to Accounts and Debts tables"
+    description = "Allows poker lambdas to read/write to DynamoDB tables and indexes"
 
     policy = jsonencode({
         Version = "2012-10-17"
@@ -101,10 +101,19 @@ resource "aws_iam_policy" "dynamo_poker_access" {
                 Effect   = "Allow"
                 Resource = [
                     aws_dynamodb_table.accounts_table.arn,
+                    "${aws_dynamodb_table.accounts_table.arn}/index/*",
+
                     aws_dynamodb_table.debts_table.arn,
+                    "${aws_dynamodb_table.debts_table.arn}/index/*",
+
                     aws_dynamodb_table.games_table.arn,
+                    "${aws_dynamodb_table.games_table.arn}/index/*",
+
                     aws_dynamodb_table.join_tokens_table.arn,
-                    "${aws_dynamodb_table.games_table.arn}/index/*"
+                    "${aws_dynamodb_table.join_tokens_table.arn}/index/*",
+
+                    aws_dynamodb_table.relationships_table.arn,
+                    "${aws_dynamodb_table.relationships_table.arn}/index/*"
                 ]
             }
         ]
@@ -209,6 +218,14 @@ resource "aws_apigatewayv2_route" "get_account_route" {
     authorizer_id      = aws_apigatewayv2_authorizer.cognito_auth.id
 }
 
+resource "aws_apigatewayv2_route" "server_get_account_route" {
+    api_id    = aws_apigatewayv2_api.poker_api.id
+    route_key = "GET /server/account/{accountId}"
+    target    = "integrations/${aws_apigatewayv2_integration.get_account_int.id}"
+    authorization_type = "CUSTOM"
+    authorizer_id      = aws_apigatewayv2_authorizer.server_token_auth.id
+}
+
 # Grant Permission for API Gateway to invoke the Lambda
 resource "aws_lambda_permission" "api_gw_get_account" {
     statement_id  = "AllowExecutionFromAPIGateway"
@@ -217,7 +234,7 @@ resource "aws_lambda_permission" "api_gw_get_account" {
     principal     = "apigateway.amazonaws.com"
 
     # Standard security: restrict access to your specific API
-    source_arn = "${aws_apigatewayv2_api.poker_api.execution_arn}/*/*/account"
+    source_arn = "${aws_apigatewayv2_api.poker_api.execution_arn}/*/*"
 }
 
 # --- End GetAccount API Gateway Integration ---
@@ -334,32 +351,32 @@ resource "aws_lambda_permission" "api_gw_get_games" {
 
 # --- End GetGames API Gateway Integration ---
 
-# --- Start UpdateGame API Gateway Integration ---
+# --- Start Server UpdateGame API Gateway Integration ---
 
-resource "aws_apigatewayv2_integration" "update_game_int" {
+resource "aws_apigatewayv2_integration" "server_update_game_int" {
     api_id           = aws_apigatewayv2_api.poker_api.id
     integration_type = "AWS_PROXY"
     integration_uri  = aws_lambda_function.update_game.invoke_arn
     payload_format_version = "2.0"
 }
 
-resource "aws_apigatewayv2_route" "update_game_route" {
+resource "aws_apigatewayv2_route" "server_update_game_route" {
     api_id    = aws_apigatewayv2_api.poker_api.id
-    route_key = "POST /game/{gameId}"
-    target    = "integrations/${aws_apigatewayv2_integration.update_game_int.id}"
+    route_key = "POST /server/game/{gameId}"
+    target    = "integrations/${aws_apigatewayv2_integration.server_update_game_int.id}"
     authorization_type = "CUSTOM"
-    authorizer_id      = aws_apigatewayv2_authorizer.server_token_auth.id # Currently only the server can hit this endpoint
+    authorizer_id      = aws_apigatewayv2_authorizer.server_token_auth.id
 }
 
-resource "aws_lambda_permission" "api_gw_update_game" {
+resource "aws_lambda_permission" "api_gw_server_update_game" {
     statement_id  = "AllowExecutionFromAPIGateway"
     action        = "lambda:InvokeFunction"
     function_name = aws_lambda_function.update_game.function_name
     principal     = "apigateway.amazonaws.com"
-    source_arn    = "${aws_apigatewayv2_api.poker_api.execution_arn}/*/*/game/*"
+    source_arn    = "${aws_apigatewayv2_api.poker_api.execution_arn}/*/*/*/game/*"
 }
 
-# --- End UpdateGame API Gateway Integration ---
+# --- End Server UpdateGame API Gateway Integration ---
 
 # --- Start Private Server Authorizer Lambda Function ---
 
@@ -468,6 +485,7 @@ resource "aws_lambda_function" "join_game" {
         variables = {
             GAMES_TABLE = aws_dynamodb_table.games_table.name,
             JOIN_TOKENS_TABLE = aws_dynamodb_table.join_tokens_table.name
+            RELATIONSHIPS_TABLE = aws_dynamodb_table.relationships_table.name
         }
     }
 }

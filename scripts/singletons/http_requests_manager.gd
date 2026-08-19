@@ -25,10 +25,17 @@ func get_account_data() -> Contracts.AccountRecord:
 	return null
 
 
-func create_game() -> Contracts.GameRecord:
+func create_game(
+	buy_in: int = 0,
+	blind: int = 10,
+	chip_ratio: int = 1,
+	privacy: Contracts.GamePrivacy = Contracts.GamePrivacy.PUBLIC) -> Contracts.GameRecord:
 	var path: String = "/game"
 	var reqeustBody = {
-		blind = 10
+		blindChips = blind,
+		buyInChips = buy_in,
+		chipRatio = chip_ratio,
+		gamePrivacy = privacy
 	}
 	
 	var http_response: Contracts.HttpResponseWrapper = await AuthManager.api_request(
@@ -94,7 +101,7 @@ func join_game(game_id: String) -> String:
 	var path: String = "/game/%s/join" % game_id.uri_encode()
 	var http_response: Contracts.HttpResponseWrapper = await AuthManager.api_request(
 		path,
-		HTTPClient.METHOD_GET
+		HTTPClient.METHOD_POST
 	)
 	
 	# Return the join game code so the client can send it to the server after connecting
@@ -106,7 +113,7 @@ func join_game(game_id: String) -> String:
 # game_id, game_status = null, port = null, add_players: Array[int] = [], remove_players: Array[int] = []
 func server_update_game(params: Dictionary) -> int:
 	var game_id: String = params.get("game_id", "")
-	var path: String = "/game/%s" % game_id.uri_encode()
+	var path: String = "/server/game/%s" % game_id.uri_encode()
 	var requestBody = {
 		gameStatus = params.get("game_status"),
 		port = params.get("port"),
@@ -124,3 +131,18 @@ func server_update_game(params: Dictionary) -> int:
 	
 	return http_response.response_code
 	
+
+func server_get_account_data(account_id: String) -> Contracts.AccountRecord:
+	var path: String = "/server/account/%s" % account_id
+	var http_response: Contracts.HttpResponseWrapper = await AuthManager.server_api_request(
+		path,
+		HTTPClient.METHOD_GET
+	)
+	
+	var account_record: Contracts.AccountRecord = Contracts.AccountRecord.new()
+	if (http_response.response_code == 200):
+		var dict: Dictionary = JSON.parse_string(http_response.response_body.get_string_from_utf8())
+		if dict:
+			account_record.ParseFromDictionary(dict)
+			return account_record
+	return null

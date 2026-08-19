@@ -105,4 +105,30 @@ resource "aws_dynamodb_table" "join_tokens_table" {
 
     tags = { Name = "PokerJoinTokens" }
 }
+
+resource "aws_dynamodb_table" "relationships_table" {
+    name = "Relationships"
+    billing_mode   = "PAY_PER_REQUEST"
+    
+    hash_key       = "accountId"
+    range_key      = "peerAccountId"
+
+    attribute {
+        name = "accountId"
+        type = "S"
+    }
+
+    attribute {
+        name = "peerAccountId"
+        type = "S"
+    }
+
+    global_secondary_index {
+        name            = "PeerAccountIdIndex"
+        hash_key        = "peerAccountId"
+        range_key       = "accountId"
+        projection_type = "ALL"
+    }
+}
+
 # --- End DynamoDB Config ---

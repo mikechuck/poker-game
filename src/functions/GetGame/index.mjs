@@ -3,10 +3,11 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import protobuf from "protobufjs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { GetGameRecord } from "./shared/utilities.js";
+import { GetGameRecord } from "./shared/utilities.mjs";
 
-const client = new DynamoDBClient({});
-const docClient = DynamoDBDocumentClient.from(client);
+const docClient = DynamoDBDocumentClient.from(new DynamoDBClient({
+    region: "us-east-1"
+}));
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const pokerApiProto = await protobuf.load(path.join(__dirname, "shared/poker_api.proto"));
@@ -16,7 +17,7 @@ const ErrorResponse = pokerApiProto.lookupType("poker_api.ErrorResponse");
 const GAMES_TABLE = process.env.GAMES_TABLE;
 
 export const handler = async (event) => {
-    const gameId = event.queryStringParameters?.gameId;
+    const gameId = event.pathParameters?.gameId;
 
     if (!gameId) {
         return {
@@ -29,11 +30,26 @@ export const handler = async (event) => {
         };
     }
 
-    const game = await GetGameRecord(gameId, GAMES_TABLE);
+    const gameRecord = await GetGameRecord(gameId, GAMES_TABLE);
+    
+    if (gameRecord == null) {
+        return {
+            statusCode: 400,
+            body: JSON.stringify(
+                ErrorResponse.create({
+                    message: "Invalid gameId" 
+                })
+            )
+        };
+    }
+
+    const gameRecordObject = GameRecord.toObject(gameRecord, { 
+        enums: Number 
+    });
 
     return {
         statusCode: 200,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(GameRecord.create(game))
+        body: JSON.stringify(gameRecordObject)
     };
 };

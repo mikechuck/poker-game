@@ -5,7 +5,7 @@ var game_manager: GameSceneManager
 var client_manager: ClientManager
 var GAME_ID: String
 var PORT: int = 12000
-const IDLE_TIMEOUT_SECONDS: float = 3000.0 # 5 minute timeout
+const IDLE_TIMEOUT_SECONDS: float = 60.0
 
 @onready var idle_timer : Timer = Timer.new()
 
@@ -44,22 +44,39 @@ func start_server():
 	idle_timer.start()
 	
 	
-func _on_peer_connected(id):
-	Log.message("Player %s connected" % id)
+func _on_peer_connected(peer_id: int):
+	Log.message("Player %s connected" % peer_id)
 	var connected_player = ConnectedPlayer.new()
-	connected_player.id = id
-	connected_player.account_total_cash = GameStateData.default_starting_cash
-	game_manager.game_state_data.connected_players[id] = connected_player
+	connected_player.peer_id = peer_id
+	connected_player.player_total_cash = GameStateData.default_starting_cash
+	game_manager.game_state_data.connected_players[peer_id] = connected_player
 	
+	var ws_multiplayer_peer := multiplayer.multiplayer_peer as WebSocketMultiplayerPeer
+	var peer: WebSocketPeer = ws_multiplayer_peer.get_peer(peer_id)
+	if peer:
+		var requested_url: String = peer.get_requested_url()
+		var account_id: String = _get_query_param(requested_url, "verified_account_id")
+		connected_player.account_id = account_id
+		var account_data: Contracts.AccountRecord = await HttpRequestsManager.server_get_account_data(account_id)
+		if (account_data):
+			connected_player.player_name = account_data.playerName
+			connected_player.player_color = account_data.playerColor
+			connected_player.friend_code = account_data.friendCode
+			connected_player.account_hands_won = account_data.handsWon
+			connected_player.account_hands_played = account_data.handsPlayed
+			print("Peer %d connected with account id %s, and found account data" % [peer_id, account_id])
+		else:
+			print("Peer %d connected with account id %s, but could NOT find account data!" % [peer_id, account_id])
+
 	# If this was the first player to connect, set it as host player
-	if (game_manager.game_state_data.host_player_id == 0):
-		game_manager.game_state_data.host_player_id = connected_player.id
+	if (game_manager.game_state_data.host_peer_id == 0):
+		game_manager.game_state_data.host_peer_id = connected_player.peer_id
 		connected_player.is_host = true
 		
 	# Update the db record with the new player ID
 	var update_request: Dictionary = {
 		"game_id": GAME_ID,
-		"add_players": [id]
+		"add_players": [connected_player.account_id]
 	}
 	var response_code: int = await HttpRequestsManager.server_update_game(update_request)
 		
@@ -75,26 +92,28 @@ func _on_peer_disconnected(id):
 	if disconnecting_player.is_host:
 		if (game_manager.game_state_data.connected_players.values().size() > 0):
 			var new_host_id = game_manager.game_state_data.connected_players.keys()[0]
-			game_manager.game_state_data.host_player_id = new_host_id
+			game_manager.game_state_data.host_peer_id = new_host_id
 		else:
-			game_manager.game_state_data.host_player_id = 0
+			game_manager.game_state_data.host_peer_id = 0
 			game_manager.game_state_data.game_state = GameState.State.PreHand
 	elif game_manager.game_state_data.connected_players.values().size() == 0:
-		game_manager.game_state_data.host_player_id = 0
+		game_manager.game_state_data.host_peer_id = 0
 		game_manager.game_state_data.game_state = GameState.State.PreHand
 		
 	# Clear the player from the seat
 	for seat in game_manager.game_state_data.player_seats.values():
-		if seat.player_id == id:
-			seat.player_id = 0
+		if seat.peer_id == id:
+			seat.peer_id = 0
 			seat.player_node = null
-			
+		
+	# TODO: don't reset hand, have some sort of grace period for reconnections.
+	# What do we do about rage quitting? 
 	if game_manager.game_state_data.connected_players.size() == 0:
 		game_manager.reset_hand()
 		
 	var update_request: Dictionary = {
 		"game_id": GAME_ID,
-		"remove_players": [id]
+		"remove_players": [disconnecting_player.account_id]
 	}
 	var response_code: int = await HttpRequestsManager.server_update_game(update_request)
 	
@@ -110,7 +129,7 @@ func _on_peer_disconnected(id):
 func update_server_startup_info() -> void:
 	var update_request: Dictionary = {
 		"game_id": GAME_ID,
-		"game_status": Contracts.GameStatus.STARTED,
+		"game_status": Contracts.GameStatus.ACTIVE,
 		"port": PORT
 	}
 	HttpRequestsManager.server_update_game(update_request)
@@ -135,6 +154,18 @@ func _on_idle_timeout() -> void:
 			Log.error("Error updating game instance from server.")
 		Log.message("Game server instance shutting down. Goodbye.")
 		get_tree().quit()
+		
+func _get_query_param(url: String, param_name: String) -> String:
+	var query_start: int = url.find("?")
+	if query_start == -1:
+		return ""
+	var query_string = url.substr(query_start + 1)
+	var pairs = query_string.split("&")
+	for pair in pairs:
+		var key_value = pair.split("=")
+		if key_value.size() == 2 and key_value[0] == param_name:
+			return key_value[1].uri_decode()
+	return ""
 
 ### RPC Functions
 
@@ -176,7 +207,7 @@ func set_player_seats():
 	for i in range(1, 9):
 		var player_seat = PlayerSeat.new()
 		player_seat.seat_index = i
-		player_seat.player_id = 0
+		player_seat.peer_id = 0
 		game_manager.game_state_data.player_seats[i] = player_seat
 		
 

@@ -4,8 +4,9 @@ import protobuf from "protobufjs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const client = new DynamoDBClient({});
-const docClient = DynamoDBDocumentClient.from(client);
+const docClient = DynamoDBDocumentClient.from(new DynamoDBClient({
+    region: "us-east-1"
+}));
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const pokerApiProto = await protobuf.load(path.join(__dirname, "shared/poker_api.proto"));
@@ -27,14 +28,19 @@ export const handler = async (event) => {
             }
         }));
 
+        const gameRecordsList = GameRecordList.create({
+            records: queryResponse.Items
+        })
+
+        const gameRecordsListObject = GameRecordList.toObject(gameRecordsList, {
+            enums: Number,
+            defaults: true
+        });
+
         return {
             statusCode: 200,
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(
-                GameRecordList.create({
-                    records: queryResponse.Items
-                })
-            )
+            body: JSON.stringify(gameRecordsListObject)
         };
 
     } catch (error) {

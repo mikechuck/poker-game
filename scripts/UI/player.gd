@@ -5,6 +5,8 @@ class_name Player
 @export var card_scene: PackedScene = preload("res://scenes/UI/card.tscn")
 
 @onready var player_card_node: Node2D = $PlayerCard
+@onready var player_details_card_node: Sprite2D = $PlayerCard/DetailsCard
+@onready var player_profile_picture_node: Sprite2D = $PlayerCard/ProfilePicture
 @onready var player_name_label_node: RichTextLabel = $PlayerCard/Name
 @onready var turn_indicator_node: Sprite2D = $PlayerCard/TurnIndicator
 @onready var cash_amount_node: RichTextLabel = $PlayerCard/CashAmount
@@ -18,7 +20,7 @@ class_name Player
 var card_front_1 = null
 var card_front_2 = null
 
-var player_id = 0
+var peer_id = 0
 var is_player_turn: bool = false
 var hand_cash: int = 0
 var is_folded: bool = false
@@ -28,9 +30,13 @@ var bet_value: int = 0
 var show_cards: bool = false
 var hole_cards: Array[CardData] = []
 var is_winner: bool = false
+var player_color: String = ""
+var player_name: String = ""
 
 func _ready() -> void:
-	player_name_label_node.text = "[font_size=16][b]%s[/b][/font_size]" % [str(player_id)]
+	# Set player details
+	player_profile_picture_node.modulate = player_color
+	player_name_label_node.text = "[font_size=16]%s[/font_size]" % player_name
 	cash_amount_node.text = "$" + str(hand_cash)
 	
 	if is_player_turn && game_manager.game_state_data.game_state != GameState.State.HandOver:

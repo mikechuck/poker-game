@@ -7,8 +7,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ssm = new SSMClient();
-const client = new DynamoDBClient({});
-const docClient = DynamoDBDocumentClient.from(client);
+const docClient = DynamoDBDocumentClient.from(new DynamoDBClient({
+    region: "us-east-1"
+}));
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const pokerApiProto = await protobuf.load(path.join(__dirname, "shared/poker_api.proto"));
@@ -21,6 +22,8 @@ const INSTANCE_ID = process.env.POKER_SERVER_INSTANCE_ID;
 const GAMES_TABLE = process.env.GAMES_TABLE;
 
 export const handler = async (event) => {
+    const accountId = event.requestContext?.authorizer?.jwt?.claims?.sub;
+
     if (!event.body) {
         return {
             statusCode: 400,
@@ -31,13 +34,6 @@ export const handler = async (event) => {
             )
         }; 
     }
-
-    const body = JSON.parse(event.body)
-    const blindValue = body.blind || 10
-    const buyIn = body.buyIn || 0 // 0 is free game
-    const chipRatio = body.chipRatio || 1
-    const gamePrivacy = body.gamePrivacy || GamePrivacy.values.PUBLIC
-    const accountId = event.requestContext?.authorizer?.jwt?.claims?.sub;
 
     if (!accountId) {
         return {
@@ -61,6 +57,12 @@ export const handler = async (event) => {
         };
     }
 
+    const body = JSON.parse(event.body)
+    const blindChips = body.blind || 10
+    const buyInChips = body.buyInChips || 100
+    const chipRatio = body.chipRatio || 0 // 0 is a free game
+    const gamePrivacy = body.gamePrivacy || GamePrivacy.values.PUBLIC
+
     // Get all active games for this player
     const params = {
         TableName: GAMES_TABLE,
@@ -78,10 +80,13 @@ export const handler = async (event) => {
         const response = await docClient.send(command);
         let existingGame = response?.Items?.[0] ?? null;
 
-        if (existingGame) {  
+        if (existingGame) {
             return {
                 statusCode: 200,
-                body: JSON.stringify(GameRecord.create(existingGame))
+                body: JSON.stringify(GameRecord.toObject(GameRecord.create(existingGame), {
+                    enums: Number,
+                    defaults: true
+                }))
             }
         }
 
@@ -102,8 +107,8 @@ export const handler = async (event) => {
             endTimeEpochMilliseconds: 0,
             connectedPlayers: [],
             port: 0,
-            blind: blindValue,
-            buyInDollars: buyIn,
+            blind: blindChips,
+            buyInChips: buyInChips,
             chipRatio: chipRatio,
             handsPlayed: 0,
             gamePrivacy: gamePrivacy
@@ -123,6 +128,10 @@ export const handler = async (event) => {
         }
 
         const newGameRecord = GameRecord.create(newGameData);
+        const newGameRecordObject = GameRecord.toObject(newGameRecord, {
+            enums: Number,
+            defaults: true
+        });
 
         await docClient.send(new PutCommand({
             TableName: GAMES_TABLE,
@@ -134,7 +143,7 @@ export const handler = async (event) => {
             InstanceIds: [INSTANCE_ID],
             DocumentName: "AWS-RunShellScript",
             Parameters: {
-                'commands': [`sudo -u ec2-user /home/ec2-user/start_game_session.sh "${GAMES_TABLE}" "${newGameRecord.gameId}" "${accountId}" "${blindValue}"`]
+                'commands': [`sudo -u ec2-user /home/ec2-user/start_game_session.sh "${GAMES_TABLE}" "${newGameRecord.gameId}" "${accountId}" "${blindChips}"`]
             },
             CloudWatchOutputConfig: {
                 CloudWatchLogGroupName: "/apps/poker-game",
@@ -147,7 +156,7 @@ export const handler = async (event) => {
         return {
             statusCode: 202,
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(newGameRecord)
+            body: JSON.stringify(newGameRecordObject)
         };
     } catch (error) {
         console.error("SSM Execution Error:", error);

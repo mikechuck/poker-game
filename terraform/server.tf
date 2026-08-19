@@ -123,21 +123,39 @@ resource "aws_iam_role_policy_attachment" "server_auth_edge_logs" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-data "template_file" "lambda_source" {
-    template = file("${path.module}/../exports/lambda/ServerEdgeAuthorizer/index.js.tpl")
-    vars = {
-        region         = "us-east-1"
-        user_pool_id   = aws_cognito_user_pool.poker_pool.id
-        app_client_id  = aws_cognito_user_pool_client.poker_client.id,
-        games_table_name = aws_dynamodb_table.games_table.name,
-        join_tokens_table_name = aws_dynamodb_table.join_tokens_table.name
-    }
+resource "aws_iam_role_policy_attachment" "server_auth_edge_dynamo" {
+    role       = aws_iam_role.lambda_edge_auth_role.name
+    policy_arn = aws_iam_policy.dynamo_poker_access.arn
+}
+
+resource "aws_cloudwatch_log_group" "server_edge_auth_logs" {
+    provider          = aws.us_east_1
+    name              = "/aws/lambda/us-east-1.${aws_lambda_function.server_edge_auth_lambda.function_name}"
+    retention_in_days = 7
+}
+
+resource "local_file" "rendered_index" {
+  content = templatefile("${path.module}/../exports/lambda/ServerEdgeAuthorizer/index.mjs.tpl", {
+    region                 = "us-east-1"
+    user_pool_id           = aws_cognito_user_pool.poker_pool.id
+    app_client_id          = aws_cognito_user_pool_client.poker_client.id
+    games_table_name       = aws_dynamodb_table.games_table.name
+    join_tokens_table_name = aws_dynamodb_table.join_tokens_table.name
+  })
+
+  # Save it directly as index.mjs alongside node_modules and proto files
+  filename = "${path.module}/../exports/lambda/ServerEdgeAuthorizer/index.mjs"
 }
 
 data "archive_file" "server_edge_auth_zip" {
-    type        = "zip"
-    output_path = "${path.module}/../exports/lambda/ServerEdgeAuthorizer.zip"
-    source_dir  = "${path.module}/../exports/lambda/ServerEdgeAuthorizer"
+  type        = "zip"
+  output_path = "${path.module}/../exports/lambda/ServerEdgeAuthorizer.zip"
+  source_dir  = "${path.module}/../exports/lambda/ServerEdgeAuthorizer"
+
+  # GUARANTEE that local_file writes index.mjs BEFORE archive_file runs
+  depends_on = [
+    resource.local_file.rendered_index
+  ]
 }
 
 resource "aws_lambda_function" "server_edge_auth_lambda" {
@@ -147,6 +165,8 @@ resource "aws_lambda_function" "server_edge_auth_lambda" {
     handler       = "index.handler"
     runtime       = "nodejs20.x"
     publish       = true
+    timeout       = 5
+    memory_size   = 512
 
     filename         = data.archive_file.server_edge_auth_zip.output_path
     source_code_hash = data.archive_file.server_edge_auth_zip.output_base64sha256
@@ -166,11 +186,11 @@ locals {
 }
 
 resource "aws_instance" "poker_server" {
-    ami                    = "ami-0341d95f75f311023"
-    instance_type          = "t3.micro"
-    iam_instance_profile   = aws_iam_instance_profile.ec2_profile.name
-    vpc_security_group_ids = [aws_security_group.poker_sg.id]
-    user_data              = local.user_data
+    ami                         = "ami-0341d95f75f311023"
+    instance_type               = "t3.micro"
+    iam_instance_profile        = aws_iam_instance_profile.ec2_profile.name
+    vpc_security_group_ids      = [aws_security_group.poker_sg.id]
+    user_data                   = local.user_data
     user_data_replace_on_change = true
 
     tags = {
@@ -189,9 +209,9 @@ resource "aws_security_group" "poker_sg" {
     description = "Nginx front door"
 
     ingress {
-        from_port   = 8000
-        to_port     = 8000
-        protocol    = "tcp"
+        from_port       = 8000
+        to_port         = 8000
+        protocol        = "tcp"
         security_groups = [aws_security_group.alb_sg.id]
     }
 

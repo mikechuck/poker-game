@@ -33,8 +33,6 @@ var game_state_data: GameStateData = GameStateData.new()
 func _ready() -> void:
 	call_deferred("run_after_tree_load")
 	
-	Log.message("account data:")
-	Log.message(DataStore.account_data)
 	
 # Make sure all the other managers are ready (auth, http, etc)
 func run_after_tree_load():
@@ -64,10 +62,10 @@ func assign_player_to_seat(client_id: int, seat_number: int) -> void:
 	# First remove them from their current seat then put them in the new seat
 	var desired_seat: PlayerSeat = game_state_data.player_seats.get(seat_number)
 	for seat: PlayerSeat in game_state_data.player_seats.values():
-		if (seat.player_id == client_id):
-			seat.player_id = 0
+		if (seat.peer_id == client_id):
+			seat.peer_id = 0
 			pass
-	desired_seat.player_id = client_id
+	desired_seat.peer_id = client_id
 	desired_seat.hand_cash = GameStateData.default_starting_cash
 	game_state_data.player_seats[seat_number] = desired_seat
 	game_state_data.connected_players[client_id].is_spectating = false
@@ -79,7 +77,7 @@ func step_next_game_state():
 	# Add a timer between states so users have visual separation
 	#await get_tree().create_timer(0.5).timeout
 	game_state_data.current_bet_value = 0
-	game_state_data.last_bet_raise_player_id = 0
+	game_state_data.last_bet_raise_peer_id = 0
 	game_state_data.player_turn = get_next_active_player_seat_number(0)
 	for seat: PlayerSeat in game_state_data.player_seats.values():
 		seat.bet_value = 0
@@ -165,7 +163,7 @@ func check_skip_this_state() -> void:
 	
 func state_deal_hole_cards():
 	for player: Player in game_state_data.player_seats.values():
-		if player.player_id:
+		if player.peer_id:
 			var hole_card1: CardData = deck_manager.deal_card()
 			var hole_card2: CardData = deck_manager.deal_card()
 			player.hole_cards.append(hole_card1)
@@ -199,12 +197,12 @@ func state_deal_river_card() -> void:
 	
 	
 func state_end_step() -> void:
-	game_state_data.winner_player_id = game_state_data.connected_players.values()[0].id
+	game_state_data.winner_peer_id = game_state_data.connected_players.values()[0].peer_id
 	# Add the new balance to the winner
 	for seat: PlayerSeat in game_state_data.player_seats.values():
-		if seat.player_id == game_state_data.winner_player_id:
+		if seat.peer_id == game_state_data.winner_peer_id:
 			seat.hand_cash += game_state_data.pot_value
-	game_state_data.connected_players[game_state_data.winner_player_id].account_total_cash += game_state_data.pot_value
+	game_state_data.connected_players[game_state_data.winner_peer_id].player_total_cash += game_state_data.pot_value
 	client_manager.update_game_state_data.rpc(game_state_data.to_dict())
 	
 	
@@ -213,7 +211,7 @@ func find_winning_seat() -> PlayerSeat:
 	var winning_seat: PlayerSeat
 	var player_scores: Dictionary[int, int]
 	for seat: PlayerSeat in game_state_data.player_seats.values():
-		if seat.player_id == 0: continue # only evaluate score for filled seats
+		if seat.peer_id == 0: continue # only evaluate score for filled seats
 		var hand_value: float = 0
 		var full_cards: Array[CardData] = seat.hole_cards + game_state_data.board_cards
 		full_cards.sort_custom(func(a, b):
@@ -254,9 +252,9 @@ func player_action_start_game() -> void:
 	# Ensure all players are ready before starting
 	var all_players_ready: bool = true
 	for seat: PlayerSeat in game_state_data.player_seats.values():
-		if seat.player_id != 0 && !seat.is_ready:
+		if seat.peer_id != 0 && !seat.is_ready:
 			all_players_ready = false
-	if (game_state_data.host_player_id == requestor_id &&
+	if (game_state_data.host_peer_id == requestor_id &&
 		game_state_data.game_state == GameState.State.PreHand &&
 		all_players_ready):
 		step_next_game_state()
@@ -265,7 +263,7 @@ func player_action_start_game() -> void:
 func player_action_folded():
 	var requestor_id: int = multiplayer.get_remote_sender_id()
 	for player_seat: PlayerSeat in game_state_data.player_seats.values():
-		if (player_seat.player_id == requestor_id):
+		if (player_seat.peer_id == requestor_id):
 			player_seat.is_folded = true
 		
 			
@@ -280,12 +278,12 @@ func player_action_ante():
 	player_seat.bet_value += bet_value
 	game_state_data.pot_value += bet_value
 	game_state_data.current_bet_value = bet_value
-	game_state_data.last_bet_raise_player_id = player_seat.player_id
+	game_state_data.last_bet_raise_peer_id = player_seat.peer_id
 
 
 func player_action_check() -> void:
-	if (game_state_data.last_bet_raise_player_id == 0):
-		game_state_data.last_bet_raise_player_id = multiplayer.get_remote_sender_id()
+	if (game_state_data.last_bet_raise_peer_id == 0):
+		game_state_data.last_bet_raise_peer_id = multiplayer.get_remote_sender_id()
 
 
 func player_action_raise(bet_value: int):
@@ -295,7 +293,7 @@ func player_action_raise(bet_value: int):
 	player_seat.bet_value += difference_raise
 	game_state_data.pot_value += bet_value
 	if player_seat.bet_value > game_state_data.current_bet_value:
-		game_state_data.last_bet_raise_player_id = player_seat.player_id
+		game_state_data.last_bet_raise_peer_id = player_seat.peer_id
 		game_state_data.current_bet_value = player_seat.bet_value
 		
 		
@@ -307,7 +305,7 @@ func player_action_call():
 	player_seat.bet_value += bet_value_difference
 	game_state_data.pot_value += bet_value_difference
 	if player_seat.bet_value > game_state_data.current_bet_value:
-		game_state_data.last_bet_raise_player_id = player_seat.player_id
+		game_state_data.last_bet_raise_peer_id = player_seat.peer_id
 		game_state_data.current_bet_value = player_seat.bet_value
 		
 		
@@ -332,7 +330,7 @@ func increment_player_turn() -> void:
 	if get_num_active_players_in_hand() <= 1:
 		step_next_game_state()
 	# It's come all around the table without a raise, move onto next game state
-	elif next_player_data.player_id == game_state_data.last_bet_raise_player_id:
+	elif next_player_data.peer_id == game_state_data.last_bet_raise_peer_id:
 		step_next_game_state()
 	else:
 		game_state_data.player_turn = next_player_turn
@@ -348,7 +346,7 @@ func get_next_active_player_turn() -> int:
 func get_num_active_players_in_hand() -> int:
 	var num_active_players: int = 0
 	for seat: PlayerSeat in game_state_data.player_seats.values():
-		if seat.player_id && !seat.is_folded && seat.hand_cash != 0:
+		if seat.peer_id && !seat.is_folded && seat.hand_cash != 0:
 			num_active_players += 1
 	return num_active_players
 
@@ -364,7 +362,7 @@ func get_num_players_in_hand() -> int:
 
 func get_next_player_seat_number(seat_number: int) -> int:
 	var desired_seat: PlayerSeat = game_state_data.player_seats.get(seat_number)
-	if (!desired_seat || desired_seat.player_id == 0):
+	if (!desired_seat || desired_seat.peer_id == 0):
 		seat_number = get_next_seat_number_in_range(seat_number)
 		#seat_number = get_next_player_seat_number(seat_number)
 	return seat_number
@@ -372,7 +370,7 @@ func get_next_player_seat_number(seat_number: int) -> int:
 	
 func get_next_active_player_seat_number(seat_number: int) -> int:
 	var desired_seat: PlayerSeat = game_state_data.player_seats.get(seat_number)
-	if (desired_seat == null || desired_seat.player_id == 0 || desired_seat.is_folded || desired_seat.hand_cash == 0):
+	if (desired_seat == null || desired_seat.peer_id == 0 || desired_seat.is_folded || desired_seat.hand_cash == 0):
 		seat_number = get_next_seat_number_in_range(seat_number)
 		seat_number = get_next_active_player_seat_number(seat_number)
 	return seat_number
@@ -380,7 +378,7 @@ func get_next_active_player_seat_number(seat_number: int) -> int:
 	
 func get_next_free_seat(seat_number: int) -> int:
 	var desired_seat: PlayerSeat = game_state_data.player_seats.get(seat_number)
-	if (!desired_seat || desired_seat.player_id != 0):
+	if (!desired_seat || desired_seat.peer_id != 0):
 		seat_number = get_next_seat_number_in_range(seat_number)
 		seat_number = get_next_free_seat(seat_number)
 	return seat_number
@@ -391,17 +389,18 @@ func get_next_seat_number_in_range(seat_number: int) -> int:
 
 
 # To be used on the client only
-func client_get_player_data() -> ConnectedPlayer:
+func client_get_player_data(account_id: String) -> ConnectedPlayer:
 	for player: ConnectedPlayer in game_state_data.connected_players.values():
-		if player.id == multiplayer.get_unique_id():
+		if player.account_id == account_id:
 			return player
+	Log.error("Can't find player data on server")
 	return null
 	
 	
 # To be used on the server only
 func server_get_player_seat() -> PlayerSeat:
 	for player: PlayerSeat in game_state_data.player_seats.values():
-		if player.player_id == multiplayer.get_remote_sender_id():
+		if player.peer_id == multiplayer.get_remote_sender_id():
 			return player
 	return null
 
@@ -411,9 +410,9 @@ func server_get_player_seat() -> PlayerSeat:
 
 func debug_assign_player_seats() -> void:
 	for player: ConnectedPlayer in game_state_data.connected_players.values():
-		assign_player_to_seat(player.id, 1)
+		assign_player_to_seat(player.peer_id, 1)
 	for seat: PlayerSeat in game_state_data.player_seats.values():
-		if seat.player_id != 0:
+		if seat.peer_id != 0:
 			seat.is_ready = true
 
 
@@ -428,7 +427,7 @@ func debug_goto_deal_flop() -> void:
 	debug_assign_player_seats()
 	step_next_game_state()
 	for player_seat: PlayerSeat in game_state_data.player_seats.values():
-		if player_seat.player_id != 0:
+		if player_seat.peer_id != 0:
 			player_seat.bet_value = GameStateData.default_big_blind
 			player_seat.hand_cash -= GameStateData.default_big_blind
 			game_state_data.pot_value += GameStateData.default_big_blind

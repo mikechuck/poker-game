@@ -40,7 +40,7 @@ func handle_game_state_updated():
 	
 func handle_player_seats_updated():
 	for player_seat: PlayerSeat in game_manager.game_state_data.player_seats.values():
-		if (multiplayer.get_unique_id() == player_seat.player_id && player_seat.player_node):
+		if (multiplayer.get_unique_id() == player_seat.peer_id && player_seat.player_node):
 			var cash_amount_label: RichTextLabel = player_seat.player_node.get_node("PlayerCard/CashAmount")
 			cash_amount_label.text = "$" + str(player_seat.hand_cash)
 	redraw_table_players()
@@ -52,7 +52,8 @@ func handle_board_cards_updated():
 	var board_cards = game_manager.game_state_data.board_cards
 	# clear cards first, then redraw
 	for card in get_tree().get_nodes_in_group("board_cards"):
-			board_cards_node.remove_child(card)
+		card.queue_free()
+		#board_cards_node.remove_child(card)
 	if (board_cards.size() > 0):
 		for i in range(5):
 			var card_spot: Sprite2D = board_cards_node.get_node("DealerCardSpot" + str(i + 1))
@@ -84,22 +85,29 @@ func redraw_table_players():
 	# Clear player seats first
 	for seat_id in player_seats.keys():
 		if (player_seats[seat_id].player_node != null):
-			remove_child(player_seats[seat_id].player_node)
+			#remove_child(player_seats[seat_id].player_node)
+			player_seats[seat_id].player_node.queue_free()
 			player_seats[seat_id].player_node = null
 		if (game_manager.game_state_data.game_state == GameState.State.PreHand):
-			var seat_node: Sprite2D = seat_nodes[seat_id]
+			var seat_node: Node2D = seat_nodes[seat_id]
 			seat_node.visible = true
 	
 	# Then spawn any players and hide seat buttons
 	player_seats = game_manager.game_state_data.player_seats
 	for seat_id in player_seats.keys():
-		var seat_data = player_seats[seat_id]
+		var seat_data: PlayerSeat = player_seats[seat_id]
 		var seat_node: Node2D = seat_nodes[seat_id]
-		if seat_data.player_id != 0:
+		if seat_data.peer_id != 0:
 			var player_instance: Player = player_scene.instantiate()
+			# Grab player data from connected_players list
+			var connected_player_data: ConnectedPlayer = game_manager.game_state_data.connected_players[seat_data.peer_id]
+			Log.message("seat data: %s" % seat_data)
+			Log.message("connected_player_data: %s" % connected_player_data)
+			Log.message("player_instance: %s" % player_instance)
+			
 			# Need to transform seat position coords from local scale to global scale (0.4 -> 1)
 			player_instance.position = (poker_table_node.scale * seat_node.position)
-			player_instance.player_id = seat_data.player_id
+			player_instance.peer_id = seat_data.peer_id
 			player_instance.is_player_turn = game_manager.game_state_data.player_turn == seat_id
 			player_instance.hand_cash = seat_data.hand_cash
 			player_instance.bet_value = seat_data.bet_value
@@ -107,7 +115,9 @@ func redraw_table_players():
 			player_instance.is_big_blind = seat_data.is_big_blind
 			player_instance.is_small_blind = seat_data.is_small_blind
 			player_instance.hole_cards = seat_data.hole_cards
-			player_instance.is_winner = game_manager.game_state_data.winner_player_id == seat_data.player_id
+			player_instance.is_winner = game_manager.game_state_data.winner_peer_id == seat_data.peer_id
+			player_instance.player_color = connected_player_data.player_color
+			player_instance.player_name = connected_player_data.player_name
 			seat_data.player_node = player_instance
 			add_child(player_instance)
 			seat_node.visible = false
