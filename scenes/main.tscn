@@ -201,6 +201,8 @@ text = "Join Game
 
 [node name="AccountSection" parent="Content" instance=ExtResource("2_jyhfs")]
 layout_mode = 0
+show_data = null
+logout_behavior_leave_game = null
 
 [node name="GamesList" type="Control" parent="Content"]
 layout_mode = 1

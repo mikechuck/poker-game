@@ -24,7 +24,6 @@ func _ready() -> void:
 		main_content.visible = true
 		loading_screen.visible = false
 	
-	# If not the server, then we should bounce the user the landing if they don't have
 	multiplayer.connected_to_server.connect(_on_connected)
 	multiplayer.connection_failed.connect(_on_connection_failed)
 	multiplayer.server_disconnected.connect(_on_disconnected)

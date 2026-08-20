@@ -35,7 +35,8 @@ var player_name: String = ""
 
 func _ready() -> void:
 	# Set player details
-	player_profile_picture_node.modulate = player_color
+	if (player_color != ""):
+		player_profile_picture_node.modulate = player_color
 	player_name_label_node.text = "[font_size=16]%s[/font_size]" % player_name
 	cash_amount_node.text = "$" + str(hand_cash)
 	

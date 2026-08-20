@@ -154,6 +154,8 @@ func _on_idle_timeout() -> void:
 			Log.error("Error updating game instance from server.")
 		Log.message("Game server instance shutting down. Goodbye.")
 		get_tree().quit()
+	else:
+		Log.message("game is not empty, skipping shutdown")
 		
 func _get_query_param(url: String, param_name: String) -> String:
 	var query_start: int = url.find("?")
@@ -199,6 +201,11 @@ func start_new_hand() -> void:
 @rpc("reliable", "any_peer")
 func goto_lobby() -> void:
 	game_manager.goto_lobby()
+
+
+@rpc("reliable", "any_peer")
+func heartbeat_server(account_id: String) -> void:
+	Log.message("Received heartbeat from client | AcountId: %s" % account_id)
 
 
 ### Helper functions

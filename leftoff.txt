@@ -1,21 +1,11 @@
 leftoff:
 	- Finish account section and hook up data in game scene show it shows color etc
 	- players list is not updated when leaving a game
-	- send player to main menu on RPC connection failure (server shut down)
+	- Build tcp reconnection logic on client side
+		- if RPC is broken and can't reconnect, send player to main menu
 	- server is ending even when players are still in the game
 
-	- When game is over:
-		- call lambda to update dybamo to:
-			- switch game state from ACTIVE to COMPLETE
-			- set expiration time
-		- debt tracking:
-			- do debt tracking call when a player LEAVES the game
 
-
-Todo:
-	- add "is host" crown to player card for host
-	- Add "is server" checks to rpc functions
-	- show list of connected players in room
 
 Test login credentials:
 username: Mikechuck

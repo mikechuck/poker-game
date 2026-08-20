@@ -104,6 +104,7 @@ func redraw_table_players():
 			Log.message("seat data: %s" % seat_data)
 			Log.message("connected_player_data: %s" % connected_player_data)
 			Log.message("player_instance: %s" % player_instance)
+			Log.message("connected player name: %s" % connected_player_data.player_name)
 			
 			# Need to transform seat position coords from local scale to global scale (0.4 -> 1)
 			player_instance.position = (poker_table_node.scale * seat_node.position)

@@ -51,4 +51,5 @@ static func from_dict(dict: Dictionary) -> ConnectedPlayer:
 	instance.friend_code = dict.get("friend_code")
 	instance.account_hands_played = dict.get("account_hands_played")
 	instance.account_hands_won = dict.get("account_hands_won")
+	instance.player_name = dict.get("player_name")
 	return instance

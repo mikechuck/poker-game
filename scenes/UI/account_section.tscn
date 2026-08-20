@@ -27,11 +27,7 @@ offset_left = 25.0
 offset_top = 25.0
 offset_right = 300.0
 offset_bottom = 230.0
-
-[node name="ColorRect" type="ColorRect" parent="MarginContainer"]
-visible = false
-layout_mode = 2
-color = Color(1, 1, 1, 0)
+mouse_filter = 2
 
 [node name="Account" type="Node2D" parent="MarginContainer"]
 position = Vector2(20, 25)
