@@ -127,8 +127,6 @@ func server_update_game(params: Dictionary) -> int:
 		JSON.stringify(requestBody)
 	)
 	
-	Log.message("Update game response code: %s" % http_response.response_code)
-	
 	return http_response.response_code
 	
 

@@ -22,6 +22,7 @@ mouse_default_cursor_shape = 2
 texture_normal = ExtResource("2_b7sds")
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
+visible = false
 layout_mode = 1
 offset_left = 25.0
 offset_top = 25.0
@@ -111,5 +112,24 @@ text = "0
 "
 horizontal_alignment = 2
 vertical_alignment = 1
+
+[node name="GameCodeContainer" type="HBoxContainer" parent="."]
+visible = false
+layout_mode = 1
+offset_left = 50.0
+offset_top = 15.0
+offset_right = 240.0
+offset_bottom = 45.0
+
+[node name="Label" type="RichTextLabel" parent="GameCodeContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Game code:"
+fit_content = true
+
+[node name="Value" type="RichTextLabel" parent="GameCodeContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "NXJHSU"
 
 [connection signal="pressed" from="LogoutButton" to="." method="_on_logout_button_pressed"]

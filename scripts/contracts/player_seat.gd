@@ -14,6 +14,19 @@ var is_small_blind: bool = false
 var sorted_hand_cards: Array[CardData] = []
 var final_hand_score: int = 0
 
+func clear_seat_data() -> void:
+	peer_id = 0
+	player_node = null
+	is_ready = false
+	hole_cards = []
+	hand_cash = 0
+	bet_value = 0
+	is_folded = false
+	is_big_blind = false
+	is_small_blind = false
+	sorted_hand_cards = []
+	final_hand_score = 0
+
 func reset_hand_data() -> void:
 	hole_cards = []
 	is_folded = false

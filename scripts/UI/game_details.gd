@@ -31,7 +31,11 @@ func set_details(game_details: Contracts.GameRecord):
 	HANDS_NODE.text = "[font_size=12]%s[/font_size]" % str(game_details.handsPlayed)
 	BLIND_VALUE_NODE.text = "[font_size=12]%s[/font_size]" % str(game_details.blindChips)
 	
-	if (game_details.gameStatus == Contracts.GameStatus.ACTIVE):
+	if (game_details.gameStatus == Contracts.GameStatus.STARTING):
+		JOIN_BUTTON_NODE.disabled = true
+		JOIN_BUTTON_NODE.mouse_default_cursor_shape = 0
+		STATUS_NODE.modulate = Color.WEB_GREEN
+	elif (game_details.gameStatus == Contracts.GameStatus.ACTIVE):
 		JOIN_BUTTON_NODE.disabled = false
 		JOIN_BUTTON_NODE.mouse_default_cursor_shape = 2
 		STATUS_NODE.modulate = Color.WEB_GREEN

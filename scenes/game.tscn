@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://bv78nq7paqs7f"]
+[gd_scene load_steps=13 format=3 uid="uid://bv78nq7paqs7f"]
 
 [ext_resource type="Script" uid="uid://b7pkboiy8lcrw" path="res://scripts/UI/table.gd" id="1_cfscn"]
 [ext_resource type="Script" uid="uid://t8a0fwy0ry0u" path="res://scripts/managers/game_scene_manager.gd" id="1_h2fnp"]
@@ -11,6 +11,7 @@
 [ext_resource type="Texture2D" uid="uid://cdibtxyl8cvkj" path="res://assets/DealerCardSpot.png" id="4_ya4ey"]
 [ext_resource type="PackedScene" uid="uid://dof81yg1jefa" path="res://scenes/UI/player_ui.tscn" id="5_tbgi4"]
 [ext_resource type="Script" uid="uid://cnawrfbgpgpfu" path="res://scripts/managers/deck_manager.gd" id="8_85g3d"]
+[ext_resource type="Script" uid="uid://wcvm2n4j3150" path="res://scripts/UI/players_list_container.gd" id="12_dinhu"]
 
 [node name="Game" type="Control"]
 layout_mode = 3
@@ -144,3 +145,63 @@ script = ExtResource("8_85g3d")
 
 [node name="GameManager" type="Node2D" parent="."]
 script = ExtResource("1_h2fnp")
+
+[node name="PlayersList" type="Control" parent="."]
+custom_minimum_size = Vector2(0, 200)
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -300.0
+offset_top = -200.0
+grow_horizontal = 0
+grow_vertical = 0
+script = ExtResource("12_dinhu")
+
+[node name="MarginContainer" type="MarginContainer" parent="PlayersList"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 25
+theme_override_constants/margin_top = 25
+theme_override_constants/margin_right = 25
+theme_override_constants/margin_bottom = 25
+
+[node name="ColorRect" type="ColorRect" parent="PlayersList/MarginContainer"]
+layout_mode = 2
+color = Color(0.078431375, 0.12941177, 0.14509805, 1)
+
+[node name="MarginContainer" type="MarginContainer" parent="PlayersList/MarginContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 25
+theme_override_constants/margin_top = 25
+theme_override_constants/margin_right = 25
+theme_override_constants/margin_bottom = 25
+
+[node name="Table" type="VBoxContainer" parent="PlayersList/MarginContainer/MarginContainer"]
+layout_mode = 2
+
+[node name="RichTextLabel" type="RichTextLabel" parent="PlayersList/MarginContainer/MarginContainer/Table"]
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+bbcode_enabled = true
+text = "[font_size=12]Players[/font_size]"
+fit_content = true
+horizontal_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="PlayersList/MarginContainer/MarginContainer/Table"]
+clip_contents = false
+custom_minimum_size = Vector2(0, 65)
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="PlayerDetailsContainer" type="VBoxContainer" parent="PlayersList/MarginContainer/MarginContainer/Table/ScrollContainer"]
+clip_contents = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 2

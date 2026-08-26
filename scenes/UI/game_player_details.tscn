@@ -1,0 +1,52 @@
+[gd_scene load_steps=4 format=3 uid="uid://cfhviycbou5nf"]
+
+[ext_resource type="Script" uid="uid://chleo1jt3lwu8" path="res://scripts/UI/game_player_details.gd" id="1_fi1vx"]
+[ext_resource type="Texture2D" uid="uid://cwcd15yqh1bdt" path="res://assets/icons/spectator_eye.svg" id="2_4r0xn"]
+[ext_resource type="Texture2D" uid="uid://dus8flcvkhw6" path="res://assets/icons/host_icon.svg" id="2_o4v1x"]
+
+[node name="HBoxContainer" type="HBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = 35.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_fi1vx")
+
+[node name="PlayerColor" type="ColorRect" parent="."]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+
+[node name="HostIndicator" type="Sprite2D" parent="PlayerColor"]
+modulate = Color(1, 1, 1, 0.23529412)
+position = Vector2(9.999999, 9.999999)
+scale = Vector2(0.025, 0.025)
+texture = ExtResource("2_o4v1x")
+
+[node name="NameContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 10
+
+[node name="Name" type="RichTextLabel" parent="NameContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+bbcode_enabled = true
+text = "[font_size=12]jeegerson[/font_size]"
+vertical_alignment = 1
+
+[node name="Status" type="RichTextLabel" parent="."]
+custom_minimum_size = Vector2(25, 25)
+layout_mode = 2
+bbcode_enabled = true
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Spectator" type="Sprite2D" parent="Status"]
+modulate = Color(0.99607843, 0.9764706, 0.9372549, 1)
+scale = Vector2(0.02, 0.02)
+texture = ExtResource("2_4r0xn")
+centered = false
+offset = Vector2(225, 300)

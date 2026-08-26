@@ -25,7 +25,7 @@ func to_dict() -> Dictionary:
 static func from_dict(dict: Dictionary) -> CardData:
 	var instance: CardData = CardData.new()
 	var instance_id: String = dict.get("id")
-	var instance_number: int = dict.get("id")
+	var instance_number: int = dict.get("number")
 	var instance_value: String = dict.get("value")
 	var instance_suit: String = dict.get("suit")
 	instance.id = instance_id

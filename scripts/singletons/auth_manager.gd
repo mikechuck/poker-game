@@ -208,8 +208,7 @@ func refresh_tokens() -> bool:
 		Log.message("Error refreshing tokens, returning to landing page")
 		NavigationManager.navigate_to_landing()
 		return false
-		
-	Log.message("auth manager response_code: %s" % response_code)
+	
 	var json: Dictionary = JSON.parse_string(response_body.get_string_from_utf8())
 	var access_token: String = json.get("access_token")
 	var id_token: String = json.get("id_token")

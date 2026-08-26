@@ -42,6 +42,13 @@ func get_games_list() -> void:
 func set_games_list(games_list: Array[Contracts.GameRecord]):
 	has_active_game = false
 	
+	# Ensure the non-ended game is on the top of the list
+	for i in games_list.size():
+		var game: Contracts.GameRecord = games_list[i]
+		if game.gameStatus != Contracts.GameStatus.ENDED:
+			games_list.remove_at(i)
+			games_list.push_back(game)
+	
 	# First remove rows that are no longer in the list
 	var game_rows: Array[Node] = game_details_container_node.get_children()
 	for game_row: GameDetails in game_rows:

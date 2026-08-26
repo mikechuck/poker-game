@@ -25,8 +25,10 @@ func _ready() -> void:
 		loading_screen.visible = false
 	
 	multiplayer.connected_to_server.connect(_on_connected)
-	multiplayer.connection_failed.connect(_on_connection_failed)
-	multiplayer.server_disconnected.connect(_on_disconnected)
+	#multiplayer.peer_disconnected.connect(_on_peer_disconnected)
+	#multiplayer.peer_connected.connect(_on_peer_connected)
+	#multiplayer.connection_failed.connect(_on_connection_failed)
+	#multiplayer.server_disconnected.connect(_on_disconnected)
 
 
 func join_game(game_id: String) -> void:
@@ -53,21 +55,30 @@ func connect_to_server(port: int, join_token: String, game_id: String):
 		var err := peer.create_client(connection_url)
 		if err == OK:
 			multiplayer.multiplayer_peer = peer
+			DataStore.game_code = game_id
 			break;
 		else:
 			# Short delay before the next attempt
 			if attempt < max_retries - 1:
 				await get_tree().create_timer(0.2).timeout
 		
-
+#
 func _on_connected():
 	Log.message("Connected to game!")
 	NavigationManager.navigate_to_game_scene()
-
-
-func _on_connection_failed():
-	Log.message("Connection to server failed.")
-
-	
-func _on_disconnected():
-	Log.message("Disconnected from server.")
+#
+#
+#func _on_connection_failed():
+	#Log.message("Connection to server failed.")
+#
+	#
+#func _on_disconnected():
+	#Log.message("Disconnected from server.")
+#
+#
+#func _on_peer_disconnected(id: int):
+	#Log.message("Peer %s has disconnected from the game" % id)
+#
+#
+#func _on_peer_connected(id: int): 
+	#Log.message("Peer %s has connected to the game" % id)

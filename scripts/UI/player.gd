@@ -15,7 +15,10 @@ class_name Player
 @onready var bet_badge_node: Sprite2D = $PlayerCard/BetBadge
 @onready var card_back_1: Sprite2D = $PlayerCard/CardBack1
 @onready var card_back_2: Sprite2D = $PlayerCard/CardBack2
+@onready var leave_seat_button: Button = $PlayerCard/LeaveSeatButton
+@onready var player_indicator_node: Sprite2D = $PlayerCard/UserIndicator
 @onready var game_manager: GameSceneManager = get_tree().root.get_node("Game/GameManager")
+@onready var server_manager: ServerManager = get_tree().root.get_node("Game/ServerManager")
 
 var card_front_1 = null
 var card_front_2 = null
@@ -32,6 +35,7 @@ var hole_cards: Array[CardData] = []
 var is_winner: bool = false
 var player_color: String = ""
 var player_name: String = ""
+var account_id: String = ""
 
 func _ready() -> void:
 	# Set player details
@@ -94,3 +98,19 @@ func _ready() -> void:
 		else:
 			card_back_1.visible = true
 			card_back_2.visible = true
+			
+	if (game_manager.game_state_data.game_state == GameState.State.PreHand):
+		Log.message("showing leave seat button")
+		leave_seat_button.visible = true
+	else:
+		Log.message("hiding leave seat button")
+		leave_seat_button.visible = false
+		
+	if account_id == DataStore.account_data.accountId:
+		player_indicator_node.visible = true
+	else:
+		player_indicator_node.visible = false
+
+
+func _on_leave_seat_button_pressed() -> void:
+	server_manager.leave_seat.rpc_id(1)

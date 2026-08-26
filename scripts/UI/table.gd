@@ -101,10 +101,6 @@ func redraw_table_players():
 			var player_instance: Player = player_scene.instantiate()
 			# Grab player data from connected_players list
 			var connected_player_data: ConnectedPlayer = game_manager.game_state_data.connected_players[seat_data.peer_id]
-			Log.message("seat data: %s" % seat_data)
-			Log.message("connected_player_data: %s" % connected_player_data)
-			Log.message("player_instance: %s" % player_instance)
-			Log.message("connected player name: %s" % connected_player_data.player_name)
 			
 			# Need to transform seat position coords from local scale to global scale (0.4 -> 1)
 			player_instance.position = (poker_table_node.scale * seat_node.position)
@@ -119,6 +115,7 @@ func redraw_table_players():
 			player_instance.is_winner = game_manager.game_state_data.winner_peer_id == seat_data.peer_id
 			player_instance.player_color = connected_player_data.player_color
 			player_instance.player_name = connected_player_data.player_name
+			player_instance.account_id = connected_player_data.account_id
 			seat_data.player_node = player_instance
 			add_child(player_instance)
 			seat_node.visible = false

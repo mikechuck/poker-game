@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://x8p6qfmpkras"]
+[gd_scene load_steps=11 format=3 uid="uid://x8p6qfmpkras"]
 
 [ext_resource type="Script" uid="uid://dsw4s5bge27tu" path="res://scripts/UI/player.gd" id="1_c1ys2"]
 [ext_resource type="Texture2D" uid="uid://bdr6mll513ay7" path="res://assets/PlayerCard/FoldBadge.png" id="2_0qg72"]
@@ -8,6 +8,7 @@
 [ext_resource type="Texture2D" uid="uid://ddlkeu1b8yhay" path="res://assets/PlayerCard/DetailsCard.png" id="6_71xb3"]
 [ext_resource type="Texture2D" uid="uid://3pvy2qjel0j0" path="res://assets/PlayerCard/ProfilePicture.png" id="7_nmq0w"]
 [ext_resource type="Texture2D" uid="uid://cbaim1l7lhhmu" path="res://assets/cards/light/BACK.png" id="8_wwf63"]
+[ext_resource type="Texture2D" uid="uid://csjr718d77a1a" path="res://assets/icons/user_icon.svg" id="9_0qg72"]
 
 [sub_resource type="GDScript" id="GDScript_xygjn"]
 
@@ -105,11 +106,29 @@ fit_content = true
 scroll_active = false
 
 [node name="CardBack1" type="Sprite2D" parent="PlayerCard"]
+visible = false
 position = Vector2(90, 106)
 scale = Vector2(0.25, 0.25)
 texture = ExtResource("8_wwf63")
 
 [node name="CardBack2" type="Sprite2D" parent="PlayerCard"]
+visible = false
 position = Vector2(145, 106)
 scale = Vector2(0.25, 0.25)
 texture = ExtResource("8_wwf63")
+
+[node name="LeaveSeatButton" type="Button" parent="PlayerCard"]
+offset_left = 65.0
+offset_top = 95.0
+offset_right = 165.0
+offset_bottom = 126.0
+mouse_default_cursor_shape = 2
+text = "Leave Seat"
+
+[node name="UserIndicator" type="Sprite2D" parent="PlayerCard"]
+modulate = Color(1, 1, 1, 0.23529412)
+position = Vector2(17, 37)
+scale = Vector2(0.07, 0.07)
+texture = ExtResource("9_0qg72")
+
+[connection signal="pressed" from="PlayerCard/LeaveSeatButton" to="." method="_on_leave_seat_button_pressed"]

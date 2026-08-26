@@ -5,7 +5,7 @@ var game_manager: GameSceneManager
 var client_manager: ClientManager
 var GAME_ID: String
 var PORT: int = 12000
-const IDLE_TIMEOUT_SECONDS: float = 60.0
+const IDLE_TIMEOUT_SECONDS: float = 300.0
 
 @onready var idle_timer : Timer = Timer.new()
 
@@ -38,14 +38,12 @@ func start_server():
 	
 	# Start idle timer so we can shutdown the server if no one is playing
 	idle_timer.wait_time = IDLE_TIMEOUT_SECONDS
-	idle_timer.one_shot = true
 	idle_timer.timeout.connect(_on_idle_timeout)
 	add_child(idle_timer)
 	idle_timer.start()
 	
 	
 func _on_peer_connected(peer_id: int):
-	Log.message("Player %s connected" % peer_id)
 	var connected_player = ConnectedPlayer.new()
 	connected_player.peer_id = peer_id
 	connected_player.player_total_cash = GameStateData.default_starting_cash
@@ -64,9 +62,9 @@ func _on_peer_connected(peer_id: int):
 			connected_player.friend_code = account_data.friendCode
 			connected_player.account_hands_won = account_data.handsWon
 			connected_player.account_hands_played = account_data.handsPlayed
-			print("Peer %d connected with account id %s, and found account data" % [peer_id, account_id])
-		else:
-			print("Peer %d connected with account id %s, but could NOT find account data!" % [peer_id, account_id])
+			print("Peer %d connected with account id %s" % [peer_id, account_id])
+	else:
+		Log.message("test?")
 
 	# If this was the first player to connect, set it as host player
 	if (game_manager.game_state_data.host_peer_id == 0):
@@ -85,15 +83,17 @@ func _on_peer_connected(peer_id: int):
 	
 	
 func _on_peer_disconnected(id):
-	Log.message("Player %s disconnected" % id)
-	var disconnecting_player = game_manager.game_state_data.connected_players.get(id)
+	var disconnecting_player: ConnectedPlayer = game_manager.game_state_data.connected_players.get(id)
+	Log.message("Player %s disconnected" % disconnecting_player.account_id)
 	game_manager.game_state_data.connected_players.erase(id)
 	
 	if disconnecting_player.is_host:
 		if (game_manager.game_state_data.connected_players.values().size() > 0):
-			var new_host_id = game_manager.game_state_data.connected_players.keys()[0]
-			game_manager.game_state_data.host_peer_id = new_host_id
+			var new_host: ConnectedPlayer = game_manager.game_state_data.connected_players.values()[0]
+			game_manager.game_state_data.host_peer_id = new_host.peer_id
+			Log.message("New host id: %s" % new_host.account_id)
 		else:
+			Log.message("Host left, no players left in the game")
 			game_manager.game_state_data.host_peer_id = 0
 			game_manager.game_state_data.game_state = GameState.State.PreHand
 	elif game_manager.game_state_data.connected_players.values().size() == 0:
@@ -122,7 +122,6 @@ func _on_peer_disconnected(id):
 	
 	# If no players are in the game, start the idle timeout shutdown
 	if (game_manager.game_state_data.connected_players.size() == 0):
-		Log.message("Room is empty. Starting shutdown timer...")
 		idle_timer.start()
 		
 		
@@ -140,9 +139,7 @@ func update_server_startup_info() -> void:
 		
 func _on_idle_timeout() -> void:
 	# If no players are in the game after the timeout, end the game
-	Log.message("checking if game is empty")
 	if (game_manager.game_state_data.connected_players.size() == 0):
-		Log.message("game is empty, update db shutting down")
 		var update_request: Dictionary = {
 			"game_id": GAME_ID,
 			"game_status": Contracts.GameStatus.ENDED,
@@ -154,8 +151,6 @@ func _on_idle_timeout() -> void:
 			Log.error("Error updating game instance from server.")
 		Log.message("Game server instance shutting down. Goodbye.")
 		get_tree().quit()
-	else:
-		Log.message("game is not empty, skipping shutdown")
 		
 func _get_query_param(url: String, param_name: String) -> String:
 	var query_start: int = url.find("?")
@@ -181,6 +176,12 @@ func request_seat(seat_number: int):
 	var client_id: int = multiplayer.get_remote_sender_id()
 	game_manager.assign_player_to_seat(client_id, seat_number)
 	
+
+@rpc("reliable", "any_peer")
+func leave_seat():
+	var client_id: int = multiplayer.get_remote_sender_id()
+	game_manager.remove_player_from_seat(client_id)
+	
 	
 @rpc("reliable", "any_peer")
 func set_ready_status(is_ready: bool):
@@ -189,7 +190,8 @@ func set_ready_status(is_ready: bool):
 		
 		
 @rpc("reliable", "any_peer")
-func player_action_taken(player_action: int, action_value: int):
+func player_action_taken(player_action: int, action_value: int = 0):
+	Log.message("Player action taken | player_action: %s | action_value: %s" % [player_action, action_value])
 	game_manager.player_action_taken(player_action, action_value)
 	
 	

@@ -15,6 +15,7 @@ var player_ui_instance: PlayerUI = null
 @onready var server_manager: ServerManager = get_parent().get_node("ServerManager")
 @onready var client_manager: ClientManager = get_parent().get_node("ClientManager")
 @onready var deck_manager: DeckManager = get_parent().get_node("DeckManager")
+@onready var players_list_node: PlayersListContainer = get_parent().get_node("PlayersList")
 
 ### Signals
 signal game_state_data_updated_signal(old_game_state_data, new_game_state_data)
@@ -46,6 +47,8 @@ func run_after_tree_load():
 		screen_origin = get_viewport_rect().size / 2
 		player_ui_instance = get_parent().find_child("PlayerUI")
 		server_manager.request_game_state_publish.rpc_id(1)
+		
+	
 	
 ### End lifecycle methods
 
@@ -63,12 +66,19 @@ func assign_player_to_seat(client_id: int, seat_number: int) -> void:
 	var desired_seat: PlayerSeat = game_state_data.player_seats.get(seat_number)
 	for seat: PlayerSeat in game_state_data.player_seats.values():
 		if (seat.peer_id == client_id):
-			seat.peer_id = 0
-			pass
+			seat.clear_seat_data()
 	desired_seat.peer_id = client_id
 	desired_seat.hand_cash = GameStateData.default_starting_cash
 	game_state_data.player_seats[seat_number] = desired_seat
 	game_state_data.connected_players[client_id].is_spectating = false
+	client_manager.update_game_state_data.rpc(game_state_data.to_dict())
+
+
+func remove_player_from_seat(client_id: int) -> void:
+	for seat: PlayerSeat in game_state_data.player_seats.values():
+		if (seat.peer_id == client_id):
+			seat.clear_seat_data()
+	game_state_data.connected_players[client_id].is_spectating = true
 	client_manager.update_game_state_data.rpc(game_state_data.to_dict())
 
 

@@ -1,5 +1,5 @@
 leftoff:
-	- Finish account section and hook up data in game scene show it shows color etc
+	- polishing join flow and player indicators, I think I can move on to polishing game flow. will return to other UI and other features later
 	- players list is not updated when leaving a game
 	- Build tcp reconnection logic on client side
 		- if RPC is broken and can't reconnect, send player to main menu
