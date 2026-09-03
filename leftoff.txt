@@ -1,8 +1,15 @@
 leftoff:
 	- polishing join flow and player indicators, I think I can move on to polishing game flow. will return to other UI and other features later
+	- Friends flow:
+		- call GetFriends from UI on load
+		- hook up AddFriend to friend code input
+		- create "accept invite" button in table
+			- should I just have a notification tray for this?
+		- Figure out what UI we want to show for each status
 	- players list is not updated when leaving a game
+
 	- Build tcp reconnection logic on client side
-		- if RPC is broken and can't reconnect, send player to main menu
+		- if RPC is broken and can't reconnect after some time, send player to main menu
 	- server is ending even when players are still in the game
 
 

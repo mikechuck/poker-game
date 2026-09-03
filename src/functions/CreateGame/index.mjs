@@ -1,7 +1,6 @@
-import { SSMClient, SendCommandCommand, GetCommandInvocationCommand } from "@aws-sdk/client-ssm";
+import { SSMClient, SendCommandCommand } from "@aws-sdk/client-ssm";
 import { DynamoDBDocumentClient, PutCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import crypto from "crypto";
 import protobuf from "protobufjs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -165,7 +164,7 @@ export const handler = async (event) => {
             body: JSON.stringify(
                 ErrorResponse.create({ 
                     message: "Failed to spin up game server session",
-                    error: error.message 
+                    error: error 
                 })
             )
         };

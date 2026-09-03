@@ -11,10 +11,11 @@ const docClient = DynamoDBDocumentClient.from(new DynamoDBClient({
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const pokerApiProto = await protobuf.load(path.join(__dirname, "poker_api.proto"));
 const GameRecord = pokerApiProto.lookupType("poker_api.GameRecord");
-const ErrorResponse = pokerApiProto.lookupType("poker_api.ErrorResponse");
-const RelationshipStatus = pokerApiProto.lookupEnum("poker_api.RelationshipStatus");
+const AccountRecord = pokerApiProto.lookupType("poker_api.AccountRecord");
 const RelationshipRecordList = pokerApiProto.lookupType("poker_api.RelationshipRecordList");
 
+// Note: we pass in table name because not all lambdas (i.e edge auth) have env variables available,
+// and I want to keep all table names terraform-authoritative
 
 // Helper utility to query game record from dynamo table
 export const GetGameRecord = async (gameId, gamesTableName) => {
@@ -29,6 +30,7 @@ export const GetGameRecord = async (gameId, gamesTableName) => {
         }));
     
         const game = gameQueryResponse.Items?.[0] ?? null;
+        console.log("Game response:", game);
     
         if (GameRecord.verify(game) == null) {
             return GameRecord.create(game);
@@ -37,7 +39,7 @@ export const GetGameRecord = async (gameId, gamesTableName) => {
         }
 
     } catch (error) {
-        console.error("Invernal server error:", error.message);
+        console.error("Invernal server error:", error);
     }
 }
 
@@ -46,10 +48,8 @@ export const GetFriendsList = async (accountId, relationshipsTableName) => {
         const friendsQueryResponse = await docClient.send(new QueryCommand({
             TableName: relationshipsTableName,
             KeyConditionExpression: "accountId = :aId",
-            FilterExpression: "relationshipStatus = :friendStatus",
             ExpressionAttributeValues: {
-                ":aId": accountId,
-                ":friendStatus": RelationshipStatus.values.FRIEND
+                ":aId": accountId
             }
         }));
     
@@ -57,6 +57,46 @@ export const GetFriendsList = async (accountId, relationshipsTableName) => {
             relationships: friendsQueryResponse.Items ?? []
         });
     } catch (error) {
-        console.error("Invernal server error:", error.message);
+        console.error("Invernal server error:", error);
+    }
+}
+
+export const GetAccount = async (accountId, accountsTableName) => {
+    try {
+        const accountQueryResponse = await docClient.send(new QueryCommand({
+            TableName: accountsTableName,
+            KeyConditionExpression: "accountId = :aId",
+            ExpressionAttributeValues: {
+                ":aId": accountId
+            }
+        }));
+
+        const account = accountQueryResponse.Items?.[0] ?? null;
+
+        if (AccountRecord.verify(account) == null) {
+            return AccountRecord.create(account);
+        } else {
+            console.error("Invalid account record:", AccountRecord.verify(account))
+        }
+    } catch (error) {
+        console.error("Invernal server error:", error);
+    }
+}
+
+export const GetAccountByFriendCode = async (friendCode, accountsTableName) => {
+    try {
+        const params = {
+            TableName: accountsTableName,
+            IndexName: "FriendCodeIndex", 
+            KeyConditionExpression: "friendCode = :fCode",
+            ExpressionAttributeValues: {
+                ":fCode": friendCode,
+            }
+        };
+        const command = new QueryCommand(params);
+        const response = await docClient.send(command);
+        return response?.Items?.[0] ?? null;
+    } catch (error) {
+        console.error("Invernal server error:", error);
     }
 }

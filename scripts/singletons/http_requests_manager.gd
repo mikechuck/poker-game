@@ -81,8 +81,23 @@ func get_games() -> Array[Contracts.GameRecord]:
 		if dict:
 			games_list.ParseFromDictionary(dict)
 	return games_list.records()
+
+
+func get_friends() -> Array[Contracts.RelationshipRecord]:
+	var path: String = "/friends"
+	var http_response: Contracts.HttpResponseWrapper = await AuthManager.api_request(
+		path,
+		HTTPClient.METHOD_GET
+	)
 	
-	
+	var friends_list: Contracts.RelationshipRecordList = Contracts.RelationshipRecordList.new()
+	if (http_response.response_code == 200):
+		var dict: Dictionary = JSON.parse_string(http_response.response_body.get_string_from_utf8())
+		if dict:
+			friends_list.ParseFromDictionary(dict)
+	return friends_list.relationships()
+
+
 func update_game(game_id: String, game_status: int) -> int:
 	var path: String = "/game/%s" % game_id.uri_encode()
 	var reqeustBody = {

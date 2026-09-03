@@ -1,6 +1,5 @@
-import { DynamoDBDocumentClient, UpdateCommand, QueryCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import crypto from "crypto";
 import protobuf from "protobufjs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -48,9 +47,8 @@ export const handler = async (event) => {
     const newPort = body.port
     const addPlayers = body.addPlayers;
     const removePlayers = body.removePlayers;
-    var hostAccountId = "";
+    var hostAccountId;
     var updateParams;
-    var game;
     var gameRecordRaw;
 
     // TODO: update logic to migrate to a new dynamo record if trying to change hosts
@@ -76,7 +74,7 @@ export const handler = async (event) => {
             body: JSON.stringify(
                 ErrorResponse.create({
                     message: "Failed to fetch game record",
-                    error: error.message
+                    error: error
                 })
             )
         };
@@ -177,7 +175,7 @@ export const handler = async (event) => {
             body: JSON.stringify(
                 ErrorResponse.create({
                     message: "Failed to update game record",
-                    error: error.message
+                    error: error
                 })
             )
         };

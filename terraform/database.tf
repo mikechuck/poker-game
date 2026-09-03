@@ -18,7 +18,18 @@ resource "aws_dynamodb_table" "accounts_table" {
         type = "S"
     }
 
+    attribute {
+        name = "friendCode"
+        type = "S"
+    }
+
     tags = { Name = "PokerAccounts" }
+
+    global_secondary_index {
+        name               = "FriendCodeIndex"
+        hash_key           = "friendCode"
+        projection_type    = "ALL"
+    }
 }
 
 resource "aws_dynamodb_table" "games_table" {

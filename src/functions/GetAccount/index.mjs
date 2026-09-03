@@ -12,7 +12,6 @@ const docClient = DynamoDBDocumentClient.from(new DynamoDBClient({
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const pokerApiProto = await protobuf.load(path.join(__dirname, "shared/poker_api.proto"));
-const GameRecord = pokerApiProto.lookupType("poker_api.GameRecord");
 const AccountRecord = pokerApiProto.lookupType("poker_api.AccountRecord");
 const ErrorResponse = pokerApiProto.lookupType("poker_api.ErrorResponse");
 
@@ -75,7 +74,7 @@ export const handler = async (event) => {
                     body: JSON.stringify(
                         ErrorResponse.create({ 
                             message: "Account not found", 
-                            error: error.message 
+                            error: error 
                         })
                     )
                 };
@@ -115,7 +114,7 @@ export const handler = async (event) => {
             body: JSON.stringify(
                 ErrorResponse.create({ 
                     message: "Internal Server Error", 
-                    error: error.message 
+                    error: error 
                 })
             )
         };

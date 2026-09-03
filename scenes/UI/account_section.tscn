@@ -21,8 +21,7 @@ scale = Vector2(0.03, 0.03)
 mouse_default_cursor_shape = 2
 texture_normal = ExtResource("2_b7sds")
 
-[node name="MarginContainer" type="MarginContainer" parent="."]
-visible = false
+[node name="AccountDetails" type="MarginContainer" parent="."]
 layout_mode = 1
 offset_left = 25.0
 offset_top = 25.0
@@ -30,20 +29,20 @@ offset_right = 300.0
 offset_bottom = 230.0
 mouse_filter = 2
 
-[node name="Account" type="Node2D" parent="MarginContainer"]
+[node name="Account" type="Node2D" parent="AccountDetails"]
 position = Vector2(20, 25)
 
-[node name="DetailsCard" type="Sprite2D" parent="MarginContainer/Account"]
+[node name="DetailsCard" type="Sprite2D" parent="AccountDetails/Account"]
 modulate = Color(0.078431375, 0.12941177, 0.14509805, 1)
 position = Vector2(138, 47)
 texture = ExtResource("2_rgjfm")
 
-[node name="ProfilePicture" type="Sprite2D" parent="MarginContainer/Account"]
+[node name="ProfilePicture" type="Sprite2D" parent="AccountDetails/Account"]
 modulate = Color(0.99607843, 0.9764706, 0.9372549, 1)
 position = Vector2(43, 41)
 texture = ExtResource("3_dv5ke")
 
-[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/Account"]
+[node name="MarginContainer" type="MarginContainer" parent="AccountDetails/Account"]
 offset_left = 95.0
 offset_right = 233.0
 offset_bottom = 85.0
@@ -52,7 +51,7 @@ theme_override_constants/margin_top = 7
 theme_override_constants/margin_right = 5
 theme_override_constants/margin_bottom = 7
 
-[node name="Name" type="RichTextLabel" parent="MarginContainer/Account/MarginContainer"]
+[node name="Name" type="RichTextLabel" parent="AccountDetails/Account/MarginContainer"]
 layout_mode = 2
 bbcode_enabled = true
 text = "[font_size=16]funtybunterrssjdncds[/font_size]"
@@ -60,54 +59,68 @@ scroll_active = false
 autowrap_mode = 0
 vertical_alignment = 1
 
-[node name="HandsPlayed" type="Control" parent="MarginContainer/Account"]
+[node name="FriendCode" type="HBoxContainer" parent="AccountDetails/Account"]
 custom_minimum_size = Vector2(0, 30)
-layout_mode = 3
-anchors_preset = 0
+offset_left = 15.0
 offset_top = 100.0
-offset_right = 88.0
+offset_right = 230.0
 offset_bottom = 130.0
+
+[node name="Label" type="RichTextLabel" parent="AccountDetails/Account/FriendCode"]
+custom_minimum_size = Vector2(115, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Friend Code:"
+vertical_alignment = 1
+
+[node name="Value" type="RichTextLabel" parent="AccountDetails/Account/FriendCode"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "X8XPKKF
+"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="HandsPlayed" type="HBoxContainer" parent="AccountDetails/Account"]
+custom_minimum_size = Vector2(0, 30)
+offset_left = 15.0
+offset_top = 130.0
+offset_right = 230.0
+offset_bottom = 160.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="Label" type="RichTextLabel" parent="MarginContainer/Account/HandsPlayed"]
-layout_mode = 1
-offset_left = 13.0
-offset_right = 128.0
-offset_bottom = 30.0
-text = "Hands Played"
+[node name="Label" type="RichTextLabel" parent="AccountDetails/Account/HandsPlayed"]
+custom_minimum_size = Vector2(115, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Hands Played:"
 vertical_alignment = 1
 
-[node name="Value" type="RichTextLabel" parent="MarginContainer/Account/HandsPlayed"]
-layout_mode = 0
-offset_left = 138.0
-offset_right = 218.0
-offset_bottom = 30.0
+[node name="Value" type="RichTextLabel" parent="AccountDetails/Account/HandsPlayed"]
+layout_mode = 2
+size_flags_horizontal = 3
 text = "0"
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="HandsWon" type="Control" parent="MarginContainer/Account"]
+[node name="HandsWon" type="HBoxContainer" parent="AccountDetails/Account"]
 custom_minimum_size = Vector2(0, 30)
-layout_mode = 3
-anchors_preset = 0
-offset_top = 134.0
-offset_right = 88.0
-offset_bottom = 164.0
+offset_left = 15.0
+offset_top = 160.0
+offset_right = 230.0
+offset_bottom = 190.0
 
-[node name="Label" type="RichTextLabel" parent="MarginContainer/Account/HandsWon"]
-layout_mode = 1
-offset_left = 13.0
-offset_right = 128.0
-offset_bottom = 30.0
-text = "Hands Won"
+[node name="Label" type="RichTextLabel" parent="AccountDetails/Account/HandsWon"]
+custom_minimum_size = Vector2(115, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Hands Won:"
 vertical_alignment = 1
 
-[node name="Value" type="RichTextLabel" parent="MarginContainer/Account/HandsWon"]
-layout_mode = 0
-offset_left = 138.0
-offset_right = 218.0
-offset_bottom = 30.0
+[node name="Value" type="RichTextLabel" parent="AccountDetails/Account/HandsWon"]
+layout_mode = 2
+size_flags_horizontal = 3
 text = "0
 "
 horizontal_alignment = 2

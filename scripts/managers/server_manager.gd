@@ -5,7 +5,7 @@ var game_manager: GameSceneManager
 var client_manager: ClientManager
 var GAME_ID: String
 var PORT: int = 12000
-const IDLE_TIMEOUT_SECONDS: float = 300.0
+const IDLE_TIMEOUT_SECONDS: float = 30.0
 
 @onready var idle_timer : Timer = Timer.new()
 
@@ -91,6 +91,7 @@ func _on_peer_disconnected(id):
 		if (game_manager.game_state_data.connected_players.values().size() > 0):
 			var new_host: ConnectedPlayer = game_manager.game_state_data.connected_players.values()[0]
 			game_manager.game_state_data.host_peer_id = new_host.peer_id
+			new_host.is_host = true
 			Log.message("New host id: %s" % new_host.account_id)
 		else:
 			Log.message("Host left, no players left in the game")

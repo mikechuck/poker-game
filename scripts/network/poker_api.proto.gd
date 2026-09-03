@@ -996,10 +996,16 @@ class RelationshipRecord extends Message:
 	#3 : relationshipStatus
 	var relationshipStatus: RelationshipStatus = 0
 
-	#4 : nickname
-	var nickname: String = ""
+	#4 : peerPlayerName
+	var peerPlayerName: String = ""
 
-	#5 : createTimeEpochMilliseconds
+	#5 : peerProfilePictureUrl
+	var peerProfilePictureUrl: String = ""
+
+	#6 : peerPlayerColor
+	var peerPlayerColor: String = ""
+
+	#7 : createTimeEpochMilliseconds
 	var createTimeEpochMilliseconds: int = 0
 
 
@@ -1008,7 +1014,9 @@ class RelationshipRecord extends Message:
 		self.accountId = ""
 		self.peerAccountId = ""
 		self.relationshipStatus = 0
-		self.nickname = ""
+		self.peerPlayerName = ""
+		self.peerProfilePictureUrl = ""
+		self.peerPlayerColor = ""
 		self.createTimeEpochMilliseconds = 0
 
 	## Create a new message instance
@@ -1027,7 +1035,9 @@ class RelationshipRecord extends Message:
 			self.accountId += other.accountId
 			self.peerAccountId += other.peerAccountId
 			self.relationshipStatus = other.relationshipStatus
-			self.nickname += other.nickname
+			self.peerPlayerName += other.peerPlayerName
+			self.peerProfilePictureUrl += other.peerProfilePictureUrl
+			self.peerPlayerColor += other.peerPlayerColor
 			self.createTimeEpochMilliseconds += other.createTimeEpochMilliseconds
  
 	func SerializeToBytes(buffer: PackedByteArray = PackedByteArray()) -> PackedByteArray:
@@ -1040,11 +1050,17 @@ class RelationshipRecord extends Message:
 		if self.relationshipStatus != 0:
 			GDScriptUtils.encode_tag(buffer, 3, 14)
 			GDScriptUtils.encode_varint(buffer, self.relationshipStatus)
-		if self.nickname != "":
+		if self.peerPlayerName != "":
 			GDScriptUtils.encode_tag(buffer, 4, 9)
-			GDScriptUtils.encode_string(buffer, self.nickname)
+			GDScriptUtils.encode_string(buffer, self.peerPlayerName)
+		if self.peerProfilePictureUrl != "":
+			GDScriptUtils.encode_tag(buffer, 5, 9)
+			GDScriptUtils.encode_string(buffer, self.peerProfilePictureUrl)
+		if self.peerPlayerColor != "":
+			GDScriptUtils.encode_tag(buffer, 6, 9)
+			GDScriptUtils.encode_string(buffer, self.peerPlayerColor)
 		if self.createTimeEpochMilliseconds != 0:
-			GDScriptUtils.encode_tag(buffer, 5, 3)
+			GDScriptUtils.encode_tag(buffer, 7, 3)
 			GDScriptUtils.encode_varint(buffer, self.createTimeEpochMilliseconds)
 		return buffer
  
@@ -1072,9 +1088,17 @@ class RelationshipRecord extends Message:
 					pos += field_value[GDScriptUtils.SIZE_KEY]
 				4:
 					var field_value = GDScriptUtils.decode_string(data, pos, self)
-					self.nickname = field_value[GDScriptUtils.VALUE_KEY]
+					self.peerPlayerName = field_value[GDScriptUtils.VALUE_KEY]
 					pos += field_value[GDScriptUtils.SIZE_KEY]
 				5:
+					var field_value = GDScriptUtils.decode_string(data, pos, self)
+					self.peerProfilePictureUrl = field_value[GDScriptUtils.VALUE_KEY]
+					pos += field_value[GDScriptUtils.SIZE_KEY]
+				6:
+					var field_value = GDScriptUtils.decode_string(data, pos, self)
+					self.peerPlayerColor = field_value[GDScriptUtils.VALUE_KEY]
+					pos += field_value[GDScriptUtils.SIZE_KEY]
+				7:
 					var field_value = GDScriptUtils.decode_varint(data, pos, self)
 					self.createTimeEpochMilliseconds = field_value[GDScriptUtils.VALUE_KEY]
 					pos += field_value[GDScriptUtils.SIZE_KEY]
@@ -1088,7 +1112,9 @@ class RelationshipRecord extends Message:
 		dict["accountId"] = self.accountId
 		dict["peerAccountId"] = self.peerAccountId
 		dict["relationshipStatus"] = self.relationshipStatus
-		dict["nickname"] = self.nickname
+		dict["peerPlayerName"] = self.peerPlayerName
+		dict["peerProfilePictureUrl"] = self.peerProfilePictureUrl
+		dict["peerPlayerColor"] = self.peerPlayerColor
 		dict["createTimeEpochMilliseconds"] = self.createTimeEpochMilliseconds
 		return dict
 
@@ -1102,8 +1128,12 @@ class RelationshipRecord extends Message:
 			self.peerAccountId = dict.get("peerAccountId")
 		if dict.has("relationshipStatus"):
 			self.relationshipStatus = dict.get("relationshipStatus")
-		if dict.has("nickname"):
-			self.nickname = dict.get("nickname")
+		if dict.has("peerPlayerName"):
+			self.peerPlayerName = dict.get("peerPlayerName")
+		if dict.has("peerProfilePictureUrl"):
+			self.peerProfilePictureUrl = dict.get("peerProfilePictureUrl")
+		if dict.has("peerPlayerColor"):
+			self.peerPlayerColor = dict.get("peerPlayerColor")
 		if dict.has("createTimeEpochMilliseconds"):
 			self.createTimeEpochMilliseconds = dict.get("createTimeEpochMilliseconds")
 

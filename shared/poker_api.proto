@@ -19,6 +19,13 @@ message ErrorResponse {
 
 // Account
 
+/**
+Fields changes that need to be replicated to other tables upon change:
+- playerName
+- profilePictureUrl
+- playerColor
+**/
+
 message AccountRecord {
     string accountId = 1;
     string playerName = 2;
@@ -83,8 +90,10 @@ message RelationshipRecord {
     string accountId = 1;
     string peerAccountId = 2;
     RelationshipStatus relationshipStatus = 3;
-    string nickname = 4;
-    int64 createTimeEpochMilliseconds = 5;
+    string peerPlayerName = 4;
+    string peerProfilePictureUrl = 5;
+    string peerPlayerColor = 6;
+    int64 createTimeEpochMilliseconds = 7;
 }
 
 message RelationshipRecordList {

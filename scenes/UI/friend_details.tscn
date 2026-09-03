@@ -1,0 +1,38 @@
+[gd_scene load_steps=2 format=3 uid="uid://db3sh5f7fw213"]
+
+[ext_resource type="Script" uid="uid://lk8efotfqpa6" path="res://scripts/UI/friend_details.gd" id="1_7p84g"]
+
+[node name="FriendDetails" type="HBoxContainer"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_7p84g")
+
+[node name="PlayerColor" type="ColorRect" parent="."]
+custom_minimum_size = Vector2(20, 20)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+
+[node name="NameContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 10
+
+[node name="Name" type="RichTextLabel" parent="NameContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+bbcode_enabled = true
+text = "jeegerson"
+vertical_alignment = 1
+
+[node name="Status" type="RichTextLabel" parent="."]
+custom_minimum_size = Vector2(50, 25)
+layout_mode = 2
+size_flags_horizontal = 4
+bbcode_enabled = true
+text = "[font_size=10]Pending[/font_size]"
+horizontal_alignment = 1
+vertical_alignment = 1

@@ -11,28 +11,29 @@ const docClient = DynamoDBDocumentClient.from(new DynamoDBClient({
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const pokerApiProto = await protobuf.load(path.join(__dirname, "shared/poker_api.proto"));
 const ErrorResponse = pokerApiProto.lookupType("poker_api.ErrorResponse");
-const GameRecordList = pokerApiProto.lookupType("poker_api.GameRecordList");
+const RelationshipRecordList = pokerApiProto.lookupType("poker_api.RelationshipRecordList");
 
-const GAMES_TABLE = process.env.GAMES_TABLE;
+const RELATIONSHIPS_TABLE = process.env.RELATIONSHIPS_TABLE;
 
 export const handler = async (event) => {
     const accountId = event.requestContext?.authorizer?.jwt?.claims?.sub;
 
     try {
         const queryResponse = await docClient.send(new QueryCommand({
-            TableName: GAMES_TABLE,
-            IndexName: "HostAccountIdIndex", 
-            KeyConditionExpression: "hostAccountId = :hId",
+            TableName: RELATIONSHIPS_TABLE,
+            KeyConditionExpression: "accountId = :aId",
             ExpressionAttributeValues: {
-                ":hId": accountId
+                ":aId": accountId
             }
         }));
 
-        const gameRecordsList = GameRecordList.create({
-            records: queryResponse.Items
+        console.log("queryResponse:", queryResponse);
+
+        const relationshipRecordList = RelationshipRecordList.create({
+            relationships: queryResponse.Items
         })
 
-        const gameRecordsListObject = GameRecordList.toObject(gameRecordsList, {
+        const relationshipRecordListObject = RelationshipRecordList.toObject(relationshipRecordList, {
             enums: Number,
             defaults: true
         });
@@ -40,7 +41,7 @@ export const handler = async (event) => {
         return {
             statusCode: 200,
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(gameRecordsListObject)
+            body: JSON.stringify(relationshipRecordListObject)
         };
 
     } catch (error) {

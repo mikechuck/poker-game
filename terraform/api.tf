@@ -378,6 +378,105 @@ resource "aws_lambda_permission" "api_gw_server_update_game" {
 
 # --- End Server UpdateGame API Gateway Integration ---
 
+# --- Start AddFriend API Gateway Integration ---
+
+# Create the Integration
+resource "aws_apigatewayv2_integration" "add_friend_int" {
+    api_id           = aws_apigatewayv2_api.poker_api.id
+    integration_type = "AWS_PROXY"
+    integration_uri  = aws_lambda_function.add_friend.invoke_arn
+    payload_format_version = "2.0"
+}
+
+# Update the existing Route to point to this integration
+resource "aws_apigatewayv2_route" "add_friend_route" {
+    api_id    = aws_apigatewayv2_api.poker_api.id
+    route_key = "POST /friends/request"
+
+    target             = "integrations/${aws_apigatewayv2_integration.add_friend_int.id}"
+    authorization_type = "JWT"
+    authorizer_id      = aws_apigatewayv2_authorizer.cognito_auth.id
+}
+
+# Grant Permission for API Gateway to invoke the Lambda
+resource "aws_lambda_permission" "api_gw_add_friend" {
+    statement_id  = "AllowExecutionFromAPIGateway"
+    action        = "lambda:InvokeFunction"
+    function_name = aws_lambda_function.add_friend.function_name
+    principal     = "apigateway.amazonaws.com"
+
+    # Standard security: restrict access to your specific API
+    source_arn = "${aws_apigatewayv2_api.poker_api.execution_arn}/*/*"
+}
+
+# --- End AddFriend API Gateway Integration ---
+
+# --- Start GetFriends API Gateway Integration ---
+
+# Create the Integration
+resource "aws_apigatewayv2_integration" "get_friends_int" {
+    api_id           = aws_apigatewayv2_api.poker_api.id
+    integration_type = "AWS_PROXY"
+    integration_uri  = aws_lambda_function.get_friends.invoke_arn
+    payload_format_version = "2.0"
+}
+
+# Update the existing Route to point to this integration
+resource "aws_apigatewayv2_route" "get_friends_route" {
+    api_id    = aws_apigatewayv2_api.poker_api.id
+    route_key = "GET /friends"
+
+    target             = "integrations/${aws_apigatewayv2_integration.get_friends_int.id}"
+    authorization_type = "JWT"
+    authorizer_id      = aws_apigatewayv2_authorizer.cognito_auth.id
+}
+
+# Grant Permission for API Gateway to invoke the Lambda
+resource "aws_lambda_permission" "api_gw_get_friends" {
+    statement_id  = "AllowExecutionFromAPIGateway"
+    action        = "lambda:InvokeFunction"
+    function_name = aws_lambda_function.get_friends.function_name
+    principal     = "apigateway.amazonaws.com"
+
+    # Standard security: restrict access to your specific API
+    source_arn = "${aws_apigatewayv2_api.poker_api.execution_arn}/*/*"
+}
+
+# --- End GetFriends API Gateway Integration ---
+
+# --- Start AcceptFriend API Gateway Integration ---
+
+# Create the Integration
+resource "aws_apigatewayv2_integration" "accept_friend_int" {
+    api_id           = aws_apigatewayv2_api.poker_api.id
+    integration_type = "AWS_PROXY"
+    integration_uri  = aws_lambda_function.accept_friend.invoke_arn
+    payload_format_version = "2.0"
+}
+
+# Update the existing Route to point to this integration
+resource "aws_apigatewayv2_route" "accept_friend_route" {
+    api_id    = aws_apigatewayv2_api.poker_api.id
+    route_key = "POST /friends/{requestorAccountId}/accept"
+
+    target             = "integrations/${aws_apigatewayv2_integration.accept_friend_int.id}"
+    authorization_type = "JWT"
+    authorizer_id      = aws_apigatewayv2_authorizer.cognito_auth.id
+}
+
+# Grant Permission for API Gateway to invoke the Lambda
+resource "aws_lambda_permission" "api_gw_accept_friend" {
+    statement_id  = "AllowExecutionFromAPIGateway"
+    action        = "lambda:InvokeFunction"
+    function_name = aws_lambda_function.accept_friend.function_name
+    principal     = "apigateway.amazonaws.com"
+
+    # Standard security: restrict access to your specific API
+    source_arn = "${aws_apigatewayv2_api.poker_api.execution_arn}/*/*"
+}
+
+# --- End AcceptFriend API Gateway Integration ---
+
 # --- Start Private Server Authorizer Lambda Function ---
 
 resource "aws_lambda_function" "server_auth_lambda" {
@@ -583,3 +682,88 @@ resource "aws_cloudwatch_log_group" "update_game_logs" {
 }
 
 # --- End UpdateGame Lambda Function ---
+
+# --- Start AddFriend Lambda Function ---
+
+resource "aws_lambda_function" "add_friend" {
+    function_name = "AddFriend"
+    filename      = "${path.module}/../exports/lambda/AddFriend.zip"
+    role          = aws_iam_role.lambda_integration_role.arn
+    handler       = "index.handler"
+    runtime       = "nodejs22.x" # Node 22 is the standard current LTS
+    timeout       = 10
+    memory_size   = 128
+
+    source_code_hash = filebase64sha256("${path.module}/../exports/lambda/AddFriend.zip")
+
+    environment {
+        variables = {
+            ACCOUNTS_TABLE = aws_dynamodb_table.accounts_table.name
+            RELATIONSHIPS_TABLE = aws_dynamodb_table.relationships_table.name
+        }
+    }
+}
+
+# Create the log group explicitly to control retention
+resource "aws_cloudwatch_log_group" "add_friend_logs" {
+    name              = "/aws/lambda/AddFriend"
+    retention_in_days = 7
+}
+
+# --- End AddFriend Lambda Function ---
+
+# --- Start GetFriends Lambda Function ---
+
+resource "aws_lambda_function" "get_friends" {
+    function_name = "GetFriends"
+    filename      = "${path.module}/../exports/lambda/GetFriends.zip"
+    role          = aws_iam_role.lambda_integration_role.arn
+    handler       = "index.handler"
+    runtime       = "nodejs22.x" # Node 22 is the standard current LTS
+    timeout       = 10
+    memory_size   = 128
+
+    source_code_hash = filebase64sha256("${path.module}/../exports/lambda/GetFriends.zip")
+
+    environment {
+        variables = {
+            RELATIONSHIPS_TABLE = aws_dynamodb_table.relationships_table.name
+        }
+    }
+}
+
+# Create the log group explicitly to control retention
+resource "aws_cloudwatch_log_group" "get_friends_logs" {
+    name              = "/aws/lambda/GetFriends"
+    retention_in_days = 7
+}
+
+# --- End GetFriends Lambda Function ---
+
+# --- Start AcceptFriend Lambda Function ---
+
+resource "aws_lambda_function" "accept_friend" {
+    function_name = "AcceptFriend"
+    filename      = "${path.module}/../exports/lambda/AcceptFriend.zip"
+    role          = aws_iam_role.lambda_integration_role.arn
+    handler       = "index.handler"
+    runtime       = "nodejs22.x" # Node 22 is the standard current LTS
+    timeout       = 10
+    memory_size   = 128
+
+    source_code_hash = filebase64sha256("${path.module}/../exports/lambda/AcceptFriend.zip")
+
+    environment {
+        variables = {
+            RELATIONSHIPS_TABLE = aws_dynamodb_table.relationships_table.name
+        }
+    }
+}
+
+# Create the log group explicitly to control retention
+resource "aws_cloudwatch_log_group" "accept_friend_logs" {
+    name              = "/aws/lambda/AcceptFriend"
+    retention_in_days = 7
+}
+
+# --- End AcceptFriend Lambda Function ---

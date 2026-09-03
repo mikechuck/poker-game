@@ -101,7 +101,8 @@ func _ready() -> void:
 			
 	if (game_manager.game_state_data.game_state == GameState.State.PreHand):
 		Log.message("showing leave seat button")
-		leave_seat_button.visible = true
+		if account_id == DataStore.account_data.accountId:
+			leave_seat_button.visible = true
 	else:
 		Log.message("hiding leave seat button")
 		leave_seat_button.visible = false

@@ -1,13 +1,7 @@
-import { DynamoDBDocumentClient, QueryCommand } from "@aws-sdk/lib-dynamodb";
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import protobuf from "protobufjs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { GetGameRecord } from "./shared/utilities.mjs";
-
-const docClient = DynamoDBDocumentClient.from(new DynamoDBClient({
-    region: "us-east-1"
-}));
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const pokerApiProto = await protobuf.load(path.join(__dirname, "shared/poker_api.proto"));
