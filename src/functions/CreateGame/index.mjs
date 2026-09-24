@@ -21,7 +21,9 @@ const INSTANCE_ID = process.env.POKER_SERVER_INSTANCE_ID;
 const GAMES_TABLE = process.env.GAMES_TABLE;
 
 export const handler = async (event) => {
-    const accountId = event.requestContext?.authorizer?.jwt?.claims?.sub;
+    const claims = event.requestContext?.authorizer?.jwt?.claims;
+    const accountId = claims.sub;
+    const username = claims["cognito:username"]
 
     if (!event.body) {
         return {
@@ -101,6 +103,7 @@ export const handler = async (event) => {
         const newGameData = {
             gameId: gameCode,
             hostAccountId: accountId,
+            hostName: username,
             createTimeEpochMilliseconds: Date.now(),
             gameStatus: GameStatus.values.STARTING,
             endTimeEpochMilliseconds: 0,

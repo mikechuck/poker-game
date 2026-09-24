@@ -13,7 +13,6 @@ var player_ui_instance: PlayerUI = null
 
 ### Managers
 @onready var server_manager: ServerManager = get_parent().get_node("ServerManager")
-@onready var client_manager: ClientManager = get_parent().get_node("ClientManager")
 @onready var deck_manager: DeckManager = get_parent().get_node("DeckManager")
 @onready var players_list_node: PlayersListContainer = get_parent().get_node("PlayersList")
 
@@ -56,7 +55,7 @@ func run_after_tree_load():
 func reset_hand() -> void:
 	game_state_data.reset_game_state()
 	deck_manager.shuffle_deck()
-	client_manager.update_game_state_data.rpc(game_state_data.to_dict())
+	ClientManager.update_game_state_data.rpc(game_state_data.to_dict())
 
 
 func assign_player_to_seat(client_id: int, seat_number: int) -> void:
@@ -71,7 +70,7 @@ func assign_player_to_seat(client_id: int, seat_number: int) -> void:
 	desired_seat.hand_cash = GameStateData.default_starting_cash
 	game_state_data.player_seats[seat_number] = desired_seat
 	game_state_data.connected_players[client_id].is_spectating = false
-	client_manager.update_game_state_data.rpc(game_state_data.to_dict())
+	ClientManager.update_game_state_data.rpc(game_state_data.to_dict())
 
 
 func remove_player_from_seat(client_id: int) -> void:
@@ -79,7 +78,7 @@ func remove_player_from_seat(client_id: int) -> void:
 		if (seat.peer_id == client_id):
 			seat.clear_seat_data()
 	game_state_data.connected_players[client_id].is_spectating = true
-	client_manager.update_game_state_data.rpc(game_state_data.to_dict())
+	ClientManager.update_game_state_data.rpc(game_state_data.to_dict())
 
 
 ### Game cycle methods
@@ -95,57 +94,57 @@ func step_next_game_state():
 		GameState.State.PreHand:
 			var next_game_state: GameState.State = GameState.State.SetupHand
 			game_state_data.game_state = next_game_state
-			client_manager.update_game_state_data.rpc(game_state_data.to_dict())
+			ClientManager.update_game_state_data.rpc(game_state_data.to_dict())
 			state_setup_hand()
 		GameState.State.SetupHand:
 			var next_game_state: GameState.State = GameState.State.DealHole
 			game_state_data.game_state = next_game_state
-			client_manager.update_game_state_data.rpc(game_state_data.to_dict())
+			ClientManager.update_game_state_data.rpc(game_state_data.to_dict())
 			state_deal_hole_cards()
 		GameState.State.DealHole:
 			var next_game_state: GameState.State = GameState.State.BetHole
 			game_state_data.game_state = next_game_state
-			client_manager.update_game_state_data.rpc(game_state_data.to_dict())
+			ClientManager.update_game_state_data.rpc(game_state_data.to_dict())
 			check_skip_this_state()
 		GameState.State.BetHole:
 			var next_game_state: GameState.State = GameState.State.DealFlop
 			game_state_data.game_state = next_game_state
-			client_manager.update_game_state_data.rpc(game_state_data.to_dict())
+			ClientManager.update_game_state_data.rpc(game_state_data.to_dict())
 			state_deal_flop_cards()
 		GameState.State.DealFlop:
 			var next_game_state: GameState.State = GameState.State.BetFlop
 			game_state_data.game_state = next_game_state
-			client_manager.update_game_state_data.rpc(game_state_data.to_dict())
+			ClientManager.update_game_state_data.rpc(game_state_data.to_dict())
 			check_skip_this_state()
 		GameState.State.BetFlop:
 			var next_game_state: GameState.State = GameState.State.DealTurn
 			game_state_data.game_state = next_game_state
-			client_manager.update_game_state_data.rpc(game_state_data.to_dict())
+			ClientManager.update_game_state_data.rpc(game_state_data.to_dict())
 			state_deal_turn_card()
 		GameState.State.DealTurn:
 			var next_game_state: GameState.State = GameState.State.BetTurn
 			game_state_data.game_state = next_game_state
-			client_manager.update_game_state_data.rpc(game_state_data.to_dict())
+			ClientManager.update_game_state_data.rpc(game_state_data.to_dict())
 			check_skip_this_state()
 		GameState.State.BetTurn:
 			var next_game_state: GameState.State = GameState.State.DealRiver
 			game_state_data.game_state = next_game_state
-			client_manager.update_game_state_data.rpc(game_state_data.to_dict())
+			ClientManager.update_game_state_data.rpc(game_state_data.to_dict())
 			state_deal_river_card()
 		GameState.State.DealRiver:
 			var next_game_state: GameState.State = GameState.State.BetRiver
 			game_state_data.game_state = next_game_state
-			client_manager.update_game_state_data.rpc(game_state_data.to_dict())
+			ClientManager.update_game_state_data.rpc(game_state_data.to_dict())
 			check_skip_this_state()
 		GameState.State.BetRiver:
 			var next_game_state: GameState.State = GameState.State.HandOver
 			game_state_data.game_state = next_game_state
-			client_manager.update_game_state_data.rpc(game_state_data.to_dict())
+			ClientManager.update_game_state_data.rpc(game_state_data.to_dict())
 			state_end_step()
 		GameState.State.HandOver:
 			var next_game_state: GameState.State = GameState.State.PreHand
 			game_state_data.game_state = next_game_state
-			client_manager.update_game_state_data.rpc(game_state_data.to_dict())
+			ClientManager.update_game_state_data.rpc(game_state_data.to_dict())
 	
 	
 func state_setup_hand():
@@ -162,7 +161,7 @@ func state_setup_hand():
 	game_state_data.player_seats[first_player_seat_index].is_small_blind = true
 	game_state_data.player_seats[second_player_seat_index].is_big_blind = true
 	# Update all clients with starting game state
-	client_manager.update_game_state_data.rpc(game_state_data.to_dict())
+	ClientManager.update_game_state_data.rpc(game_state_data.to_dict())
 	step_next_game_state()
 	
 	
@@ -178,7 +177,7 @@ func state_deal_hole_cards():
 			var hole_card2: CardData = deck_manager.deal_card()
 			player.hole_cards.append(hole_card1)
 			player.hole_cards.append(hole_card2)
-	client_manager.update_game_state_data.rpc(game_state_data.to_dict())
+	ClientManager.update_game_state_data.rpc(game_state_data.to_dict())
 	step_next_game_state()
 	
 	
@@ -188,7 +187,7 @@ func state_deal_flop_cards() -> void:
 	game_state_data.board_cards.append(deck_manager.deal_card())
 	# Add a timer between states so users have visual separation
 	await get_tree().create_timer(0.5).timeout
-	client_manager.update_game_state_data.rpc(game_state_data.to_dict())
+	ClientManager.update_game_state_data.rpc(game_state_data.to_dict())
 	step_next_game_state()
 	
 	
@@ -196,13 +195,13 @@ func state_deal_turn_card() -> void:
 	game_state_data.board_cards.append(deck_manager.deal_card())
 	# Add a timer between states so users have visual separation
 	await get_tree().create_timer(0.5).timeout
-	client_manager.update_game_state_data.rpc(game_state_data.to_dict())
+	ClientManager.update_game_state_data.rpc(game_state_data.to_dict())
 	step_next_game_state()
 
 
 func state_deal_river_card() -> void:
 	game_state_data.board_cards.append(deck_manager.deal_card())
-	client_manager.update_game_state_data.rpc(game_state_data.to_dict())
+	ClientManager.update_game_state_data.rpc(game_state_data.to_dict())
 	step_next_game_state()
 	
 	
@@ -213,7 +212,7 @@ func state_end_step() -> void:
 		if seat.peer_id == game_state_data.winner_peer_id:
 			seat.hand_cash += game_state_data.pot_value
 	game_state_data.connected_players[game_state_data.winner_peer_id].player_total_cash += game_state_data.pot_value
-	client_manager.update_game_state_data.rpc(game_state_data.to_dict())
+	ClientManager.update_game_state_data.rpc(game_state_data.to_dict())
 	
 	
 func find_winning_seat() -> PlayerSeat:
@@ -344,7 +343,7 @@ func increment_player_turn() -> void:
 		step_next_game_state()
 	else:
 		game_state_data.player_turn = next_player_turn
-		client_manager.update_game_state_data.rpc(game_state_data.to_dict())
+		ClientManager.update_game_state_data.rpc(game_state_data.to_dict())
 		
 		
 func get_next_active_player_turn() -> int:

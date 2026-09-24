@@ -12,7 +12,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const pokerApiProto = await protobuf.load(path.join(__dirname, "poker_api.proto"));
 const GameRecord = pokerApiProto.lookupType("poker_api.GameRecord");
 const AccountRecord = pokerApiProto.lookupType("poker_api.AccountRecord");
-const RelationshipRecordList = pokerApiProto.lookupType("poker_api.RelationshipRecordList");
+const FriendRecordList = pokerApiProto.lookupType("poker_api.FriendRecordList");
 
 // Note: we pass in table name because not all lambdas (i.e edge auth) have env variables available,
 // and I want to keep all table names terraform-authoritative
@@ -30,7 +30,6 @@ export const GetGameRecord = async (gameId, gamesTableName) => {
         }));
     
         const game = gameQueryResponse.Items?.[0] ?? null;
-        console.log("Game response:", game);
     
         if (GameRecord.verify(game) == null) {
             return GameRecord.create(game);
@@ -43,21 +42,40 @@ export const GetGameRecord = async (gameId, gamesTableName) => {
     }
 }
 
-export const GetFriendsList = async (accountId, relationshipsTableName) => {
+export const GetFriendsList = async (accountId, friendsTableName) => {
     try {
         const friendsQueryResponse = await docClient.send(new QueryCommand({
-            TableName: relationshipsTableName,
+            TableName: friendsTableName,
             KeyConditionExpression: "accountId = :aId",
             ExpressionAttributeValues: {
                 ":aId": accountId
             }
         }));
     
-        return RelationshipRecordList.create({
-            relationships: friendsQueryResponse.Items ?? []
+        return FriendRecordList.create({
+            friends: friendsQueryResponse.Items ?? []
         });
     } catch (error) {
         console.error("Invernal server error:", error);
+    }
+}
+
+export const IsFriendsWithPlayer = async (accountId, peerAcountId, friendsTableName) => {
+    try {
+        const friendsQueryResponse = await docClient.send(new QueryCommand({
+            TableName: friendsTableName,
+            IndexName: "PeerAccountIdIndex", 
+            KeyConditionExpression: "accountId = :accId AND peerAccountId = :peerId",
+            ExpressionAttributeValues: {
+                ":accId": accountId,
+                ":peerId": peerAcountId,
+            }
+        }));
+
+        return friendsQueryResponse.Items.length > 0;
+    } catch (error) {
+        console.error("Invernal server error:", error);
+        return false;
     }
 }
 

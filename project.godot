@@ -25,6 +25,8 @@ DataStore="*res://scripts/singletons/data_store.gd"
 Contracts="*res://scripts/network/poker_api.proto.gd"
 AuthManager="*res://scripts/singletons/auth_manager.gd"
 HttpRequestsManager="*res://scripts/singletons/http_requests_manager.gd"
+BrowserExtensions="*res://scripts/singletons/browser_extensions.gd"
+ClientManager="*res://scripts/singletons/client_manager.gd"
 
 [debug]
 

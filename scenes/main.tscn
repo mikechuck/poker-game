@@ -1,7 +1,8 @@
-[gd_scene load_steps=7 format=3 uid="uid://b7ckdfv84qrn2"]
+[gd_scene load_steps=8 format=3 uid="uid://b7ckdfv84qrn2"]
 
 [ext_resource type="Script" uid="uid://dvefjfvnac0ds" path="res://scripts/managers/main_scene_manager.gd" id="1_o5qli"]
 [ext_resource type="PackedScene" uid="uid://cr8vvixudbsoq" path="res://scenes/UI/account_section.tscn" id="2_jyhfs"]
+[ext_resource type="Texture2D" uid="uid://bkth60ay70ih4" path="res://assets/icons/refresh-circle.svg" id="4_tefeu"]
 [ext_resource type="Script" uid="uid://pbt3e5ngffq3" path="res://scripts/UI/game_details_container.gd" id="5_85g3d"]
 [ext_resource type="Script" uid="uid://hh1ti6qwxid3" path="res://scripts/UI/friends_list_container.gd" id="5_tefeu"]
 [ext_resource type="PackedScene" uid="uid://68tyc31vsq17" path="res://scenes/UI/game_details.tscn" id="6_choun"]
@@ -209,7 +210,7 @@ anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_top = -500.0
-offset_right = 815.0
+offset_right = 850.0
 grow_vertical = 0
 script = ExtResource("5_85g3d")
 
@@ -218,7 +219,6 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_right = 28.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/margin_left = 25
@@ -251,11 +251,20 @@ horizontal_alignment = 1
 layout_mode = 2
 
 [node name="GameIdHeader" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ColumnTitles"]
+custom_minimum_size = Vector2(80, 30)
+layout_mode = 2
+bbcode_enabled = true
+text = "[font_size=12][b]Game Id[/b][/font_size]"
+fit_content = true
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HostNameHeader" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ColumnTitles"]
 custom_minimum_size = Vector2(50, 30)
 layout_mode = 2
 size_flags_horizontal = 3
 bbcode_enabled = true
-text = "[font_size=12][b]Game Id[/b][/font_size]"
+text = "[font_size=12][b]Host[/b][/font_size]"
 fit_content = true
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -270,7 +279,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Players" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ColumnTitles"]
-custom_minimum_size = Vector2(55, 30)
+custom_minimum_size = Vector2(65, 30)
 layout_mode = 2
 bbcode_enabled = true
 text = "[font_size=12][b]Players[/b][/font_size]"
@@ -278,19 +287,9 @@ fit_content = true
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="HandsHeader" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ColumnTitles"]
-custom_minimum_size = Vector2(55, 30)
-layout_mode = 2
-bbcode_enabled = true
-text = "[font_size=12][b]Hands[/b][/font_size]"
-fit_content = true
-horizontal_alignment = 1
-vertical_alignment = 1
-
 [node name="PrivacyHeader" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ColumnTitles"]
-custom_minimum_size = Vector2(0, 30)
+custom_minimum_size = Vector2(65, 30)
 layout_mode = 2
-size_flags_horizontal = 3
 bbcode_enabled = true
 text = "[font_size=12][b]Privacy[/b][/font_size]"
 fit_content = true
@@ -298,9 +297,8 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="BuyInHeader" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ColumnTitles"]
-custom_minimum_size = Vector2(0, 30)
+custom_minimum_size = Vector2(65, 30)
 layout_mode = 2
-size_flags_horizontal = 3
 bbcode_enabled = true
 text = "[font_size=12][b]Buy In[/b][/font_size]"
 fit_content = true
@@ -308,9 +306,8 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="BlindHeader" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ColumnTitles"]
-custom_minimum_size = Vector2(0, 30)
+custom_minimum_size = Vector2(65, 30)
 layout_mode = 2
-size_flags_horizontal = 3
 bbcode_enabled = true
 text = "[font_size=12][b]Blind[/b][/font_size]"
 fit_content = true
@@ -318,9 +315,8 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="ChipRatioHeader" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ColumnTitles"]
-custom_minimum_size = Vector2(0, 30)
+custom_minimum_size = Vector2(80, 30)
 layout_mode = 2
-size_flags_horizontal = 3
 tooltip_text = "How many chips are equal to one dollar"
 mouse_default_cursor_shape = 16
 bbcode_enabled = true
@@ -330,6 +326,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="JoinHeader" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ColumnTitles"]
+visible = false
 custom_minimum_size = Vector2(108, 30)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -339,6 +336,30 @@ text = "
 fit_content = true
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="Control" type="Control" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ColumnTitles"]
+custom_minimum_size = Vector2(108, 0)
+layout_mode = 2
+
+[node name="Sprite2D" type="Sprite2D" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ColumnTitles/Control"]
+visible = false
+modulate = Color(1, 0.79607844, 0.46666667, 1)
+position = Vector2(50, 15)
+scale = Vector2(0.03, 0.03)
+texture = ExtResource("4_tefeu")
+
+[node name="RefreshButton" type="TextureButton" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ColumnTitles/Control"]
+modulate = Color(1, 0.79607844, 0.46666667, 1)
+layout_mode = 0
+offset_left = 40.0
+offset_right = 65.0
+offset_bottom = 30.0
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.1
+mouse_default_cursor_shape = 2
+texture_normal = ExtResource("4_tefeu")
+ignore_texture_size = true
+stretch_mode = 5
 
 [node name="MarginContainer" type="MarginContainer" parent="Content/GamesList/MarginContainer/MarginContainer/Table"]
 clip_contents = true
@@ -470,7 +491,6 @@ popup/item_0/text = "Public"
 popup/item_0/id = 0
 popup/item_1/text = "Friends"
 popup/item_1/id = 1
-popup/item_1/disabled = true
 popup/item_2/text = "Invite"
 popup/item_2/id = 2
 popup/item_2/disabled = true
@@ -479,6 +499,7 @@ popup/item_3/id = 3
 
 [node name="BuyIn" type="SpinBox" parent="Content/GamesList/MarginContainer/MarginContainer/Table/GameControls"]
 layout_mode = 2
+size_flags_horizontal = 4
 size_flags_vertical = 4
 mouse_default_cursor_shape = 1
 max_value = 10000.0
@@ -631,23 +652,16 @@ size_flags_vertical = 4
 mouse_default_cursor_shape = 2
 theme = SubResource("Theme_o6xl0")
 theme_override_font_sizes/font_size = 16
+disabled = true
 text = "Add
 "
-
-[node name="DebugOutput" type="TextEdit" parent="."]
-visible = false
-layout_mode = 0
-offset_right = 209.0
-offset_bottom = 176.0
-theme_override_font_sizes/font_size = 10
-placeholder_text = "Debug connection info"
-editable = false
-wrap_mode = 1
-indent_wrapped_lines = true
 
 [connection signal="pressed" from="Content/Menu/MarginContainer/VBoxContainer/HostGameMenu/CreateGameButton" to="." method="_on_create_game_button_pressed"]
 [connection signal="text_changed" from="Content/Menu/MarginContainer/VBoxContainer/JoinGameMenu/GameCodeInput" to="." method="_on_game_code_input_text_changed"]
 [connection signal="pressed" from="Content/Menu/MarginContainer/VBoxContainer/JoinGameMenu/MarginContainer/JoinGameButton" to="." method="_on_join_game_button_pressed"]
+[connection signal="pressed" from="Content/GamesList/MarginContainer/MarginContainer/Table/ColumnTitles/Control/RefreshButton" to="Content/GamesList" method="_on_refresh_button_pressed"]
 [connection signal="text_changed" from="Content/GamesList/MarginContainer/MarginContainer/Table/GameControls/GameCodeInput" to="Content/GamesList" method="_on_game_code_input_text_changed"]
 [connection signal="pressed" from="Content/GamesList/MarginContainer/MarginContainer/Table/GameControls/JoinGameButton" to="Content/GamesList" method="_on_join_game_button_pressed"]
 [connection signal="pressed" from="Content/GamesList/MarginContainer/MarginContainer/Table/GameControls/CreateButton" to="Content/GamesList" method="_on_create_button_pressed"]
+[connection signal="text_changed" from="Content/FriendsList/MarginContainer/MarginContainer/Table/HBoxContainer/FriendCodeInput" to="Content/FriendsList" method="_on_friend_code_input_text_changed"]
+[connection signal="pressed" from="Content/FriendsList/MarginContainer/MarginContainer/Table/HBoxContainer/AddFriendButton" to="Content/FriendsList" method="_on_add_friend_button_pressed"]

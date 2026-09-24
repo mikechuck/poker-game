@@ -18,7 +18,7 @@ enum GamePrivacy {
 	PRIVATE = 3,
 } 
  
-enum RelationshipStatus {
+enum FriendStatus {
 	FRIEND = 0,
 	OUTGOING_PENDING = 1,
 	INCOMING_PENDING = 2,
@@ -522,31 +522,34 @@ class GameRecord extends Message:
 	#2 : hostAccountId
 	var hostAccountId: String = ""
 
-	#3 : gameStatus
+	#3 : hostName
+	var hostName: String = ""
+
+	#4 : gameStatus
 	var gameStatus: GameStatus = 0
 
-	#4 : createTimeEpochMilliseconds
+	#5 : createTimeEpochMilliseconds
 	var createTimeEpochMilliseconds: int = 0
 
-	#5 : endTimeEpochMilliseconds
+	#6 : endTimeEpochMilliseconds
 	var endTimeEpochMilliseconds: int = 0
 
-	#6 : port
+	#7 : port
 	var port: int = 0
 
-	#7 : blindChips
+	#8 : blindChips
 	var blindChips: int = 0
 
-	#8 : buyInChips
+	#9 : buyInChips
 	var buyInChips: int = 0
 
-	#9 : chipRatio
+	#10 : chipRatio
 	var chipRatio: int = 0
 
-	#10 : handsPlayed
+	#11 : handsPlayed
 	var handsPlayed: int = 0
 
-	#11 : connectedPlayers
+	#12 : connectedPlayers
 	var _connectedPlayers: Array[String] = []
 	var _connectedPlayers_size: int = 0
 	## Size of _connectedPlayers
@@ -577,7 +580,7 @@ class GameRecord extends Message:
 	func clear_connectedPlayers() -> void:
 		self._connectedPlayers_size = 0
 
-	#12 : gamePrivacy
+	#13 : gamePrivacy
 	var gamePrivacy: GamePrivacy = 0
 
 
@@ -585,6 +588,7 @@ class GameRecord extends Message:
 	func Init() -> void:
 		self.gameId = ""
 		self.hostAccountId = ""
+		self.hostName = ""
 		self.gameStatus = 0
 		self.createTimeEpochMilliseconds = 0
 		self.endTimeEpochMilliseconds = 0
@@ -611,6 +615,7 @@ class GameRecord extends Message:
 		if other is GameRecord:
 			self.gameId += other.gameId
 			self.hostAccountId += other.hostAccountId
+			self.hostName += other.hostName
 			self.gameStatus = other.gameStatus
 			self.createTimeEpochMilliseconds += other.createTimeEpochMilliseconds
 			self.endTimeEpochMilliseconds += other.endTimeEpochMilliseconds
@@ -631,35 +636,38 @@ class GameRecord extends Message:
 		if self.hostAccountId != "":
 			GDScriptUtils.encode_tag(buffer, 2, 9)
 			GDScriptUtils.encode_string(buffer, self.hostAccountId)
+		if self.hostName != "":
+			GDScriptUtils.encode_tag(buffer, 3, 9)
+			GDScriptUtils.encode_string(buffer, self.hostName)
 		if self.gameStatus != 0:
-			GDScriptUtils.encode_tag(buffer, 3, 14)
+			GDScriptUtils.encode_tag(buffer, 4, 14)
 			GDScriptUtils.encode_varint(buffer, self.gameStatus)
 		if self.createTimeEpochMilliseconds != 0:
-			GDScriptUtils.encode_tag(buffer, 4, 3)
+			GDScriptUtils.encode_tag(buffer, 5, 3)
 			GDScriptUtils.encode_varint(buffer, self.createTimeEpochMilliseconds)
 		if self.endTimeEpochMilliseconds != 0:
-			GDScriptUtils.encode_tag(buffer, 5, 3)
+			GDScriptUtils.encode_tag(buffer, 6, 3)
 			GDScriptUtils.encode_varint(buffer, self.endTimeEpochMilliseconds)
 		if self.port != 0:
-			GDScriptUtils.encode_tag(buffer, 6, 5)
+			GDScriptUtils.encode_tag(buffer, 7, 5)
 			GDScriptUtils.encode_varint(buffer, self.port)
 		if self.blindChips != 0:
-			GDScriptUtils.encode_tag(buffer, 7, 5)
+			GDScriptUtils.encode_tag(buffer, 8, 5)
 			GDScriptUtils.encode_varint(buffer, self.blindChips)
 		if self.buyInChips != 0:
-			GDScriptUtils.encode_tag(buffer, 8, 5)
+			GDScriptUtils.encode_tag(buffer, 9, 5)
 			GDScriptUtils.encode_varint(buffer, self.buyInChips)
 		if self.chipRatio != 0:
-			GDScriptUtils.encode_tag(buffer, 9, 5)
+			GDScriptUtils.encode_tag(buffer, 10, 5)
 			GDScriptUtils.encode_varint(buffer, self.chipRatio)
 		if self.handsPlayed != 0:
-			GDScriptUtils.encode_tag(buffer, 10, 5)
+			GDScriptUtils.encode_tag(buffer, 11, 5)
 			GDScriptUtils.encode_varint(buffer, self.handsPlayed)
 		for item in self._connectedPlayers:
-			GDScriptUtils.encode_tag(buffer, 11, 9)
+			GDScriptUtils.encode_tag(buffer, 12, 9)
 			GDScriptUtils.encode_string(buffer, item)
 		if self.gamePrivacy != 0:
-			GDScriptUtils.encode_tag(buffer, 12, 14)
+			GDScriptUtils.encode_tag(buffer, 13, 14)
 			GDScriptUtils.encode_varint(buffer, self.gamePrivacy)
 		return buffer
  
@@ -682,42 +690,46 @@ class GameRecord extends Message:
 					self.hostAccountId = field_value[GDScriptUtils.VALUE_KEY]
 					pos += field_value[GDScriptUtils.SIZE_KEY]
 				3:
-					var field_value = GDScriptUtils.decode_varint(data, pos, self)
-					self.gameStatus = field_value[GDScriptUtils.VALUE_KEY]
+					var field_value = GDScriptUtils.decode_string(data, pos, self)
+					self.hostName = field_value[GDScriptUtils.VALUE_KEY]
 					pos += field_value[GDScriptUtils.SIZE_KEY]
 				4:
 					var field_value = GDScriptUtils.decode_varint(data, pos, self)
-					self.createTimeEpochMilliseconds = field_value[GDScriptUtils.VALUE_KEY]
+					self.gameStatus = field_value[GDScriptUtils.VALUE_KEY]
 					pos += field_value[GDScriptUtils.SIZE_KEY]
 				5:
 					var field_value = GDScriptUtils.decode_varint(data, pos, self)
-					self.endTimeEpochMilliseconds = field_value[GDScriptUtils.VALUE_KEY]
+					self.createTimeEpochMilliseconds = field_value[GDScriptUtils.VALUE_KEY]
 					pos += field_value[GDScriptUtils.SIZE_KEY]
 				6:
 					var field_value = GDScriptUtils.decode_varint(data, pos, self)
-					self.port = field_value[GDScriptUtils.VALUE_KEY]
+					self.endTimeEpochMilliseconds = field_value[GDScriptUtils.VALUE_KEY]
 					pos += field_value[GDScriptUtils.SIZE_KEY]
 				7:
 					var field_value = GDScriptUtils.decode_varint(data, pos, self)
-					self.blindChips = field_value[GDScriptUtils.VALUE_KEY]
+					self.port = field_value[GDScriptUtils.VALUE_KEY]
 					pos += field_value[GDScriptUtils.SIZE_KEY]
 				8:
 					var field_value = GDScriptUtils.decode_varint(data, pos, self)
-					self.buyInChips = field_value[GDScriptUtils.VALUE_KEY]
+					self.blindChips = field_value[GDScriptUtils.VALUE_KEY]
 					pos += field_value[GDScriptUtils.SIZE_KEY]
 				9:
 					var field_value = GDScriptUtils.decode_varint(data, pos, self)
-					self.chipRatio = field_value[GDScriptUtils.VALUE_KEY]
+					self.buyInChips = field_value[GDScriptUtils.VALUE_KEY]
 					pos += field_value[GDScriptUtils.SIZE_KEY]
 				10:
 					var field_value = GDScriptUtils.decode_varint(data, pos, self)
-					self.handsPlayed = field_value[GDScriptUtils.VALUE_KEY]
+					self.chipRatio = field_value[GDScriptUtils.VALUE_KEY]
 					pos += field_value[GDScriptUtils.SIZE_KEY]
 				11:
+					var field_value = GDScriptUtils.decode_varint(data, pos, self)
+					self.handsPlayed = field_value[GDScriptUtils.VALUE_KEY]
+					pos += field_value[GDScriptUtils.SIZE_KEY]
+				12:
 					var field_value = GDScriptUtils.decode_string(data, pos, self)
 					self.add_connectedPlayers(field_value[GDScriptUtils.VALUE_KEY])
 					pos += field_value[GDScriptUtils.SIZE_KEY]
-				12:
+				13:
 					var field_value = GDScriptUtils.decode_varint(data, pos, self)
 					self.gamePrivacy = field_value[GDScriptUtils.VALUE_KEY]
 					pos += field_value[GDScriptUtils.SIZE_KEY]
@@ -730,6 +742,7 @@ class GameRecord extends Message:
 		var dict = {}
 		dict["gameId"] = self.gameId
 		dict["hostAccountId"] = self.hostAccountId
+		dict["hostName"] = self.hostName
 		dict["gameStatus"] = self.gameStatus
 		dict["createTimeEpochMilliseconds"] = self.createTimeEpochMilliseconds
 		dict["endTimeEpochMilliseconds"] = self.endTimeEpochMilliseconds
@@ -750,6 +763,8 @@ class GameRecord extends Message:
 			self.gameId = dict.get("gameId")
 		if dict.has("hostAccountId"):
 			self.hostAccountId = dict.get("hostAccountId")
+		if dict.has("hostName"):
+			self.hostName = dict.get("hostName")
 		if dict.has("gameStatus"):
 			self.gameStatus = dict.get("gameStatus")
 		if dict.has("createTimeEpochMilliseconds"):
@@ -888,8 +903,8 @@ class JoinTokenRecord extends Message:
 	#3 : joinToken
 	var joinToken: String = ""
 
-	#4 : expirationTimeEpochMilliseconds
-	var expirationTimeEpochMilliseconds: int = 0
+	#4 : expirationTimeEpochSeconds
+	var expirationTimeEpochSeconds: int = 0
 
 
 	## Init message field values to default value
@@ -897,7 +912,7 @@ class JoinTokenRecord extends Message:
 		self.accountId = ""
 		self.gameId = ""
 		self.joinToken = ""
-		self.expirationTimeEpochMilliseconds = 0
+		self.expirationTimeEpochSeconds = 0
 
 	## Create a new message instance
 	## Returns: Message - New message instance
@@ -915,7 +930,7 @@ class JoinTokenRecord extends Message:
 			self.accountId += other.accountId
 			self.gameId += other.gameId
 			self.joinToken += other.joinToken
-			self.expirationTimeEpochMilliseconds += other.expirationTimeEpochMilliseconds
+			self.expirationTimeEpochSeconds += other.expirationTimeEpochSeconds
  
 	func SerializeToBytes(buffer: PackedByteArray = PackedByteArray()) -> PackedByteArray:
 		if self.accountId != "":
@@ -927,9 +942,9 @@ class JoinTokenRecord extends Message:
 		if self.joinToken != "":
 			GDScriptUtils.encode_tag(buffer, 3, 9)
 			GDScriptUtils.encode_string(buffer, self.joinToken)
-		if self.expirationTimeEpochMilliseconds != 0:
+		if self.expirationTimeEpochSeconds != 0:
 			GDScriptUtils.encode_tag(buffer, 4, 3)
-			GDScriptUtils.encode_varint(buffer, self.expirationTimeEpochMilliseconds)
+			GDScriptUtils.encode_varint(buffer, self.expirationTimeEpochSeconds)
 		return buffer
  
 	func ParseFromBytes(data: PackedByteArray) -> int:
@@ -956,7 +971,7 @@ class JoinTokenRecord extends Message:
 					pos += field_value[GDScriptUtils.SIZE_KEY]
 				4:
 					var field_value = GDScriptUtils.decode_varint(data, pos, self)
-					self.expirationTimeEpochMilliseconds = field_value[GDScriptUtils.VALUE_KEY]
+					self.expirationTimeEpochSeconds = field_value[GDScriptUtils.VALUE_KEY]
 					pos += field_value[GDScriptUtils.SIZE_KEY]
 				_:
 					pass
@@ -968,7 +983,7 @@ class JoinTokenRecord extends Message:
 		dict["accountId"] = self.accountId
 		dict["gameId"] = self.gameId
 		dict["joinToken"] = self.joinToken
-		dict["expirationTimeEpochMilliseconds"] = self.expirationTimeEpochMilliseconds
+		dict["expirationTimeEpochSeconds"] = self.expirationTimeEpochSeconds
 		return dict
 
 	func ParseFromDictionary(dict: Dictionary) -> void:
@@ -981,20 +996,20 @@ class JoinTokenRecord extends Message:
 			self.gameId = dict.get("gameId")
 		if dict.has("joinToken"):
 			self.joinToken = dict.get("joinToken")
-		if dict.has("expirationTimeEpochMilliseconds"):
-			self.expirationTimeEpochMilliseconds = dict.get("expirationTimeEpochMilliseconds")
+		if dict.has("expirationTimeEpochSeconds"):
+			self.expirationTimeEpochSeconds = dict.get("expirationTimeEpochSeconds")
 
 # =========================================
 
-class RelationshipRecord extends Message:
+class FriendRecord extends Message:
 	#1 : accountId
 	var accountId: String = ""
 
 	#2 : peerAccountId
 	var peerAccountId: String = ""
 
-	#3 : relationshipStatus
-	var relationshipStatus: RelationshipStatus = 0
+	#3 : friendStatus
+	var friendStatus: FriendStatus = 0
 
 	#4 : peerPlayerName
 	var peerPlayerName: String = ""
@@ -1013,7 +1028,7 @@ class RelationshipRecord extends Message:
 	func Init() -> void:
 		self.accountId = ""
 		self.peerAccountId = ""
-		self.relationshipStatus = 0
+		self.friendStatus = 0
 		self.peerPlayerName = ""
 		self.peerProfilePictureUrl = ""
 		self.peerPlayerColor = ""
@@ -1022,19 +1037,19 @@ class RelationshipRecord extends Message:
 	## Create a new message instance
 	## Returns: Message - New message instance
 	func New() -> Message:
-		var msg = RelationshipRecord.new()
+		var msg = FriendRecord.new()
 		return msg
 
 	## Message ProtoName
 	## Returns: String - ProtoName
 	func ProtoName() -> String:
-		return "poker_api.RelationshipRecord"
+		return "poker_api.FriendRecord"
 
 	func MergeFrom(other : Message) -> void:
-		if other is RelationshipRecord:
+		if other is FriendRecord:
 			self.accountId += other.accountId
 			self.peerAccountId += other.peerAccountId
-			self.relationshipStatus = other.relationshipStatus
+			self.friendStatus = other.friendStatus
 			self.peerPlayerName += other.peerPlayerName
 			self.peerProfilePictureUrl += other.peerProfilePictureUrl
 			self.peerPlayerColor += other.peerPlayerColor
@@ -1047,9 +1062,9 @@ class RelationshipRecord extends Message:
 		if self.peerAccountId != "":
 			GDScriptUtils.encode_tag(buffer, 2, 9)
 			GDScriptUtils.encode_string(buffer, self.peerAccountId)
-		if self.relationshipStatus != 0:
+		if self.friendStatus != 0:
 			GDScriptUtils.encode_tag(buffer, 3, 14)
-			GDScriptUtils.encode_varint(buffer, self.relationshipStatus)
+			GDScriptUtils.encode_varint(buffer, self.friendStatus)
 		if self.peerPlayerName != "":
 			GDScriptUtils.encode_tag(buffer, 4, 9)
 			GDScriptUtils.encode_string(buffer, self.peerPlayerName)
@@ -1084,7 +1099,7 @@ class RelationshipRecord extends Message:
 					pos += field_value[GDScriptUtils.SIZE_KEY]
 				3:
 					var field_value = GDScriptUtils.decode_varint(data, pos, self)
-					self.relationshipStatus = field_value[GDScriptUtils.VALUE_KEY]
+					self.friendStatus = field_value[GDScriptUtils.VALUE_KEY]
 					pos += field_value[GDScriptUtils.SIZE_KEY]
 				4:
 					var field_value = GDScriptUtils.decode_string(data, pos, self)
@@ -1111,7 +1126,7 @@ class RelationshipRecord extends Message:
 		var dict = {}
 		dict["accountId"] = self.accountId
 		dict["peerAccountId"] = self.peerAccountId
-		dict["relationshipStatus"] = self.relationshipStatus
+		dict["friendStatus"] = self.friendStatus
 		dict["peerPlayerName"] = self.peerPlayerName
 		dict["peerProfilePictureUrl"] = self.peerProfilePictureUrl
 		dict["peerPlayerColor"] = self.peerPlayerColor
@@ -1126,8 +1141,8 @@ class RelationshipRecord extends Message:
 			self.accountId = dict.get("accountId")
 		if dict.has("peerAccountId"):
 			self.peerAccountId = dict.get("peerAccountId")
-		if dict.has("relationshipStatus"):
-			self.relationshipStatus = dict.get("relationshipStatus")
+		if dict.has("friendStatus"):
+			self.friendStatus = dict.get("friendStatus")
 		if dict.has("peerPlayerName"):
 			self.peerPlayerName = dict.get("peerPlayerName")
 		if dict.has("peerProfilePictureUrl"):
@@ -1139,62 +1154,62 @@ class RelationshipRecord extends Message:
 
 # =========================================
 
-class RelationshipRecordList extends Message:
-	#1 : relationships
-	var _relationships: Array[RelationshipRecord] = []
-	var _relationships_size: int = 0
-	## Size of _relationships
-	func relationships_size() -> int:
-		return self._relationships_size
-	## Get _relationships
-	func relationships() -> Array[RelationshipRecord]:
-		return self._relationships.slice(0, self._relationships_size)
-	## Get _relationships item 
-	func get_relationships(index: int) -> RelationshipRecord: # index begin from 1
-		if index > 0 and index <= _relationships_size and index <= _relationships.size():
-			return self._relationships[index - 1]
+class FriendRecordList extends Message:
+	#1 : friends
+	var _friends: Array[FriendRecord] = []
+	var _friends_size: int = 0
+	## Size of _friends
+	func friends_size() -> int:
+		return self._friends_size
+	## Get _friends
+	func friends() -> Array[FriendRecord]:
+		return self._friends.slice(0, self._friends_size)
+	## Get _friends item 
+	func get_friends(index: int) -> FriendRecord: # index begin from 1
+		if index > 0 and index <= _friends_size and index <= _friends.size():
+			return self._friends[index - 1]
 		return null
-	## Add _relationships
-	func add_relationships(item: RelationshipRecord) -> RelationshipRecord:
-		if self._relationships_size >= 0 and self._relationships_size < self._relationships.size():
-			self._relationships[self._relationships_size] = item
+	## Add _friends
+	func add_friends(item: FriendRecord) -> FriendRecord:
+		if self._friends_size >= 0 and self._friends_size < self._friends.size():
+			self._friends[self._friends_size] = item
 		else:
-			self._relationships.append(item)
-		self._relationships_size += 1
+			self._friends.append(item)
+		self._friends_size += 1
 		return item
-	## Append _relationships
-	func append_relationships(item_array: Array):
+	## Append _friends
+	func append_friends(item_array: Array):
 		for item in item_array:
-			if item is RelationshipRecord:
-				self.add_relationships(item)
-	## Clean _relationships 
-	func clear_relationships() -> void:
-		self._relationships_size = 0
+			if item is FriendRecord:
+				self.add_friends(item)
+	## Clean _friends 
+	func clear_friends() -> void:
+		self._friends_size = 0
 
 
 	## Init message field values to default value
 	func Init() -> void:
-		self.clear_relationships
+		self.clear_friends
 
 	## Create a new message instance
 	## Returns: Message - New message instance
 	func New() -> Message:
-		var msg = RelationshipRecordList.new()
+		var msg = FriendRecordList.new()
 		return msg
 
 	## Message ProtoName
 	## Returns: String - ProtoName
 	func ProtoName() -> String:
-		return "poker_api.RelationshipRecordList"
+		return "poker_api.FriendRecordList"
 
 	func MergeFrom(other : Message) -> void:
-		if other is RelationshipRecordList:
-			self._relationships = self._relationships.slice(0, _relationships_size)
-			self._relationships.append_array(other._relationships.slice(0, other._relationships_size))
-			self._relationships_size += other._relationships_size
+		if other is FriendRecordList:
+			self._friends = self._friends.slice(0, _friends_size)
+			self._friends.append_array(other._friends.slice(0, other._friends_size))
+			self._friends_size += other._friends_size
  
 	func SerializeToBytes(buffer: PackedByteArray = PackedByteArray()) -> PackedByteArray:
-		for item in self._relationships:
+		for item in self._friends:
 			GDScriptUtils.encode_tag(buffer, 1, 11)
 			GDScriptUtils.encode_message(buffer, item)
 		return buffer
@@ -1210,9 +1225,9 @@ class RelationshipRecordList extends Message:
  
 			match field_number:
 				1:
-					var sub__relationships = RelationshipRecord.new()
-					var field_value = GDScriptUtils.decode_message(data, pos, sub__relationships)
-					self.add_relationships(field_value[GDScriptUtils.VALUE_KEY])
+					var sub__friends = FriendRecord.new()
+					var field_value = GDScriptUtils.decode_message(data, pos, sub__friends)
+					self.add_friends(field_value[GDScriptUtils.VALUE_KEY])
 					pos += field_value[GDScriptUtils.SIZE_KEY]
 				_:
 					pass
@@ -1221,23 +1236,23 @@ class RelationshipRecordList extends Message:
 
 	func SerializeToDictionary() -> Dictionary:
 		var dict = {}
-		dict["relationships"] = []
-		for index in range(1, self._relationships_size + 1):
-			var item = self.get_relationships(index)
-			dict["relationships"].append(item.SerializeToDictionary())
+		dict["friends"] = []
+		for index in range(1, self._friends_size + 1):
+			var item = self.get_friends(index)
+			dict["friends"].append(item.SerializeToDictionary())
 		return dict
 
 	func ParseFromDictionary(dict: Dictionary) -> void:
 		if dict == null:
 			return
 
-		self.clear_relationships()
-		if dict.has("relationships"):
-			var list = dict["relationships"]
+		self.clear_friends()
+		if dict.has("friends"):
+			var list = dict["friends"]
 			for item in list:
-				var item_msg = RelationshipRecord.new()
+				var item_msg = FriendRecord.new()
 				item_msg.ParseFromDictionary(item)
-				self.add_relationships(item_msg)
+				self.add_friends(item_msg)
 
 # =========================================
 

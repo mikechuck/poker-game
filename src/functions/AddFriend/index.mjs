@@ -12,10 +12,10 @@ const docClient = DynamoDBDocumentClient.from(new DynamoDBClient({
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const pokerApiProto = await protobuf.load(path.join(__dirname, "shared/poker_api.proto"));
 const ErrorResponse = pokerApiProto.lookupType("poker_api.ErrorResponse");
-const RelationshipRecord = pokerApiProto.lookupType("poker_api.RelationshipRecord");
-const RelationshipStatus = pokerApiProto.lookupEnum("poker_api.RelationshipStatus");
+const FriendRecord = pokerApiProto.lookupType("poker_api.FriendRecord");
+const FriendStatus = pokerApiProto.lookupEnum("poker_api.FriendStatus");
 
-const RELATIONSHIPS_TABLE = process.env.RELATIONSHIPS_TABLE;
+const FRIENDS_TABLE = process.env.FRIENDS_TABLE;
 const ACCOUNTS_TABLE = process.env.ACCOUNTS_TABLE;
 
 export const handler = async (event) => {
@@ -43,7 +43,7 @@ export const handler = async (event) => {
         };
     }
 
-    if (!RELATIONSHIPS_TABLE || !ACCOUNTS_TABLE) {
+    if (!FRIENDS_TABLE || !ACCOUNTS_TABLE) {
         return {
             statusCode: 500,
             body: JSON.stringify(
@@ -73,7 +73,7 @@ export const handler = async (event) => {
         const friendAccountRecord = await GetAccountByFriendCode(friendCode, ACCOUNTS_TABLE);
         const now = Date.now()
 
-        if (friendAccountRecord == null) {
+        if (friendAccountRecord == null || requestorAccountRecord.accountId == friendAccountRecord.accountId) {
             return {
                 statusCode: 403,
                 body: JSON.stringify(
@@ -86,14 +86,14 @@ export const handler = async (event) => {
 
         // Construct record for requestor account
 
-        const newRequestorRelationshipRecordObject = RelationshipRecord.toObject(
-            RelationshipRecord.create({
+        const newRequestorFriendRecordObject = FriendRecord.toObject(
+            FriendRecord.create({
                 accountId: requestorAccountRecord.accountId,
                 peerAccountId: friendAccountRecord.accountId,
                 peerPlayerName: friendAccountRecord.playerName,
                 peerProfilePictureUrl: friendAccountRecord.profilePictureUrl,
                 peerPlayerColor: friendAccountRecord.playerColor,
-                relationshipStatus: RelationshipStatus.values.OUTGOING_PENDING,
+                friendStatus: FriendStatus.values.OUTGOING_PENDING,
                 createTimeEpochMilliseconds: now
             }), {
             enums: Number,
@@ -102,14 +102,14 @@ export const handler = async (event) => {
 
         // Construct record for peer account
 
-        const newPeerRelationshipRecordObject = RelationshipRecord.toObject(
-            RelationshipRecord.create({
+        const newPeerFriendRecordObject = FriendRecord.toObject(
+            FriendRecord.create({
                 accountId: friendAccountRecord.accountId,
                 peerAccountId: requestorAccountRecord.accountId,
                 peerPlayerName: requestorAccountRecord.playerName,
                 peerProfilePictureUrl: requestorAccountRecord.profilePictureUrl,
                 peerPlayerColor: requestorAccountRecord.playerColor,
-                relationshipStatus: RelationshipStatus.values.INCOMING_PENDING,
+                friendStatus: FriendStatus.values.INCOMING_PENDING,
                 createTimeEpochMilliseconds: now
             }), {
             enums: Number,
@@ -118,11 +118,11 @@ export const handler = async (event) => {
 
         try {
 
-            // Insert both directions of the relationship
+            // Insert both directions of the friend
             await docClient.send(
                 new PutCommand({
-                    TableName: RELATIONSHIPS_TABLE,
-                    Item: newRequestorRelationshipRecordObject,
+                    TableName: FRIENDS_TABLE,
+                    Item: newRequestorFriendRecordObject,
                     // Checks if the partition key (or sort key) does NOT exist yet
                     ConditionExpression: "attribute_not_exists(accountId) AND attribute_not_exists(peerAccountId)"
                 })
@@ -130,8 +130,8 @@ export const handler = async (event) => {
 
             await docClient.send(
                 new PutCommand({
-                    TableName: RELATIONSHIPS_TABLE,
-                    Item: newPeerRelationshipRecordObject,
+                    TableName: FRIENDS_TABLE,
+                    Item: newPeerFriendRecordObject,
                     // Checks if the partition key (or sort key) does NOT exist yet
                     ConditionExpression: "attribute_not_exists(accountId) AND attribute_not_exists(peerAccountId)"
                 })
@@ -139,10 +139,10 @@ export const handler = async (event) => {
 
         } catch (error) {
             if (error.name === "ConditionalCheckFailedException") {
-                console.log(`Relationship already exists between ${requestorAccountRecord.accountId} and ${friendAccountRecord.accountId}`)
+                console.log(`Friend already exists between ${requestorAccountRecord.accountId} and ${friendAccountRecord.accountId}`)
                 
                 return {
-                    statusCode: 200
+                    statusCode: 409
                 }
             } else {
                 throw error

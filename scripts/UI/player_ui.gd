@@ -6,7 +6,6 @@ class_name PlayerUI
 
 ### Managers
 @onready var game_manager: GameSceneManager = get_parent().get_node("GameManager")
-@onready var client_manager: ClientManager = get_parent().get_node("ClientManager")
 @onready var server_manager: ServerManager = get_parent().get_node("ServerManager")
 
 ### UI nodes

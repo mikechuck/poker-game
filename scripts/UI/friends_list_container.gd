@@ -8,8 +8,9 @@ const FRIEND_DETAILS_SCENE = preload("res://scenes/UI/friend_details.tscn")
 @onready var scroll_container = $MarginContainer/MarginContainer/Table/ScrollContainer
 @onready var friend_details_container_node = $MarginContainer/MarginContainer/Table/ScrollContainer/FriendDetailsContainer
 
-# Join game nodes
-@onready var AddFriendCodeNode = $MarginContainer/MarginContainer/Table/HBoxContainer/FriendCodeInput
+# Add friend nodes
+@onready var add_friend_button_node = $MarginContainer/MarginContainer/Table/HBoxContainer/AddFriendButton
+@onready var friend_code_input_node = $MarginContainer/MarginContainer/Table/HBoxContainer/FriendCodeInput
 
 var _friend_details_nodes: Array[Node] = []
 var _add_friend_code: String = ""
@@ -24,19 +25,20 @@ func _ready():
 	add_child(timer)
 	get_friends_list()
 
+
 func get_friends_list() -> void:
-	var friends_list: Array[Contracts.RelationshipRecord] = await HttpRequestsManager.get_friends()
+	var friends_list: Array[Contracts.FriendRecord] = await HttpRequestsManager.get_friends()
 	#friends_list = []
 	if (friends_list != null):
 		set_friends_list(friends_list)
 
 
-func set_friends_list(friends_list: Array[Contracts.RelationshipRecord]):
+func set_friends_list(friends_list: Array[Contracts.FriendRecord]):
 	# First remove rows that are no longer in the list
 	var friend_rows: Array[Node] = friend_details_container_node.get_children()
 	for friend_row: FriendDetails in friend_rows:
 		var delete_row = true
-		for friend: Contracts.RelationshipRecord in friends_list:
+		for friend: Contracts.FriendRecord in friends_list:
 			if friend_row.friend_account_id == friend.peerAccountId:
 				friend_row.set_details(friend)
 				delete_row = false
@@ -45,7 +47,7 @@ func set_friends_list(friends_list: Array[Contracts.RelationshipRecord]):
 				friend_row.queue_free()
 
 	# Then create rows for games that don't have rows yet
-	for friend: Contracts.RelationshipRecord in friends_list:
+	for friend: Contracts.FriendRecord in friends_list:
 		var create_new_row = true
 		for details_row: FriendDetails in friend_rows:
 			if (friend.peerAccountId == details_row.friend_account_id):
@@ -61,3 +63,31 @@ func set_friends_list(friends_list: Array[Contracts.RelationshipRecord]):
 	else:
 		no_friends_container_node.visible = true
 		scroll_container.visible = false
+
+
+func reset_friend_code_input() -> void:
+	friend_code_input_node.text = ""
+	_add_friend_code = ""
+
+
+func _on_friend_code_input_text_changed(new_text: String) -> void:
+	_add_friend_code = new_text
+	if (len(new_text) > 0):
+		add_friend_button_node.disabled = false
+	else:
+		add_friend_button_node.disabled = true
+
+
+func _on_add_friend_button_pressed() -> void:
+	add_friend_button_node.disabled = true
+	var add_friend_response_code: int = await HttpRequestsManager.add_friend(_add_friend_code)
+	add_friend_button_node.disabled = false
+	if (add_friend_response_code == 201):
+		reset_friend_code_input()
+		get_friends_list()
+		Log.toast("Friend request sent")
+	# TODO: for some reason we sometimes get 200 for dupe requests 
+	elif (add_friend_response_code == 200 || add_friend_response_code == 409):
+		Log.toast("Already friends with this player")
+	else:
+		Log.toast("Failed to send friend request")

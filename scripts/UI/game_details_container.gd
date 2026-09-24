@@ -7,6 +7,7 @@ const GAME_DETAILS_SCENE = preload("res://scenes/UI/game_details.tscn")
 @onready var no_games_container_node = $MarginContainer/MarginContainer/Table/NoRecordsContainer
 @onready var scroll_container = $MarginContainer/MarginContainer/Table/MarginContainer/ScrollContainer
 @onready var game_details_container_node = $MarginContainer/MarginContainer/Table/MarginContainer/ScrollContainer/GameDetailsContainer
+@onready var refresh_button_node = $MarginContainer/MarginContainer/Table/ColumnTitles/Control/RefreshButton
 
 # Create game nodes
 @onready var blind_value_node = $MarginContainer/MarginContainer/Table/GameControls/Blind
@@ -21,16 +22,6 @@ const GAME_DETAILS_SCENE = preload("res://scenes/UI/game_details.tscn")
 var _games_details_nodes: Array[Node] = []
 var _join_game_code: String = ""
 var has_active_game: bool = false
-
-
-func _ready():
-	# Grab games list on an interval
-	var timer: Timer = Timer.new()
-	timer.wait_time = 5.0
-	timer.autostart = true
-	timer.timeout.connect(get_games_list)
-	add_child(timer)
-	get_games_list()
 
 
 func get_games_list() -> void:
@@ -71,7 +62,8 @@ func set_games_list(games_list: Array[Contracts.GameRecord]):
 			var game_details_instance: GameDetails = GAME_DETAILS_SCENE.instantiate()
 			game_details_container_node.add_child(game_details_instance)
 			game_details_instance.set_details(game)
-		if (game.gameStatus != Contracts.GameStatus.ENDED):
+		# If the current user is a host of an active game, set flag so they can't create multiple at once
+		if (game.hostAccountId == DataStore.account_data.accountId && game.gameStatus != Contracts.GameStatus.ENDED):
 			has_active_game = true
 	
 	if (has_active_game):
@@ -114,3 +106,13 @@ func _on_create_button_pressed() -> void:
 	var game_record: Contracts.GameRecord = await HttpRequestsManager.create_game(int(blind_value), int(buy_in), int(chip_ratio), privacy)
 	if (game_record != null):
 		get_games_list()
+
+
+func _on_refresh_button_pressed() -> void:
+	refresh_button_node.disabled = true
+	refresh_button_node.modulate = "#ffcb7750"
+	refresh_button_node.mouse_default_cursor_shape = 0
+	await get_games_list()
+	refresh_button_node.disabled = false
+	refresh_button_node.modulate = "#ffcb77"
+	refresh_button_node.mouse_default_cursor_shape = 2

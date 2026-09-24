@@ -8,16 +8,31 @@ size_flags_vertical = 3
 script = ExtResource("1_3yj15")
 
 [node name="GameId" type="RichTextLabel" parent="."]
-custom_minimum_size = Vector2(50, 0)
+custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
-size_flags_horizontal = 3
 size_flags_vertical = 5
+focus_mode = 2
 bbcode_enabled = true
 text = "[font_size=12]S1WZMO5[/font_size]"
 fit_content = true
 scroll_active = false
 horizontal_alignment = 1
 vertical_alignment = 1
+selection_enabled = true
+
+[node name="HostName" type="RichTextLabel" parent="."]
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 5
+focus_mode = 2
+bbcode_enabled = true
+text = "[font_size=12]jeegerson[/font_size]"
+fit_content = true
+scroll_active = false
+horizontal_alignment = 1
+vertical_alignment = 1
+selection_enabled = true
 
 [node name="Status" type="RichTextLabel" parent="."]
 custom_minimum_size = Vector2(65, 0)
@@ -31,7 +46,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Players" type="RichTextLabel" parent="."]
-custom_minimum_size = Vector2(55, 0)
+custom_minimum_size = Vector2(65, 0)
 layout_mode = 2
 size_flags_vertical = 5
 bbcode_enabled = true
@@ -41,20 +56,9 @@ scroll_active = false
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="Hands" type="RichTextLabel" parent="."]
-custom_minimum_size = Vector2(55, 0)
-layout_mode = 2
-size_flags_vertical = 5
-bbcode_enabled = true
-text = "[font_size=12]9[/font_size]"
-fit_content = true
-scroll_active = false
-horizontal_alignment = 1
-vertical_alignment = 1
-
 [node name="Privacy" type="RichTextLabel" parent="."]
+custom_minimum_size = Vector2(65, 0)
 layout_mode = 2
-size_flags_horizontal = 3
 size_flags_vertical = 5
 bbcode_enabled = true
 text = "[font_size=12]Friends[/font_size]"
@@ -64,8 +68,8 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="BuyIn" type="RichTextLabel" parent="."]
+custom_minimum_size = Vector2(65, 0)
 layout_mode = 2
-size_flags_horizontal = 3
 size_flags_vertical = 5
 bbcode_enabled = true
 text = "[font_size=12]20[/font_size]"
@@ -75,8 +79,8 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="Blind" type="RichTextLabel" parent="."]
+custom_minimum_size = Vector2(65, 0)
 layout_mode = 2
-size_flags_horizontal = 3
 size_flags_vertical = 5
 bbcode_enabled = true
 text = "[font_size=12]25[/font_size]"
@@ -86,8 +90,8 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="ChipRatio" type="RichTextLabel" parent="."]
+custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
-size_flags_horizontal = 3
 size_flags_vertical = 5
 bbcode_enabled = true
 text = "[font_size=12]100:1[/font_size]"
@@ -99,7 +103,6 @@ vertical_alignment = 1
 [node name="JoinButton" type="Button" parent="."]
 custom_minimum_size = Vector2(100, 27)
 layout_mode = 2
-size_flags_horizontal = 3
 size_flags_vertical = 4
 mouse_default_cursor_shape = 2
 disabled = true

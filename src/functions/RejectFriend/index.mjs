@@ -1,7 +1,7 @@
 import protobuf from "protobufjs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { DynamoDBDocumentClient, UpdateCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, DeleteCommand } from "@aws-sdk/lib-dynamodb";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 
 const docClient = DynamoDBDocumentClient.from(new DynamoDBClient({
@@ -16,9 +16,9 @@ const FriendStatus = pokerApiProto.lookupEnum("poker_api.FriendStatus");
 const FRIENDS_TABLE = process.env.FRIENDS_TABLE;
 
 export const handler = async (event) => {
-    const acceptorAccountId = event.requestContext?.authorizer?.jwt?.claims?.sub;
+    const rejectorAccountId = event.requestContext?.authorizer?.jwt?.claims?.sub;
 
-    if (!acceptorAccountId) {
+    if (!rejectorAccountId) {
         return {
             statusCode: 401,
             body: JSON.stringify(
@@ -54,42 +54,33 @@ export const handler = async (event) => {
     }
 
     try {
-        // Update the incoming request first, and if that succeeds then update the matching outgoing record
+        // Delete both incoming and outgoing request records
 
-        console.log("acceptorAccountId:", acceptorAccountId);
-        console.log("requestorAccountId:", requestorAccountId);
-        console.log("expected status:", FriendStatus.values.INCOMING_PENDING);
-        
-        await docClient.send(new UpdateCommand({
+        await docClient.send(new DeleteCommand({
             TableName: FRIENDS_TABLE,
             Key: {
-                accountId: acceptorAccountId,
+                accountId: rejectorAccountId,
                 peerAccountId: requestorAccountId
             },
-            UpdateExpression: "SET friendStatus = :newStatus",
             ConditionExpression: "friendStatus = :expectedStatus",
             ExpressionAttributeValues: {
-                ":newStatus": FriendStatus.values.FRIEND,
                 ":expectedStatus": FriendStatus.values.INCOMING_PENDING
-            },
-            ReturnValues: "ALL_NEW"
+            }
         }));
 
-        await docClient.send(new UpdateCommand({
+        await docClient.send(new DeleteCommand({
             TableName: FRIENDS_TABLE,
             Key: {
                 accountId: requestorAccountId,
-                peerAccountId: acceptorAccountId
+                peerAccountId: rejectorAccountId
             },
-            UpdateExpression: "SET friendStatus = :newStatus",
             ConditionExpression: "friendStatus = :expectedStatus",
             ExpressionAttributeValues: {
-                ":newStatus": FriendStatus.values.FRIEND,
                 ":expectedStatus": FriendStatus.values.OUTGOING_PENDING
             }
         }));
 
-        console.log(`[Lambda] Friend request from ${requestorAccountId} to ${acceptorAccountId} accepted`)
+        console.log(`[Lambda] Friend request from ${requestorAccountId} to ${rejectorAccountId} accepted`)
         
         return {
             statusCode: 200
@@ -101,7 +92,7 @@ export const handler = async (event) => {
             
             return {
                 statusCode: 400,
-                body: JSON.stringify({ message: "No pending friend request found to accept." })
+                body: JSON.stringify({ message: "No pending friend request found to reject." })
             };
         }
 
@@ -110,7 +101,7 @@ export const handler = async (event) => {
             statusCode: 500,
             body: JSON.stringify(
                 ErrorResponse.create({ 
-                    message: "Failed to accept friend request"
+                    message: "Failed to reject friend request"
                 })
             )
         };

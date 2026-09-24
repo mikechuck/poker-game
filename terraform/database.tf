@@ -117,8 +117,8 @@ resource "aws_dynamodb_table" "join_tokens_table" {
     tags = { Name = "PokerJoinTokens" }
 }
 
-resource "aws_dynamodb_table" "relationships_table" {
-    name = "Relationships"
+resource "aws_dynamodb_table" "friends_table" {
+    name = "Friends"
     billing_mode   = "PAY_PER_REQUEST"
     
     hash_key       = "accountId"

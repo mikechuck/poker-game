@@ -9,7 +9,6 @@ func _ready():
 	game_manager.game_state_data_updated_signal.connect(_on_game_state_data_change)
 
 func set_players_list(connected_players: Dictionary[int, ConnectedPlayer]):
-	Log.message
 	var player_rows: Array[Node] = player_details_container_node.get_children()
 	for player_row: Node in player_rows:
 		player_row.queue_free()
@@ -20,5 +19,6 @@ func set_players_list(connected_players: Dictionary[int, ConnectedPlayer]):
 		player_details_instance.set_player_details(player)
 
 func _on_game_state_data_change(old_game_state_data: GameStateData, new_game_state_data: GameStateData):
-	Log.message("Game state changed, updating players list")
+	if (old_game_state_data.connected_players != new_game_state_data.connected_players):
+		Log.message("Connected players list has been changed, ")
 	set_players_list(new_game_state_data.connected_players)

@@ -3,7 +3,7 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import protobuf from "protobufjs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { GetGameRecord, GetFriendsList } from "./shared/utilities.mjs";
+import { GetGameRecord, IsFriendsWithPlayer } from "./shared/utilities.mjs";
 
 const docClient = DynamoDBDocumentClient.from(new DynamoDBClient({
     region: "us-east-1"
@@ -15,12 +15,12 @@ const GameRecord = pokerApiProto.lookupType("poker_api.GameRecord");
 const GamePrivacy = pokerApiProto.lookupEnum("poker_api.GamePrivacy");
 const GameStatus = pokerApiProto.lookupEnum("poker_api.GameStatus");
 const ErrorResponse = pokerApiProto.lookupType("poker_api.ErrorResponse");
-const RelationshipRecordList = pokerApiProto.lookupType("poker_api.RelationshipRecordList");
+const FriendRecordList = pokerApiProto.lookupType("poker_api.FriendRecordList");
 const JoinTokenRecord = pokerApiProto.lookupType("poker_api.JoinTokenRecord");
 
 const GAMES_TABLE = process.env.GAMES_TABLE;
 const JOIN_TOKENS_TABLE = process.env.JOIN_TOKENS_TABLE;
-const RELATIONSHIPS_TABLE = process.env.RELATIONSHIPS_TABLE;
+const FRIENDS_TABLE = process.env.FRIENDS_TABLE;
 
 export const handler = async (event) => {
     const accountId = event.requestContext?.authorizer?.jwt?.claims?.sub;
@@ -56,15 +56,7 @@ export const handler = async (event) => {
                 }
 
                 // If not host, check friend status
-                const friendsList = await GetFriendsList(accountId, RELATIONSHIPS_TABLE);
-                var isFriendsWithHost = false
-                friendsList.relationships.forEach(friendsListRecord => {
-                    if (friendAccountId.peerAccountId == game.hostAccountId) {
-                        isFriendsWithHost = true
-                    }
-                })
-
-                if (isFriendsWithHost) {
+                if (await IsFriendsWithPlayer(accountId, game.hostAccountId, FRIENDS_TABLE)) {
                     joinToken = await saveJoinCodeForPlayer(accountId, gameId);
                 } else {
                     return {
@@ -90,7 +82,6 @@ export const handler = async (event) => {
                 return {
                     statusCode: 403
                 };
-                break;
         }
 
         return {
@@ -118,7 +109,7 @@ const saveJoinCodeForPlayer = async (accountId, gameId) => {
         accountId: accountId,
         gameId: gameId,
         joinToken: joinToken,
-        expirationTimeEpochMilliseconds: Date.now() + 60000 // Expire 1 minute from now
+        expirationTimeEpochSeconds: Math.floor(Date.now() / 1000) + 60 // Expire 1 minute from now
     }
 
     const errMsg = JoinTokenRecord.verify(newJoinTokenEntry);

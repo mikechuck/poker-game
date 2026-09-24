@@ -95,6 +95,7 @@ resource "aws_iam_policy" "dynamo_poker_access" {
                     "dynamodb:PutItem",
                     "dynamodb:GetItem",
                     "dynamodb:UpdateItem",
+                    "dynamodb:DeleteItem",
                     "dynamodb:Query",
                     "dynamodb:Scan"
                 ]
@@ -112,8 +113,8 @@ resource "aws_iam_policy" "dynamo_poker_access" {
                     aws_dynamodb_table.join_tokens_table.arn,
                     "${aws_dynamodb_table.join_tokens_table.arn}/index/*",
 
-                    aws_dynamodb_table.relationships_table.arn,
-                    "${aws_dynamodb_table.relationships_table.arn}/index/*"
+                    aws_dynamodb_table.friends_table.arn,
+                    "${aws_dynamodb_table.friends_table.arn}/index/*"
                 ]
             }
         ]
@@ -477,6 +478,39 @@ resource "aws_lambda_permission" "api_gw_accept_friend" {
 
 # --- End AcceptFriend API Gateway Integration ---
 
+# --- Start RejectFriend API Gateway Integration ---
+
+# Create the Integration
+resource "aws_apigatewayv2_integration" "reject_friend_int" {
+    api_id           = aws_apigatewayv2_api.poker_api.id
+    integration_type = "AWS_PROXY"
+    integration_uri  = aws_lambda_function.reject_friend.invoke_arn
+    payload_format_version = "2.0"
+}
+
+# Update the existing Route to point to this integration
+resource "aws_apigatewayv2_route" "reject_friend_route" {
+    api_id    = aws_apigatewayv2_api.poker_api.id
+    route_key = "POST /friends/{requestorAccountId}/reject"
+
+    target             = "integrations/${aws_apigatewayv2_integration.reject_friend_int.id}"
+    authorization_type = "JWT"
+    authorizer_id      = aws_apigatewayv2_authorizer.cognito_auth.id
+}
+
+# Grant Permission for API Gateway to invoke the Lambda
+resource "aws_lambda_permission" "api_gw_reject_friend" {
+    statement_id  = "AllowExecutionFromAPIGateway"
+    action        = "lambda:InvokeFunction"
+    function_name = aws_lambda_function.reject_friend.function_name
+    principal     = "apigateway.amazonaws.com"
+
+    # Standard security: restrict access to your specific API
+    source_arn = "${aws_apigatewayv2_api.poker_api.execution_arn}/*/*"
+}
+
+# --- End RejectFriend API Gateway Integration ---
+
 # --- Start Private Server Authorizer Lambda Function ---
 
 resource "aws_lambda_function" "server_auth_lambda" {
@@ -584,7 +618,7 @@ resource "aws_lambda_function" "join_game" {
         variables = {
             GAMES_TABLE = aws_dynamodb_table.games_table.name,
             JOIN_TOKENS_TABLE = aws_dynamodb_table.join_tokens_table.name
-            RELATIONSHIPS_TABLE = aws_dynamodb_table.relationships_table.name
+            FRIENDS_TABLE = aws_dynamodb_table.friends_table.name
         }
     }
 }
@@ -641,6 +675,7 @@ resource "aws_lambda_function" "get_games" {
     environment {
         variables = {
             GAMES_TABLE = aws_dynamodb_table.games_table.name
+            FRIENDS_TABLE = aws_dynamodb_table.friends_table.name
         }
     }
 }
@@ -699,7 +734,7 @@ resource "aws_lambda_function" "add_friend" {
     environment {
         variables = {
             ACCOUNTS_TABLE = aws_dynamodb_table.accounts_table.name
-            RELATIONSHIPS_TABLE = aws_dynamodb_table.relationships_table.name
+            FRIENDS_TABLE = aws_dynamodb_table.friends_table.name
         }
     }
 }
@@ -727,7 +762,7 @@ resource "aws_lambda_function" "get_friends" {
 
     environment {
         variables = {
-            RELATIONSHIPS_TABLE = aws_dynamodb_table.relationships_table.name
+            FRIENDS_TABLE = aws_dynamodb_table.friends_table.name
         }
     }
 }
@@ -755,7 +790,7 @@ resource "aws_lambda_function" "accept_friend" {
 
     environment {
         variables = {
-            RELATIONSHIPS_TABLE = aws_dynamodb_table.relationships_table.name
+            FRIENDS_TABLE = aws_dynamodb_table.friends_table.name
         }
     }
 }
@@ -767,3 +802,31 @@ resource "aws_cloudwatch_log_group" "accept_friend_logs" {
 }
 
 # --- End AcceptFriend Lambda Function ---
+
+# --- Start RejectFriend Lambda Function ---
+
+resource "aws_lambda_function" "reject_friend" {
+    function_name = "RejectFriend"
+    filename      = "${path.module}/../exports/lambda/RejectFriend.zip"
+    role          = aws_iam_role.lambda_integration_role.arn
+    handler       = "index.handler"
+    runtime       = "nodejs22.x" # Node 22 is the standard current LTS
+    timeout       = 10
+    memory_size   = 128
+
+    source_code_hash = filebase64sha256("${path.module}/../exports/lambda/RejectFriend.zip")
+
+    environment {
+        variables = {
+            FRIENDS_TABLE = aws_dynamodb_table.friends_table.name
+        }
+    }
+}
+
+# Create the log group explicitly to control retention
+resource "aws_cloudwatch_log_group" "reject_friend_logs" {
+    name              = "/aws/lambda/RejectFriend"
+    retention_in_days = 7
+}
+
+# --- End RejectFriend Lambda Function ---

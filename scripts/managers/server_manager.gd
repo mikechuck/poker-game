@@ -2,10 +2,9 @@ extends Node
 class_name ServerManager
 
 var game_manager: GameSceneManager
-var client_manager: ClientManager
 var GAME_ID: String
 var PORT: int = 12000
-const IDLE_TIMEOUT_SECONDS: float = 30.0
+const IDLE_TIMEOUT_SECONDS: float = 300.0 # 5 minutes of no players will shutdown server
 
 @onready var idle_timer : Timer = Timer.new()
 
@@ -13,7 +12,6 @@ const IDLE_TIMEOUT_SECONDS: float = 30.0
 func _ready() -> void:
 	# Don't call managers that are lower on the stack from _ready(), they won't exist yet
 	game_manager = get_parent().get_node("GameManager")
-	client_manager = get_parent().get_node("ClientManager")
 
 
 func start_server():
@@ -63,8 +61,6 @@ func _on_peer_connected(peer_id: int):
 			connected_player.account_hands_won = account_data.handsWon
 			connected_player.account_hands_played = account_data.handsPlayed
 			print("Peer %d connected with account id %s" % [peer_id, account_id])
-	else:
-		Log.message("test?")
 
 	# If this was the first player to connect, set it as host player
 	if (game_manager.game_state_data.host_peer_id == 0):
@@ -78,7 +74,7 @@ func _on_peer_connected(peer_id: int):
 	}
 	var response_code: int = await HttpRequestsManager.server_update_game(update_request)
 		
-	client_manager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
+	ClientManager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
 	Log.message("Number of players connected: %s" % [game_manager.game_state_data.connected_players.size()])
 	
 	
@@ -118,7 +114,7 @@ func _on_peer_disconnected(id):
 	}
 	var response_code: int = await HttpRequestsManager.server_update_game(update_request)
 	
-	client_manager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
+	ClientManager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
 	Log.message("Number of players connected: %s" % [game_manager.game_state_data.connected_players.size()])
 	
 	# If no players are in the game, start the idle timeout shutdown
@@ -169,7 +165,7 @@ func _get_query_param(url: String, param_name: String) -> String:
 
 @rpc("reliable", "any_peer")
 func request_game_state_publish():
-	client_manager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
+	ClientManager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
 
 
 @rpc("reliable", "any_peer")
@@ -187,12 +183,11 @@ func leave_seat():
 @rpc("reliable", "any_peer")
 func set_ready_status(is_ready: bool):
 	game_manager.server_get_player_seat().is_ready = is_ready
-	client_manager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
+	ClientManager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
 		
 		
 @rpc("reliable", "any_peer")
 func player_action_taken(player_action: int, action_value: int = 0):
-	Log.message("Player action taken | player_action: %s | action_value: %s" % [player_action, action_value])
 	game_manager.player_action_taken(player_action, action_value)
 	
 	
@@ -236,5 +231,3 @@ func call_debug_deal_flop() -> void:
 @rpc("reliable", "any_peer")
 func call_debug_end_step() -> void:
 	game_manager.debug_goto_end_step()
-
-	

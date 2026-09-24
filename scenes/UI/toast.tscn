@@ -1,0 +1,21 @@
+[gd_scene load_steps=2 format=3 uid="uid://bse1wcu5xio2m"]
+
+[ext_resource type="Script" uid="uid://dwi4olk0c5x86" path="res://scripts/UI/toast.gd" id="1_wxn4e"]
+
+[node name="Toast" type="PanelContainer"]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -150.0
+offset_top = 15.0
+offset_right = 150.0
+offset_bottom = 55.0
+grow_horizontal = 2
+script = ExtResource("1_wxn4e")
+
+[node name="Message" type="RichTextLabel" parent="."]
+layout_mode = 2
+bbcode_enabled = true
+text = "[font_size=10]Friend request accepted[/font_size]"
+horizontal_alignment = 1
+vertical_alignment = 1

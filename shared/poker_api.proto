@@ -46,16 +46,17 @@ message AccountRecordList {
 message GameRecord {
     string gameId = 1;
     string hostAccountId = 2;
-    GameStatus gameStatus = 3;
-    int64 createTimeEpochMilliseconds = 4;
-    int64 endTimeEpochMilliseconds = 5;
-    int32 port = 6;
-    int32 blindChips = 7;
-    int32 buyInChips = 8;
-    int32 chipRatio = 9;
-    int32 handsPlayed = 10; 
-    repeated string connectedPlayers = 11;
-    GamePrivacy gamePrivacy = 12;
+    string hostName = 3;
+    GameStatus gameStatus = 4;
+    int64 createTimeEpochMilliseconds = 5;
+    int64 endTimeEpochMilliseconds = 6;
+    int32 port = 7;
+    int32 blindChips = 8;
+    int32 buyInChips = 9;
+    int32 chipRatio = 10;
+    int32 handsPlayed = 11; 
+    repeated string connectedPlayers = 12;
+    GamePrivacy gamePrivacy = 13;
 }
 
 message GameRecordList {
@@ -81,26 +82,26 @@ message JoinTokenRecord {
     string accountId = 1;
     string gameId = 2;
     string joinToken = 3;
-    int64 expirationTimeEpochMilliseconds = 4;
+    int64 expirationTimeEpochSeconds = 4; // Need to use seconds for this since it triggers dynamo TTL
 }
 
-// Relationships
+// Friends
 
-message RelationshipRecord {
+message FriendRecord {
     string accountId = 1;
     string peerAccountId = 2;
-    RelationshipStatus relationshipStatus = 3;
+    FriendStatus friendStatus = 3;
     string peerPlayerName = 4;
     string peerProfilePictureUrl = 5;
     string peerPlayerColor = 6;
     int64 createTimeEpochMilliseconds = 7;
 }
 
-message RelationshipRecordList {
-    repeated RelationshipRecord relationships = 1;
+message FriendRecordList {
+    repeated FriendRecord friends = 1;
 }
 
-enum RelationshipStatus {
+enum FriendStatus {
     FRIEND = 0;
     OUTGOING_PENDING = 1;
     INCOMING_PENDING = 2;

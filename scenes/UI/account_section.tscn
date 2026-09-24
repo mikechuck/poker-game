@@ -53,11 +53,13 @@ theme_override_constants/margin_bottom = 7
 
 [node name="Name" type="RichTextLabel" parent="AccountDetails/Account/MarginContainer"]
 layout_mode = 2
+focus_mode = 2
 bbcode_enabled = true
 text = "[font_size=16]funtybunterrssjdncds[/font_size]"
 scroll_active = false
 autowrap_mode = 0
 vertical_alignment = 1
+selection_enabled = true
 
 [node name="FriendCode" type="HBoxContainer" parent="AccountDetails/Account"]
 custom_minimum_size = Vector2(0, 30)
@@ -76,10 +78,12 @@ vertical_alignment = 1
 [node name="Value" type="RichTextLabel" parent="AccountDetails/Account/FriendCode"]
 layout_mode = 2
 size_flags_horizontal = 3
+focus_mode = 2
 text = "X8XPKKF
 "
 horizontal_alignment = 2
 vertical_alignment = 1
+selection_enabled = true
 
 [node name="HandsPlayed" type="HBoxContainer" parent="AccountDetails/Account"]
 custom_minimum_size = Vector2(0, 30)
@@ -143,6 +147,8 @@ fit_content = true
 [node name="Value" type="RichTextLabel" parent="GameCodeContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
+focus_mode = 2
 text = "NXJHSU"
+selection_enabled = true
 
 [connection signal="pressed" from="LogoutButton" to="." method="_on_logout_button_pressed"]

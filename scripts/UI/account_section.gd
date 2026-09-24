@@ -1,7 +1,6 @@
 extends Control
 class_name AccountSection
 
-var client_manager: ClientManager
 var server_manager: ServerManager
 
 @onready var account_details_container: MarginContainer = $AccountDetails
@@ -41,8 +40,6 @@ func _ready() -> void:
 	if (DataStore.account_data):
 		display_account_data(DataStore.account_data)
 		
-	if (get_tree().root.find_child("ClientManager")):
-		client_manager = get_tree().root.get_node("ClientManager")
 	if (get_tree().root.find_child("ServerManager")):
 		server_manager = get_tree().root.get_node("ServerManager")
 
@@ -57,8 +54,7 @@ func display_account_data(data: Contracts.AccountRecord):
 
 
 func _on_logout_button_pressed() -> void:
-	if (client_manager):
-		client_manager.disconnect_from_server()
+	ClientManager.disconnect_from_server()
 		
 	if (logout_behavior_leave_game):
 		game_code_container_node.visible = false

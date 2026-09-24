@@ -31,7 +31,7 @@ func create_game(
 	chip_ratio: int = 1,
 	privacy: Contracts.GamePrivacy = Contracts.GamePrivacy.PUBLIC) -> Contracts.GameRecord:
 	var path: String = "/game"
-	var reqeustBody = {
+	var request_body = {
 		blindChips = blind,
 		buyInChips = buy_in,
 		chipRatio = chip_ratio,
@@ -41,7 +41,7 @@ func create_game(
 	var http_response: Contracts.HttpResponseWrapper = await AuthManager.api_request(
 		path,
 		HTTPClient.METHOD_PUT,
-		JSON.stringify(reqeustBody)
+		JSON.stringify(request_body)
 	)
 	
 	var game_record: Contracts.GameRecord = Contracts.GameRecord.new()
@@ -83,31 +83,67 @@ func get_games() -> Array[Contracts.GameRecord]:
 	return games_list.records()
 
 
-func get_friends() -> Array[Contracts.RelationshipRecord]:
+func get_friends() -> Array[Contracts.FriendRecord]:
 	var path: String = "/friends"
 	var http_response: Contracts.HttpResponseWrapper = await AuthManager.api_request(
 		path,
 		HTTPClient.METHOD_GET
 	)
 	
-	var friends_list: Contracts.RelationshipRecordList = Contracts.RelationshipRecordList.new()
+	var friends_list: Contracts.FriendRecordList = Contracts.FriendRecordList.new()
 	if (http_response.response_code == 200):
 		var dict: Dictionary = JSON.parse_string(http_response.response_body.get_string_from_utf8())
 		if dict:
 			friends_list.ParseFromDictionary(dict)
-	return friends_list.relationships()
+	return friends_list.friends()
+	
 
+func add_friend(friend_code: String) -> int:
+	var path: String = "/friends/request"
+	var request_body = {
+		friendCode = friend_code
+	}
+	
+	var http_response: Contracts.HttpResponseWrapper = await AuthManager.api_request(
+		path,
+		HTTPClient.METHOD_POST,
+		JSON.stringify(request_body)
+	)
+	
+	return http_response.response_code
+	
+
+func accept_friend_request(friend_account_id) -> int:
+	var path: String = "/friends/%s/accept" % friend_account_id
+	
+	var http_response: Contracts.HttpResponseWrapper = await AuthManager.api_request(
+		path,
+		HTTPClient.METHOD_POST
+	)
+	
+	return http_response.response_code
+	
+
+func reject_friend_request(friend_account_id) -> int:
+	var path: String = "/friends/%s/reject" % friend_account_id
+	
+	var http_response: Contracts.HttpResponseWrapper = await AuthManager.api_request(
+		path,
+		HTTPClient.METHOD_POST
+	)
+	
+	return http_response.response_code
 
 func update_game(game_id: String, game_status: int) -> int:
 	var path: String = "/game/%s" % game_id.uri_encode()
-	var reqeustBody = {
+	var request_body = {
 		gameStatus = game_status
 	}
 	
 	var http_response: Contracts.HttpResponseWrapper = await AuthManager.api_request(
 		path,
 		HTTPClient.METHOD_POST,
-		JSON.stringify(reqeustBody)
+		JSON.stringify(request_body)
 	)
 	
 	return http_response.response_code
@@ -129,7 +165,7 @@ func join_game(game_id: String) -> String:
 func server_update_game(params: Dictionary) -> int:
 	var game_id: String = params.get("game_id", "")
 	var path: String = "/server/game/%s" % game_id.uri_encode()
-	var requestBody = {
+	var request_body = {
 		gameStatus = params.get("game_status"),
 		port = params.get("port"),
 		addPlayers = params.get("add_players"),
@@ -139,7 +175,7 @@ func server_update_game(params: Dictionary) -> int:
 	var http_response: Contracts.HttpResponseWrapper = await AuthManager.server_api_request(
 		path,
 		HTTPClient.METHOD_POST,
-		JSON.stringify(requestBody)
+		JSON.stringify(request_body)
 	)
 	
 	return http_response.response_code

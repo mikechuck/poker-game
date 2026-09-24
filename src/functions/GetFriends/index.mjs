@@ -11,16 +11,16 @@ const docClient = DynamoDBDocumentClient.from(new DynamoDBClient({
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const pokerApiProto = await protobuf.load(path.join(__dirname, "shared/poker_api.proto"));
 const ErrorResponse = pokerApiProto.lookupType("poker_api.ErrorResponse");
-const RelationshipRecordList = pokerApiProto.lookupType("poker_api.RelationshipRecordList");
+const FriendRecordList = pokerApiProto.lookupType("poker_api.FriendRecordList");
 
-const RELATIONSHIPS_TABLE = process.env.RELATIONSHIPS_TABLE;
+const FRIENDS_TABLE = process.env.FRIENDS_TABLE;
 
 export const handler = async (event) => {
     const accountId = event.requestContext?.authorizer?.jwt?.claims?.sub;
 
     try {
         const queryResponse = await docClient.send(new QueryCommand({
-            TableName: RELATIONSHIPS_TABLE,
+            TableName: FRIENDS_TABLE,
             KeyConditionExpression: "accountId = :aId",
             ExpressionAttributeValues: {
                 ":aId": accountId
@@ -29,11 +29,11 @@ export const handler = async (event) => {
 
         console.log("queryResponse:", queryResponse);
 
-        const relationshipRecordList = RelationshipRecordList.create({
-            relationships: queryResponse.Items
+        const friendRecordList = FriendRecordList.create({
+            friends: queryResponse.Items
         })
 
-        const relationshipRecordListObject = RelationshipRecordList.toObject(relationshipRecordList, {
+        const friendRecordListObject = FriendRecordList.toObject(friendRecordList, {
             enums: Number,
             defaults: true
         });
@@ -41,7 +41,7 @@ export const handler = async (event) => {
         return {
             statusCode: 200,
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(relationshipRecordListObject)
+            body: JSON.stringify(friendRecordListObject)
         };
 
     } catch (error) {
