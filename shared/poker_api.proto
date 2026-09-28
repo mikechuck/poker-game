@@ -82,7 +82,6 @@ message JoinTokenRecord {
     string accountId = 1;
     string gameId = 2;
     string joinToken = 3;
-    int64 expirationTimeEpochSeconds = 4; // Need to use seconds for this since it triggers dynamo TTL
 }
 
 // Friends

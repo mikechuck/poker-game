@@ -108,8 +108,7 @@ const saveJoinCodeForPlayer = async (accountId, gameId) => {
     const newJoinTokenEntry = {
         accountId: accountId,
         gameId: gameId,
-        joinToken: joinToken,
-        expirationTimeEpochSeconds: Math.floor(Date.now() / 1000) + 60 // Expire 1 minute from now
+        joinToken: joinToken
     }
 
     const errMsg = JoinTokenRecord.verify(newJoinTokenEntry);

@@ -2,7 +2,7 @@ extends RefCounted
 class_name PlayerSeat
 
 var seat_index: int = 0
-var peer_id: int = 0 # Should map to networking peer id, not account id
+var account_id: String = ""
 var player_node: Node2D
 var is_ready: bool = false
 var hole_cards: Array[CardData] = []
@@ -15,7 +15,7 @@ var sorted_hand_cards: Array[CardData] = []
 var final_hand_score: int = 0
 
 func clear_seat_data() -> void:
-	peer_id = 0
+	account_id = ""
 	player_node = null
 	is_ready = false
 	hole_cards = []
@@ -40,7 +40,7 @@ func reset_hand_data() -> void:
 func clone() -> PlayerSeat:
 	var seat_clone: PlayerSeat = PlayerSeat.new()
 	seat_clone.seat_index = seat_index
-	seat_clone.peer_id = peer_id
+	seat_clone.account_id = account_id
 	seat_clone.player_node = player_node
 	seat_clone.is_ready = is_ready
 	seat_clone.hand_cash = hand_cash
@@ -62,7 +62,7 @@ func to_dict() -> Dictionary:
 		
 	return {
 		"seat_index": seat_index,
-		"peer_id": peer_id,
+		"account_id": account_id,
 		"player_node": player_node,
 		"hole_cards": cards,
 		"hand_cash": hand_cash,
@@ -79,7 +79,7 @@ static func from_dict(dict: Dictionary) -> PlayerSeat:
 	if dict != {}:
 		var hole_cards_array: Array[Dictionary] = dict.get("hole_cards")
 		instance.seat_index = dict.get("seat_index")
-		instance.peer_id = dict.get("peer_id")
+		instance.account_id = dict.get("account_id")
 		instance.player_node = dict.get("player_node")
 		instance.is_folded = dict.get("is_folded")
 		instance.is_big_blind = dict.get("is_big_blind")

@@ -25,11 +25,15 @@ func _ready() -> void:
 		var seat_id = seat.seat_number
 		seat_nodes[seat_id] = seat
 
-func _on_game_state_data_change(old_game_state_data, new_game_state_data):
-	handle_game_state_updated()
-	handle_player_seats_updated()
-	handle_player_turn_updated()
-	handle_board_cards_updated()
+func _on_game_state_data_change(old_game_state_data: GameStateData, new_game_state_data: GameStateData):
+	if (old_game_state_data.game_state != new_game_state_data.game_state):
+		handle_game_state_updated()
+	if (old_game_state_data.player_turn != new_game_state_data.player_turn):
+		handle_player_turn_updated()
+	if (old_game_state_data.board_cards.hash() != new_game_state_data.board_cards.hash()):
+		handle_board_cards_updated()
+	if (old_game_state_data.player_seats.hash() != new_game_state_data.player_seats.hash()):
+		handle_player_seats_updated()
 
 func handle_game_state_updated():
 	for seat in seat_nodes.values():
@@ -40,9 +44,12 @@ func handle_game_state_updated():
 	
 func handle_player_seats_updated():
 	for player_seat: PlayerSeat in game_manager.game_state_data.player_seats.values():
-		if (multiplayer.get_unique_id() == player_seat.peer_id && player_seat.player_node):
-			var cash_amount_label: RichTextLabel = player_seat.player_node.get_node("PlayerCard/CashAmount")
-			cash_amount_label.text = "$" + str(player_seat.hand_cash)
+		var account_data: ConnectedPlayer = game_manager.game_state_data.try_get_connected_player_data(multiplayer.get_unique_id())
+		# Sometimes we don't have the current player in a seat for early game state updates from the server, skip if so
+		if (account_data != null):
+			if (account_data.account_id == player_seat.account_id && player_seat.player_node):
+				var cash_amount_label: RichTextLabel = player_seat.player_node.get_node("PlayerCard/CashAmount")
+				cash_amount_label.text = "$" + str(player_seat.hand_cash)
 	redraw_table_players()
 
 func handle_player_turn_updated():
@@ -97,14 +104,14 @@ func redraw_table_players():
 	for seat_id in player_seats.keys():
 		var seat_data: PlayerSeat = player_seats[seat_id]
 		var seat_node: Node2D = seat_nodes[seat_id]
-		if seat_data.peer_id != 0:
+		if seat_data.account_id != "":
 			var player_instance: Player = player_scene.instantiate()
 			# Grab player data from connected_players list
-			var connected_player_data: ConnectedPlayer = game_manager.game_state_data.connected_players[seat_data.peer_id]
+			var connected_player_data: ConnectedPlayer = game_manager.game_state_data.connected_players[seat_data.account_id]
 			
 			# Need to transform seat position coords from local scale to global scale (0.4 -> 1)
 			player_instance.position = (poker_table_node.scale * seat_node.position)
-			player_instance.peer_id = seat_data.peer_id
+			player_instance.account_id = seat_data.account_id
 			player_instance.is_player_turn = game_manager.game_state_data.player_turn == seat_id
 			player_instance.hand_cash = seat_data.hand_cash
 			player_instance.bet_value = seat_data.bet_value
@@ -112,7 +119,7 @@ func redraw_table_players():
 			player_instance.is_big_blind = seat_data.is_big_blind
 			player_instance.is_small_blind = seat_data.is_small_blind
 			player_instance.hole_cards = seat_data.hole_cards
-			player_instance.is_winner = game_manager.game_state_data.winner_peer_id == seat_data.peer_id
+			player_instance.is_winner = game_manager.game_state_data.winner_account_id == seat_data.account_id
 			player_instance.player_color = connected_player_data.player_color
 			player_instance.player_name = connected_player_data.player_name
 			player_instance.account_id = connected_player_data.account_id

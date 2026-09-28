@@ -3,8 +3,8 @@ class_name Serializer
 
 static func serialize_player_seats(player_seats: Dictionary[int, PlayerSeat]) -> Dictionary:
 	var player_seats_dict = {}
-	for peer_id in player_seats:
-		player_seats_dict[peer_id] = player_seats[peer_id].to_dict()
+	for seat_id in player_seats:
+		player_seats_dict[seat_id] = player_seats[seat_id].to_dict()
 	return player_seats_dict
 	
 static func deserialize_player_seats(new_player_seats: Dictionary) -> Dictionary[int, PlayerSeat]:
@@ -14,17 +14,17 @@ static func deserialize_player_seats(new_player_seats: Dictionary) -> Dictionary
 		deserialized_player_seats[id] = PlayerSeat.from_dict(seat_data)
 	return deserialized_player_seats
 	
-static func serialize_connected_players(connected_players: Dictionary[int, ConnectedPlayer]) -> Dictionary:
+static func serialize_connected_players(connected_players: Dictionary[String, ConnectedPlayer]) -> Dictionary:
 	var connected_players_dict = {}
-	for peer_id in connected_players:
-		connected_players_dict[peer_id] = connected_players[peer_id].to_dict()
+	for account_id in connected_players:
+		connected_players_dict[account_id] = connected_players[account_id].to_dict()
 	return connected_players_dict
 	
-static func deserialize_connected_players(new_connected_players: Dictionary) -> Dictionary[int, ConnectedPlayer]:
-	var deserialized_connected_players: Dictionary[int, ConnectedPlayer] = {}
-	for id in new_connected_players.keys():
-		var seat_data: Dictionary = new_connected_players[id]
-		deserialized_connected_players[id] = ConnectedPlayer.from_dict(seat_data)
+static func deserialize_connected_players(new_connected_players: Dictionary) -> Dictionary[String, ConnectedPlayer]:
+	var deserialized_connected_players: Dictionary[String, ConnectedPlayer] = {}
+	for account_id in new_connected_players.keys():
+		var seat_data: Dictionary = new_connected_players[account_id]
+		deserialized_connected_players[account_id] = ConnectedPlayer.from_dict(seat_data)
 	return deserialized_connected_players
 	
 static func serialize_cards(cards: Array[CardData]) -> Array[Dictionary]:

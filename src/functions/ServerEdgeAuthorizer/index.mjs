@@ -144,8 +144,7 @@ export const handler = async (event) => {
 
         // Validate table record bounds
         if (joinTokenRecord.gameId !== gameId || 
-            joinTokenRecord.accountId !== requestorAccountId ||
-            joinTokenRecord.expirationTimeEpochSeconds <= Math.floor(Date.now() / 1000)) {
+            joinTokenRecord.accountId !== requestorAccountId) {
             return UnauthorizedError;
         }
 

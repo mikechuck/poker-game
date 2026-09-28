@@ -31,7 +31,10 @@ func join_game(game_id: String) -> void:
 		if (game_record.gameStatus == Contracts.GameStatus.ACTIVE):
 			var join_token: String = await HttpRequestsManager.join_game(game_id)
 			if (join_token):
-				ClientManager.connect_to_server(game_record.port, join_token, game_id)
+				DataStore.game_data = game_record
+				DataStore.join_token = join_token
+				Log.toast("Connecting to server...")
+				ClientManager.connect_to_server()
 			else:
 				Log.toast("Failed to join game")
 		else:

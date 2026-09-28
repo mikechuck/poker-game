@@ -47,6 +47,7 @@ export const handler = async (event) => {
     const newPort = body.port
     const addPlayers = body.addPlayers;
     const removePlayers = body.removePlayers;
+    console.log("removePlayers:", removePlayers)
     var hostAccountId;
     var updateParams;
     var gameRecordRaw;
@@ -125,7 +126,9 @@ export const handler = async (event) => {
         playersChanged = true;
     }
 
+    console.log("removing players?")
     if (Array.isArray(removePlayers) && removePlayers.length > 0) {
+        console.log("YES")
         const playersToRemove = new Set(removePlayers);
         currentPlayers = currentPlayers.filter(id => !playersToRemove.has(id));
         playersChanged = true;

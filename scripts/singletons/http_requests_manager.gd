@@ -165,12 +165,14 @@ func join_game(game_id: String) -> String:
 func server_update_game(params: Dictionary) -> int:
 	var game_id: String = params.get("game_id", "")
 	var path: String = "/server/game/%s" % game_id.uri_encode()
-	var request_body = {
+	var request_body: Dictionary = {
 		gameStatus = params.get("game_status"),
 		port = params.get("port"),
 		addPlayers = params.get("add_players"),
 		removePlayers = params.get("remove_players")
 	}
+	
+	Log.message_formatted("request_body:", request_body)
 	
 	var http_response: Contracts.HttpResponseWrapper = await AuthManager.server_api_request(
 		path,

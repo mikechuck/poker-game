@@ -903,16 +903,12 @@ class JoinTokenRecord extends Message:
 	#3 : joinToken
 	var joinToken: String = ""
 
-	#4 : expirationTimeEpochSeconds
-	var expirationTimeEpochSeconds: int = 0
-
 
 	## Init message field values to default value
 	func Init() -> void:
 		self.accountId = ""
 		self.gameId = ""
 		self.joinToken = ""
-		self.expirationTimeEpochSeconds = 0
 
 	## Create a new message instance
 	## Returns: Message - New message instance
@@ -930,7 +926,6 @@ class JoinTokenRecord extends Message:
 			self.accountId += other.accountId
 			self.gameId += other.gameId
 			self.joinToken += other.joinToken
-			self.expirationTimeEpochSeconds += other.expirationTimeEpochSeconds
  
 	func SerializeToBytes(buffer: PackedByteArray = PackedByteArray()) -> PackedByteArray:
 		if self.accountId != "":
@@ -942,9 +937,6 @@ class JoinTokenRecord extends Message:
 		if self.joinToken != "":
 			GDScriptUtils.encode_tag(buffer, 3, 9)
 			GDScriptUtils.encode_string(buffer, self.joinToken)
-		if self.expirationTimeEpochSeconds != 0:
-			GDScriptUtils.encode_tag(buffer, 4, 3)
-			GDScriptUtils.encode_varint(buffer, self.expirationTimeEpochSeconds)
 		return buffer
  
 	func ParseFromBytes(data: PackedByteArray) -> int:
@@ -969,10 +961,6 @@ class JoinTokenRecord extends Message:
 					var field_value = GDScriptUtils.decode_string(data, pos, self)
 					self.joinToken = field_value[GDScriptUtils.VALUE_KEY]
 					pos += field_value[GDScriptUtils.SIZE_KEY]
-				4:
-					var field_value = GDScriptUtils.decode_varint(data, pos, self)
-					self.expirationTimeEpochSeconds = field_value[GDScriptUtils.VALUE_KEY]
-					pos += field_value[GDScriptUtils.SIZE_KEY]
 				_:
 					pass
 
@@ -983,7 +971,6 @@ class JoinTokenRecord extends Message:
 		dict["accountId"] = self.accountId
 		dict["gameId"] = self.gameId
 		dict["joinToken"] = self.joinToken
-		dict["expirationTimeEpochSeconds"] = self.expirationTimeEpochSeconds
 		return dict
 
 	func ParseFromDictionary(dict: Dictionary) -> void:
@@ -996,8 +983,6 @@ class JoinTokenRecord extends Message:
 			self.gameId = dict.get("gameId")
 		if dict.has("joinToken"):
 			self.joinToken = dict.get("joinToken")
-		if dict.has("expirationTimeEpochSeconds"):
-			self.expirationTimeEpochSeconds = dict.get("expirationTimeEpochSeconds")
 
 # =========================================
 

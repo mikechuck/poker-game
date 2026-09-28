@@ -26,6 +26,11 @@ func message(log_text: Variant, show_toast: bool = true, notification_icon: Stri
 		
 	if (write_to_notifications):
 		NotificationManager.write(text, notification_icon)
+		
+func message_formatted(log_text: String, log_json: Dictionary):
+	var json_string = JSON.stringify(log_json)
+	var command_string: String = "console.log(\"" + log_text + "\", JSON.parse('" + json_string.replace("'", "\\'") + "'));"
+	JavaScriptBridge.eval(command_string)
 
 
 func warning(log_text: Variant, notification_icon: String = "⚠️", write_to_notifications: bool = false) -> void:

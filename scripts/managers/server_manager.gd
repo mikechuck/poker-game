@@ -4,10 +4,6 @@ class_name ServerManager
 var game_manager: GameSceneManager
 var GAME_ID: String
 var PORT: int = 12000
-const IDLE_TIMEOUT_SECONDS: float = 300.0 # 5 minutes of no players will shutdown server
-
-@onready var idle_timer : Timer = Timer.new()
-
 
 func _ready() -> void:
 	# Don't call managers that are lower on the stack from _ready(), they won't exist yet
@@ -34,94 +30,83 @@ func start_server():
 	Log.message("Started server at wss://localhost:%s for game id %s..." % [PORT, GAME_ID])
 	update_server_startup_info()
 	
-	# Start idle timer so we can shutdown the server if no one is playing
-	idle_timer.wait_time = IDLE_TIMEOUT_SECONDS
-	idle_timer.timeout.connect(_on_idle_timeout)
-	add_child(idle_timer)
-	idle_timer.start()
-	
 	
 func _on_peer_connected(peer_id: int):
-	var connected_player = ConnectedPlayer.new()
-	connected_player.peer_id = peer_id
-	connected_player.player_total_cash = GameStateData.default_starting_cash
-	game_manager.game_state_data.connected_players[peer_id] = connected_player
+	# If the player exists already (i.e. they didn't intentially leave), then 
+	# just reassign their peer id and set them back to ACTIVE
+	#Log.message("NEW PEER CONNECTED, peer_id: %s" % peer_id)
+	#var connected_player = game_manager.game_state_data.try_get_connected_player_data(peer_id)
+	#if (connected_player != null):
+		#Log.message("found connected player, so not overriting existing player data")
+		#connected_player.peer_id = peer_id
+		#connected_player.player_state = ConnectedPlayer.PlayerState.ACTIVE
+		#return
+	#else:
+		#Log.message("player not in connected_player list, overriting player data")
+		#connected_player = ConnectedPlayer.new()
+		#connected_player.peer_id = peer_id
+		#connected_player.player_total_cash = GameStateData.default_starting_cash
 	
 	var ws_multiplayer_peer := multiplayer.multiplayer_peer as WebSocketMultiplayerPeer
 	var peer: WebSocketPeer = ws_multiplayer_peer.get_peer(peer_id)
+	var connected_player: ConnectedPlayer
+	
+	# This might act funny if peer is null?
 	if peer:
 		var requested_url: String = peer.get_requested_url()
 		var account_id: String = _get_query_param(requested_url, "verified_account_id")
+		
+		connected_player = game_manager.game_state_data.connected_players.get(account_id)
+		if (connected_player == null):
+			var account_data: Contracts.AccountRecord = await HttpRequestsManager.server_get_account_data(account_id)
+			if (account_data):
+				connected_player = ConnectedPlayer.new()
+				connected_player.player_name = account_data.playerName
+				connected_player.player_color = account_data.playerColor
+				connected_player.account_friend_code = account_data.friendCode
+				connected_player.account_hands_won = account_data.handsWon
+				connected_player.account_hands_played = account_data.handsPlayed
+				connected_player.player_total_cash = GameStateData.default_starting_cash
+		
+		connected_player.peer_id = peer_id
 		connected_player.account_id = account_id
-		var account_data: Contracts.AccountRecord = await HttpRequestsManager.server_get_account_data(account_id)
-		if (account_data):
-			connected_player.player_name = account_data.playerName
-			connected_player.player_color = account_data.playerColor
-			connected_player.friend_code = account_data.friendCode
-			connected_player.account_hands_won = account_data.handsWon
-			connected_player.account_hands_played = account_data.handsPlayed
-			print("Peer %d connected with account id %s" % [peer_id, account_id])
+		
+		print("Peer %d connected with account id %s" % [peer_id, account_id])
 
-	# If this was the first player to connect, set it as host player
-	if (game_manager.game_state_data.host_peer_id == 0):
-		game_manager.game_state_data.host_peer_id = connected_player.peer_id
-		connected_player.is_host = true
-		
-	# Update the db record with the new player ID
-	var update_request: Dictionary = {
-		"game_id": GAME_ID,
-		"add_players": [connected_player.account_id]
-	}
-	var response_code: int = await HttpRequestsManager.server_update_game(update_request)
-		
-	ClientManager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
-	Log.message("Number of players connected: %s" % [game_manager.game_state_data.connected_players.size()])
-	
-	
+		# If this was the first player to connect, set it as host player
+		if (game_manager.game_state_data.host_account_id == ""):
+			game_manager.game_state_data.host_account_id = connected_player.account_id
+			connected_player.is_host = true
+			
+		# Update the db record with the new player ID
+		var update_request: Dictionary = {
+			"game_id": GAME_ID,
+			"add_players": [connected_player.account_id]
+		}
+		var response_code: int = await HttpRequestsManager.server_update_game(update_request)
+		game_manager.game_state_data.connected_players[account_id] = connected_player
+		ClientManager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
+		Log.message("Number of players connected: %s" % [game_manager.game_state_data.connected_players.size()])
+
+
 func _on_peer_disconnected(id):
-	var disconnecting_player: ConnectedPlayer = game_manager.game_state_data.connected_players.get(id)
-	Log.message("Player %s disconnected" % disconnecting_player.account_id)
-	game_manager.game_state_data.connected_players.erase(id)
-	
-	if disconnecting_player.is_host:
-		if (game_manager.game_state_data.connected_players.values().size() > 0):
-			var new_host: ConnectedPlayer = game_manager.game_state_data.connected_players.values()[0]
-			game_manager.game_state_data.host_peer_id = new_host.peer_id
-			new_host.is_host = true
-			Log.message("New host id: %s" % new_host.account_id)
-		else:
-			Log.message("Host left, no players left in the game")
-			game_manager.game_state_data.host_peer_id = 0
-			game_manager.game_state_data.game_state = GameState.State.PreHand
-	elif game_manager.game_state_data.connected_players.values().size() == 0:
-		game_manager.game_state_data.host_peer_id = 0
-		game_manager.game_state_data.game_state = GameState.State.PreHand
+	# If the player is still active in the game, set them to IDLE
+	var found_account: bool = false
+	for connected_player: ConnectedPlayer in game_manager.game_state_data.connected_players.values():
+		if connected_player.peer_id == id && connected_player.player_state == ConnectedPlayer.PlayerState.ACTIVE:
+			Log.message("Account %s (peer_id: %s) disconnected, setting to IDLE status" % [connected_player.account_id, connected_player.peer_id])
+			found_account = true;
+			connected_player.player_state = ConnectedPlayer.PlayerState.IDLE
+			var player_seat: PlayerSeat = game_manager.server_get_player_seat()
+			player_seat.is_ready = false
+			connected_player.player_idle_start_timestamp_ms = int(Time.get_unix_time_from_system() * 1000)
+			
+	if !found_account:
+		Log.message("Peer %s left the game and has been disconnected")
 		
-	# Clear the player from the seat
-	for seat in game_manager.game_state_data.player_seats.values():
-		if seat.peer_id == id:
-			seat.peer_id = 0
-			seat.player_node = null
-		
-	# TODO: don't reset hand, have some sort of grace period for reconnections.
-	# What do we do about rage quitting? 
-	if game_manager.game_state_data.connected_players.size() == 0:
-		game_manager.reset_hand()
-		
-	var update_request: Dictionary = {
-		"game_id": GAME_ID,
-		"remove_players": [disconnecting_player.account_id]
-	}
-	var response_code: int = await HttpRequestsManager.server_update_game(update_request)
-	
 	ClientManager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
-	Log.message("Number of players connected: %s" % [game_manager.game_state_data.connected_players.size()])
-	
-	# If no players are in the game, start the idle timeout shutdown
-	if (game_manager.game_state_data.connected_players.size() == 0):
-		idle_timer.start()
-		
-		
+
+
 func update_server_startup_info() -> void:
 	var update_request: Dictionary = {
 		"game_id": GAME_ID,
@@ -129,26 +114,8 @@ func update_server_startup_info() -> void:
 		"port": PORT
 	}
 	HttpRequestsManager.server_update_game(update_request)
-	
-#func update_db_player_connected() -> void:
-	#http_request_manager.server_update_game(GAME_ID, )
-		
-		
-func _on_idle_timeout() -> void:
-	# If no players are in the game after the timeout, end the game
-	if (game_manager.game_state_data.connected_players.size() == 0):
-		var update_request: Dictionary = {
-			"game_id": GAME_ID,
-			"game_status": Contracts.GameStatus.ENDED,
-			"port": PORT
-		}
-		
-		var response_code: int = await HttpRequestsManager.server_update_game(update_request)
-		if response_code != 200:
-			Log.error("Error updating game instance from server.")
-		Log.message("Game server instance shutting down. Goodbye.")
-		get_tree().quit()
-		
+
+
 func _get_query_param(url: String, param_name: String) -> String:
 	var query_start: int = url.find("?")
 	if query_start == -1:
@@ -161,48 +128,102 @@ func _get_query_param(url: String, param_name: String) -> String:
 			return key_value[1].uri_decode()
 	return ""
 
+
 ### RPC Functions
+
+
+@rpc("reliable", "any_peer")
+func leave_game():
+	var client_id: int = multiplayer.get_remote_sender_id()
+	if game_manager.game_state_data.game_state == GameState.State.PreHand:
+		var connected_player: ConnectedPlayer = game_manager.game_state_data.try_get_connected_player_data(client_id)
+		Log.message("Player %s has left during in PreHand, removing them from the game" % connected_player.player_name)
+		game_manager.remove_player_from_game(client_id)
+	else:
+		var connected_player: ConnectedPlayer = game_manager.game_state_data.try_get_connected_player_data(client_id)
+		Log.message("Player %s has left during a hand, setting status to LEFT" % connected_player.player_name)
+		connected_player.player_state = ConnectedPlayer.PlayerState.LEFT
+
 
 @rpc("reliable", "any_peer")
 func request_game_state_publish():
+	if not multiplayer.is_server():
+		return
+	
 	ClientManager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
 
 
 @rpc("reliable", "any_peer")
 func request_seat(seat_number: int):
+	if not multiplayer.is_server():
+		return
+	
+	if game_manager.game_state_data.game_state != GameState.State.PreHand:
+		return
+	
 	var client_id: int = multiplayer.get_remote_sender_id()
 	game_manager.assign_player_to_seat(client_id, seat_number)
 	
 
 @rpc("reliable", "any_peer")
 func leave_seat():
+	if not multiplayer.is_server():
+		return
+		
+	if game_manager.game_state_data.game_state != GameState.State.PreHand:
+		return
+	
 	var client_id: int = multiplayer.get_remote_sender_id()
 	game_manager.remove_player_from_seat(client_id)
 	
 	
 @rpc("reliable", "any_peer")
 func set_ready_status(is_ready: bool):
+	if not multiplayer.is_server():
+		return
+		
+	if game_manager.game_state_data.game_state != GameState.State.PreHand:
+		return
+	
 	game_manager.server_get_player_seat().is_ready = is_ready
 	ClientManager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
 		
 		
 @rpc("reliable", "any_peer")
 func player_action_taken(player_action: int, action_value: int = 0):
+	if not multiplayer.is_server():
+		return
+	
 	game_manager.player_action_taken(player_action, action_value)
 	
 	
 @rpc("reliable", "any_peer")
 func start_new_hand() -> void:
+	if not multiplayer.is_server():
+		return
+	
+	if game_manager.game_state_data.game_state != GameState.State.PreHand:
+		return
+	
 	game_manager.start_new_hand()
 	
 	
 @rpc("reliable", "any_peer")
 func goto_lobby() -> void:
+	if not multiplayer.is_server():
+		return
+		
+	if game_manager.game_state_data.game_state != GameState.State.HandOver:
+		return
+	
 	game_manager.goto_lobby()
 
 
 @rpc("reliable", "any_peer")
 func heartbeat_server(account_id: String) -> void:
+	if not multiplayer.is_server():
+		return
+	
 	Log.message("Received heartbeat from client | AcountId: %s" % account_id)
 
 
@@ -210,9 +231,9 @@ func heartbeat_server(account_id: String) -> void:
 
 func set_player_seats():
 	for i in range(1, 9):
-		var player_seat = PlayerSeat.new()
+		var player_seat: PlayerSeat = PlayerSeat.new()
 		player_seat.seat_index = i
-		player_seat.peer_id = 0
+		player_seat.account_id = ""
 		game_manager.game_state_data.player_seats[i] = player_seat
 		
 

@@ -23,7 +23,6 @@ class_name Player
 var card_front_1 = null
 var card_front_2 = null
 
-var peer_id = 0
 var is_player_turn: bool = false
 var hand_cash: int = 0
 var is_folded: bool = false
@@ -38,6 +37,8 @@ var player_name: String = ""
 var account_id: String = ""
 
 func _ready() -> void:
+	leave_seat_button.visible = false
+	
 	# Set player details
 	if (player_color != ""):
 		player_profile_picture_node.modulate = player_color

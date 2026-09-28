@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://b1jfi6ws60cfm" path="res://scripts/UI/player_ui.gd" id="1_d6j1s"]
 [ext_resource type="Texture2D" uid="uid://cku43xsg7wffl" path="res://assets/HoleCardSpot.png" id="2_50a1s"]
-[ext_resource type="PackedScene" uid="uid://cr8vvixudbsoq" path="res://scenes/UI/account_section.tscn" id="2_q3y81"]
+[ext_resource type="Texture2D" uid="uid://cdhg6f0q5aod7" path="res://assets/logout-white.svg" id="4_hxbk0"]
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -13,11 +13,6 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("1_d6j1s")
-
-[node name="AccountSection" parent="." instance=ExtResource("2_q3y81")]
-layout_mode = 0
-show_data = false
-logout_behavior_leave_game = true
 
 [node name="PlayerActionsHandOver" type="Control" parent="."]
 visible = false
@@ -451,6 +446,117 @@ theme_override_font_sizes/normal_font_size = 12
 text = "Game state: cdsac"
 vertical_alignment = 1
 
+[node name="LeaveGameButton" type="TextureButton" parent="."]
+modulate = Color(0.99607843, 0.9764706, 0.9372549, 1)
+layout_mode = 0
+offset_left = 15.0
+offset_top = 15.0
+offset_right = 815.0
+offset_bottom = 815.0
+scale = Vector2(0.03, 0.03)
+mouse_default_cursor_shape = 2
+texture_normal = ExtResource("4_hxbk0")
+
+[node name="GameCodeContainer" type="HBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 50.0
+offset_top = 15.0
+offset_right = 260.0
+offset_bottom = 45.0
+
+[node name="Label" type="RichTextLabel" parent="GameCodeContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Game code:"
+fit_content = true
+
+[node name="Value" type="RichTextLabel" parent="GameCodeContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 2
+text = "NXJHSU"
+selection_enabled = true
+
+[node name="GamePrivacyContainer" type="HBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 50.0
+offset_top = 40.0
+offset_right = 260.0
+offset_bottom = 70.0
+
+[node name="Label" type="RichTextLabel" parent="GamePrivacyContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Privacy:"
+fit_content = true
+
+[node name="Value" type="RichTextLabel" parent="GamePrivacyContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 2
+text = "Friends"
+selection_enabled = true
+
+[node name="GameBuyInContainer" type="HBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 50.0
+offset_top = 65.0
+offset_right = 260.0
+offset_bottom = 95.0
+
+[node name="Label" type="RichTextLabel" parent="GameBuyInContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Buy in:"
+fit_content = true
+
+[node name="Value" type="RichTextLabel" parent="GameBuyInContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 2
+text = "100"
+selection_enabled = true
+
+[node name="GameBlindContainer" type="HBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 50.0
+offset_top = 90.0
+offset_right = 260.0
+offset_bottom = 120.0
+
+[node name="Label" type="RichTextLabel" parent="GameBlindContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Blind:"
+fit_content = true
+
+[node name="Value" type="RichTextLabel" parent="GameBlindContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 2
+text = "10"
+selection_enabled = true
+
+[node name="GameChipValueContainer" type="HBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 50.0
+offset_top = 115.0
+offset_right = 260.0
+offset_bottom = 145.0
+
+[node name="Label" type="RichTextLabel" parent="GameChipValueContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Chip Value:"
+fit_content = true
+
+[node name="Value" type="RichTextLabel" parent="GameChipValueContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 2
+text = "$1"
+selection_enabled = true
+
 [connection signal="pressed" from="PlayerActionsHandOver/StartNewHand/LobbyButton" to="." method="_on_goto_lobby_button_pressed"]
 [connection signal="pressed" from="PlayerActionsHandOver/GoToLobby/StartButton" to="." method="_on_start_new_hand_button_pressed"]
 [connection signal="toggled" from="PlayerActionsPreHandHost/Ready/ReadyButton" to="." method="_on_ready_button_toggled"]
@@ -466,3 +572,4 @@ vertical_alignment = 1
 [connection signal="pressed" from="Debug/Container/StartGame" to="." method="_on_debug_start_game_pressed"]
 [connection signal="pressed" from="Debug/Container/DealFlop" to="." method="_on_debug_deal_flop_pressed"]
 [connection signal="pressed" from="Debug/Container/EndStep" to="." method="_on_debug_end_step_pressed"]
+[connection signal="pressed" from="LeaveGameButton" to="." method="_on_leave_game_button_pressed"]
