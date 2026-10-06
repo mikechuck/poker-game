@@ -12,7 +12,6 @@ const MAX_RECONNECT_RETRY_ATTEMPTS: int = 5
 const RECONNECT_RETRY_DELAY_SEC: float = 2.0
 var last_heartbeat_time: int = 0
 var is_manually_disconnecting: bool = false
-var is_attempting_connection: bool = false
 var is_lost_focus: bool = false # For keeping track if the page is in focus or the user is away
 
 # Unlike ServerManager, this ClientManager class is a global singleton so we can
@@ -45,7 +44,7 @@ func _on_focus_regained() -> void:
 	# When tab comes back to focus, if we lost peer connection, trigger the loop immediately
 	var peer = multiplayer.multiplayer_peer
 	if peer == null or peer.get_connection_status() == MultiplayerPeer.CONNECTION_DISCONNECTED:
-		if not is_manually_disconnecting and not is_attempting_connection and _is_game_scene:
+		if not is_manually_disconnecting and _is_game_scene:
 			connect_to_server()
 
 
@@ -69,7 +68,6 @@ func _on_node_added(node: Node) -> void:
 		_is_main_scene = true
 		# Reset leave flag once we get back to main scene
 		is_manually_disconnecting = false
-		is_attempting_connection = false
 
 
 func _on_game_scene_ready(game_node: Node) -> void:
@@ -87,20 +85,23 @@ func _on_game_scene_ready(game_node: Node) -> void:
 
 
 func connect_to_server():
-	if (is_attempting_connection): return
-	
-	is_attempting_connection = true
 	var port = DataStore.game_data.port
 	var join_token = DataStore.join_token
 	var game_id = DataStore.game_data.gameId
 	var connection_url: String = "wss://%s/game/%s?joinToken=%s&gameId=%s" % [AuthManager.BASE_URL, port, join_token, game_id]
 	var max_retries: int = 3
-	var retry_interval_seconds: int = 2
+	var retry_interval_seconds: int = 3
 	
 	for attempt in range(1, max_retries):
+		# If we already have a peer, it means we lost connection previously
+		if (multiplayer.multiplayer_peer != null):
+			Log.toast("Connection lost to server, reconnecting...")
+		else:
+			Log.toast("Connecting to server...")
+		
 		Log.message("Connection attempt %d of %d..." % [attempt, max_retries])
 		multiplayer.multiplayer_peer = null
-		var peer:= WebSocketMultiplayerPeer.new()
+		var peer := WebSocketMultiplayerPeer.new()
 		var response := peer.create_client(connection_url)
 		if response == OK:
 			Log.message("Connection success!")
@@ -114,8 +115,6 @@ func connect_to_server():
 				await get_tree().create_timer(retry_interval_seconds).timeout
 			else:
 				Log.message("No more retries, aborting connection attempt")
-	
-	is_attempting_connection = false
 
 
 #func disconnect_from_server() -> void:
@@ -143,7 +142,8 @@ func leave_game() -> void:
 func _on_connected():
 	Log.toast("Connected to game!")
 	Log.message("Finished connecting to the game. Unique peer id is %s" % multiplayer.get_unique_id())
-	NavigationManager.navigate_to_game_scene()
+	if (_is_main_scene):
+		NavigationManager.navigate_to_game_scene()
 
 
 func _on_connection_failed():
@@ -158,7 +158,7 @@ func _on_disconnected():
 		Log.message("navigating to main scene")
 		NavigationManager.navigate_to_main()
 	# Only start connection retry if the user is active
-	elif (not is_lost_focus and not is_attempting_connection):
+	elif (not is_lost_focus):
 		connect_to_server()
 
 

@@ -11,19 +11,9 @@ leftoff:
 	- we should show who's ready and not ready on the player UI in lobby
 	- add ready status in players list in game scene?
 	- player can't see their cards when hands are delt
-		- we are actually sending every player all the players cards. need to figure out how to remove them per client with a mask or seomthing. 
-	- hide leave seat button for other players
-	- after I join and then leave, we're getting "node not found "Game/ClientManager" error
-	- Games table:
-		- list active games from all friends, and show hostname for each record as well
-		- this should only show "public" and "friends" game type
+		- *** we are actually sending every player all the players cards. need to figure out how to remove them per client with a mask or seomthing. 
 	
 	- polishing join flow and player indicators, I think I can move on to polishing game flow. will return to other UI and other features later
-	- players list is not updated when leaving a game
-
-	- Build tcp reconnection logic on client side
-		- if RPC is broken and can't reconnect after some time, send player to main menu
-	- server is ending even when players are still in the game (migth have fixed this already...)
 	- add "remove join tokens for this server" when it goes to shut down
 
 

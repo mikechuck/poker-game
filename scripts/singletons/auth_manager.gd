@@ -79,7 +79,8 @@ func api_request(path: String, method: int, request_body: String = "", retry_cou
 			# Something is wrong with our auth, boot user
 			clear_local_storage()
 			NavigationManager.navigate_to_landing()
-			return null
+			# Return empty response so we don't need to do null checks everywhere
+			return Contracts.HttpResponseWrapper.new()
 	else:
 		if (response_code >= 300):
 			Log.error("HTTP response error code: %s" % response_code)

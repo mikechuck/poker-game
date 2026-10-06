@@ -15,7 +15,11 @@ run/main_scene="uid://cp36jy3j67uj0"
 config/features=PackedStringArray("4.5", "GL Compatibility")
 run/flush_stdout_on_print=true
 run/low_processor_mode_sleep_usec=0
+boot_splash/bg_color=Color(0.047058824, 0.17254902, 0.21568628, 1)
+boot_splash/fullsize=false
+boot_splash/image="uid://gsn2mlrn27w7"
 config/icon="res://icon.svg"
+boot_splash/minimum_display_time=3000
 
 [autoload]
 
