@@ -89,6 +89,8 @@ func redraw_table_players():
 	else:
 		pot_value_node.visible = false
 	
+	# TODO because we clear everything first and then redraw, there're flashes of nodes popingin and out on game state updates
+	# We should move to a deep compare instead of delete/add flow so we don't redraw if we don't need to
 	# Clear player seats first
 	for seat_id in player_seats.keys():
 		if (player_seats[seat_id].player_node != null):
@@ -123,6 +125,7 @@ func redraw_table_players():
 			player_instance.player_color = connected_player_data.player_color
 			player_instance.player_name = connected_player_data.player_name
 			player_instance.account_id = connected_player_data.account_id
+			player_instance.player_state = connected_player_data.player_state
 			seat_data.player_node = player_instance
 			add_child(player_instance)
 			seat_node.visible = false

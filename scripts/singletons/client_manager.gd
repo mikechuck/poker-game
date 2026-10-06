@@ -97,29 +97,35 @@ func connect_to_server():
 	var max_retries: int = 3
 	var retry_interval_seconds: int = 2
 	
-	for attempt in range(max_retries):
+	for attempt in range(1, max_retries):
 		Log.message("Connection attempt %d of %d..." % [attempt, max_retries])
 		multiplayer.multiplayer_peer = null
 		var peer:= WebSocketMultiplayerPeer.new()
-		var err := peer.create_client(connection_url)
-		if err == OK:
+		var response := peer.create_client(connection_url)
+		if response == OK:
+			Log.message("Connection success!")
 			multiplayer.multiplayer_peer = peer
 			break;
 		else:
 			DataStore.game_data = null
 			# Short delay before the next attempt
-			if attempt < max_retries - 1:
+			if attempt < max_retries:
+				Log.message("Waiting for next retry attempt...")
 				await get_tree().create_timer(retry_interval_seconds).timeout
-				
+			else:
+				Log.message("No more retries, aborting connection attempt")
+	
 	is_attempting_connection = false
 
 
-func disconnect_from_server() -> void:
-	Log.message("disconnecting from server")
-	DataStore.game_data = null
-	if (multiplayer.multiplayer_peer):
-		Log.message("peer still not closed, closing it now")
-		multiplayer.multiplayer_peer.close()
+#func disconnect_from_server() -> void:
+	#Log.message("Disconnecting from server...")
+	#DataStore.game_data = null
+	#if (multiplayer.multiplayer_peer):
+		#Log.message("Peer still not closed, closing it now")
+		#multiplayer.multiplayer_peer.close()
+	#else:
+		#NavigationManager.navigate_to_main()
 		
 
 func leave_game() -> void:
@@ -128,12 +134,9 @@ func leave_game() -> void:
 		NavigationManager.navigate_to_main()
 	else:
 		if peer.get_connection_status() == MultiplayerPeer.CONNECTION_CONNECTED:
-			Log.message("multiplayer is connected")
 			server_manager.leave_game.rpc_id(1)
 			is_manually_disconnecting = true
-			disconnect_from_server()
 		else:
-			Log.message("multiplayer is not connected")
 			NavigationManager.navigate_to_main()
 
 

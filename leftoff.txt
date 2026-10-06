@@ -1,5 +1,13 @@
-leftoff
+leftoff:
+	- ***Need to go back to main page and close connection if server can't be reached. end of reconnect logic?
 	- does server shutdown work with the reconnect logic?
+	- when connected to a game, add to url so refreshes can automatically attempt to connect to it
+		- probably need to store join token in session storage for this to work properly
+	- remove logic for "first player to join is host". It should be the creator of the game that is host, unless they leave with other players in the game
+	- There's a delay between loading game scene and showing player seats, is there anything we can do about this?
+	- Bug: host left during game, game finished, and host rejoined. Used "go to lobby" button and started a new game, but new hand was never delt
+		- fix host logic first before getting into this
+	- Still need to fix scenario when client is connected to server and server shuts down. 
 	- we should show who's ready and not ready on the player UI in lobby
 	- add ready status in players list in game scene?
 	- player can't see their cards when hands are delt

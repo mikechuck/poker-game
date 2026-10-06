@@ -27,6 +27,7 @@ var table_radius: int = 225
 ### Server fields
 var game_state_data: GameStateData = GameStateData.new()
 @onready var idle_timer : Timer = Timer.new()
+var idle_timeout_sec: int = 300
 
 ### Start lifecycle methods
 
@@ -35,7 +36,7 @@ func _ready() -> void:
 	call_deferred("run_after_tree_load")
 	
 	# Start idle timer so we can shutdown the server if no one is playing
-	idle_timer.wait_time = 300.0
+	idle_timer.wait_time = idle_timeout_sec
 	idle_timer.timeout.connect(_on_idle_timeout)
 	add_child(idle_timer)
 	idle_timer.start()
@@ -112,21 +113,16 @@ func remove_player_from_seat(client_id: int) -> void:
 	
 
 func remove_player_from_game(peer_id: int) -> void:
+	remove_player_from_seat(peer_id)
 	var disconnecting_player: ConnectedPlayer = game_state_data.try_get_connected_player_data(peer_id)
 	game_state_data.connected_players.erase(disconnecting_player.account_id)
 	Log.message("Removing player %s from game (peer_id %s" % [disconnecting_player.account_id, peer_id])
 	
 	if game_state_data.host_account_id == disconnecting_player.account_id:
-			var new_host: ConnectedPlayer = game_state_data.connected_players.values()[0]
-			game_state_data.host_account_id = new_host.account_id
-			new_host.is_host = true
-			Log.message("New host id: %s" % new_host.account_id)
-		
-	if game_state_data.connected_players.values().size() > 0:
-		# Mark the player as left only if there are other players in the game
-		for seat in game_state_data.player_seats.values():
-			if seat.account_id == disconnecting_player.account_id:
-				seat.has_left = true
+		var new_host: ConnectedPlayer = game_state_data.connected_players.values()[0]
+		game_state_data.host_account_id = new_host.account_id
+		new_host.is_host = true
+		Log.message("New host id: %s" % new_host.account_id)
 		
 	var update_request: Dictionary = {
 		"game_id": server_manager.GAME_ID,
@@ -141,6 +137,14 @@ func remove_player_from_game(peer_id: int) -> void:
 	if (game_state_data.connected_players.size() == 0):
 		reset_game()
 		idle_timer.start()
+
+
+func set_player_as_left(client_id: int):
+	var connected_player: ConnectedPlayer = game_state_data.try_get_connected_player_data(client_id)
+	connected_player.player_state = ConnectedPlayer.PlayerState.LEFT
+	for seat in game_state_data.player_seats.values():
+		if seat.account_id == connected_player.account_id:
+			seat.has_left = true
 
 
 ### Game cycle methods
@@ -249,7 +253,8 @@ func state_setup_hand():
 	
 	
 func check_skip_this_state() -> void:
-	if get_num_active_players_in_hand() <= 1:
+	if get_num_active_players_in_hand() <= 1 and game_state_data.game_state != GameState.State.PreHand:
+		Log.message("NO ACTIVE PLAYERS, CONTINUING TO NEXT GAME STATE")
 		step_next_game_state()
 	
 	
@@ -451,11 +456,20 @@ func get_next_active_player_turn() -> int:
 
 
 # Num of players in the hand that have not folded and can still bet
+# Ensure that any "active" players are not in a LEFT connection state,
+# They don't count as active even if their seat is
 func get_num_active_players_in_hand() -> int:
 	var num_active_players: int = 0
 	for seat: PlayerSeat in game_state_data.player_seats.values():
-		if seat.account_id != "" && !seat.is_folded && seat.hand_cash != 0:
-			num_active_players += 1
+		if seat.account_id != "":
+			var player_data: ConnectedPlayer = game_state_data.connected_players.get(seat.account_id)
+			Log.message("Checking if player %s is active" % seat.account_id)
+			Log.message_formatted("Player data for %s:" % seat.account_id, player_data.to_dict())
+			if (player_data == null): continue
+			if (player_data.player_state == ConnectedPlayer.PlayerState.LEFT): continue
+			if !seat.is_folded && seat.hand_cash != 0:
+				Log.message("They are active!")
+				num_active_players += 1
 	return num_active_players
 
 
@@ -475,10 +489,23 @@ func get_next_player_seat_number(seat_number: int) -> int:
 		#seat_number = get_next_player_seat_number(seat_number)
 	return seat_number
 	
-	
+
+# An active seat meets these criteria:
+# - has a player assigned (account_id set)
+# - is not folded
+# - has money left to bet
+# - is not in a LEFT state in their connected_player data
+# Note: we will still give IDLE players a change to reconnect, so their turn still runs
 func get_next_active_player_seat_number(seat_number: int) -> int:
 	var desired_seat: PlayerSeat = game_state_data.player_seats.get(seat_number)
-	if (desired_seat == null || desired_seat.account_id == "" || desired_seat.is_folded || desired_seat.hand_cash == 0):
+	var player_left_game: bool = false
+	# Check connection status first if a player is sitting here
+	if (desired_seat.account_id != ""):
+		var player_data: ConnectedPlayer = game_state_data.connected_players.get(desired_seat.account_id)
+		if player_data != null:
+			player_left_game = player_data.player_state == ConnectedPlayer.PlayerState.LEFT
+	# Not an active seat, find the next one
+	if (desired_seat.account_id == "" || desired_seat.is_folded || desired_seat.hand_cash == 0 || player_left_game):
 		seat_number = get_next_seat_number_in_range(seat_number)
 		seat_number = get_next_active_player_seat_number(seat_number)
 	return seat_number

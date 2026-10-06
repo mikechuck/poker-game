@@ -32,26 +32,11 @@ func start_server():
 	
 	
 func _on_peer_connected(peer_id: int):
-	# If the player exists already (i.e. they didn't intentially leave), then 
-	# just reassign their peer id and set them back to ACTIVE
-	#Log.message("NEW PEER CONNECTED, peer_id: %s" % peer_id)
-	#var connected_player = game_manager.game_state_data.try_get_connected_player_data(peer_id)
-	#if (connected_player != null):
-		#Log.message("found connected player, so not overriting existing player data")
-		#connected_player.peer_id = peer_id
-		#connected_player.player_state = ConnectedPlayer.PlayerState.ACTIVE
-		#return
-	#else:
-		#Log.message("player not in connected_player list, overriting player data")
-		#connected_player = ConnectedPlayer.new()
-		#connected_player.peer_id = peer_id
-		#connected_player.player_total_cash = GameStateData.default_starting_cash
-	
 	var ws_multiplayer_peer := multiplayer.multiplayer_peer as WebSocketMultiplayerPeer
 	var peer: WebSocketPeer = ws_multiplayer_peer.get_peer(peer_id)
 	var connected_player: ConnectedPlayer
 	
-	# This might act funny if peer is null?
+	# TODO This might act funny if peer is null?
 	if peer:
 		var requested_url: String = peer.get_requested_url()
 		var account_id: String = _get_query_param(requested_url, "verified_account_id")
@@ -70,6 +55,7 @@ func _on_peer_connected(peer_id: int):
 		
 		connected_player.peer_id = peer_id
 		connected_player.account_id = account_id
+		connected_player.player_state = ConnectedPlayer.PlayerState.ACTIVE
 		
 		print("Peer %d connected with account id %s" % [peer_id, account_id])
 
@@ -96,14 +82,17 @@ func _on_peer_disconnected(id):
 		if connected_player.peer_id == id && connected_player.player_state == ConnectedPlayer.PlayerState.ACTIVE:
 			Log.message("Account %s (peer_id: %s) disconnected, setting to IDLE status" % [connected_player.account_id, connected_player.peer_id])
 			found_account = true;
-			connected_player.player_state = ConnectedPlayer.PlayerState.IDLE
 			var player_seat: PlayerSeat = game_manager.server_get_player_seat()
 			player_seat.is_ready = false
+			connected_player.player_state = ConnectedPlayer.PlayerState.IDLE
 			connected_player.player_idle_start_timestamp_ms = int(Time.get_unix_time_from_system() * 1000)
-			
+	
 	if !found_account:
 		Log.message("Peer %s left the game and has been disconnected")
-		
+	
+	# Run a check to see if any players are still active
+	# Continue game forward if we need to skip (i.e. no active or idle players left)
+	game_manager.check_skip_this_state()
 	ClientManager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
 
 
@@ -136,13 +125,13 @@ func _get_query_param(url: String, param_name: String) -> String:
 func leave_game():
 	var client_id: int = multiplayer.get_remote_sender_id()
 	if game_manager.game_state_data.game_state == GameState.State.PreHand:
-		var connected_player: ConnectedPlayer = game_manager.game_state_data.try_get_connected_player_data(client_id)
-		Log.message("Player %s has left during in PreHand, removing them from the game" % connected_player.player_name)
+		Log.message("Client %s left the game in pre-hand, removing them from the game")
 		game_manager.remove_player_from_game(client_id)
+		multiplayer.multiplayer_peer.disconnect_peer(client_id)
 	else:
-		var connected_player: ConnectedPlayer = game_manager.game_state_data.try_get_connected_player_data(client_id)
-		Log.message("Player %s has left during a hand, setting status to LEFT" % connected_player.player_name)
-		connected_player.player_state = ConnectedPlayer.PlayerState.LEFT
+		Log.message("Client %s left the game during a hand")
+		game_manager.set_player_as_left(client_id)
+		multiplayer.multiplayer_peer.disconnect_peer(client_id)
 
 
 @rpc("reliable", "any_peer")

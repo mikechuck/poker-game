@@ -17,6 +17,8 @@ class_name Player
 @onready var card_back_2: Sprite2D = $PlayerCard/CardBack2
 @onready var leave_seat_button: Button = $PlayerCard/LeaveSeatButton
 @onready var player_indicator_node: Sprite2D = $PlayerCard/UserIndicator
+@onready var player_left_indicator_node: Sprite2D = $PlayerCard/PlayerLeftIndicator
+@onready var player_idle_indicator_node: Sprite2D = $PlayerCard/PlayerIdleIndicator
 @onready var game_manager: GameSceneManager = get_tree().root.get_node("Game/GameManager")
 @onready var server_manager: ServerManager = get_tree().root.get_node("Game/ServerManager")
 
@@ -35,6 +37,7 @@ var is_winner: bool = false
 var player_color: String = ""
 var player_name: String = ""
 var account_id: String = ""
+var player_state: ConnectedPlayer.PlayerState = ConnectedPlayer.PlayerState.ACTIVE
 
 func _ready() -> void:
 	leave_seat_button.visible = false
@@ -110,6 +113,14 @@ func _ready() -> void:
 		player_indicator_node.visible = true
 	else:
 		player_indicator_node.visible = false
+		
+	if player_state == ConnectedPlayer.PlayerState.IDLE:
+		player_idle_indicator_node.visible = true
+		player_left_indicator_node.visible = false
+		
+	if player_state == ConnectedPlayer.PlayerState.LEFT:
+		player_left_indicator_node.visible = true
+		player_idle_indicator_node.visible = false
 
 
 func _on_leave_seat_button_pressed() -> void:

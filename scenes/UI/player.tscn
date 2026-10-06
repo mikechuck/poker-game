@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://x8p6qfmpkras"]
+[gd_scene load_steps=13 format=3 uid="uid://x8p6qfmpkras"]
 
 [ext_resource type="Script" uid="uid://dsw4s5bge27tu" path="res://scripts/UI/player.gd" id="1_c1ys2"]
 [ext_resource type="Texture2D" uid="uid://bdr6mll513ay7" path="res://assets/PlayerCard/FoldBadge.png" id="2_0qg72"]
@@ -9,6 +9,8 @@
 [ext_resource type="Texture2D" uid="uid://3pvy2qjel0j0" path="res://assets/PlayerCard/ProfilePicture.png" id="7_nmq0w"]
 [ext_resource type="Texture2D" uid="uid://cbaim1l7lhhmu" path="res://assets/cards/light/BACK.png" id="8_wwf63"]
 [ext_resource type="Texture2D" uid="uid://csjr718d77a1a" path="res://assets/icons/user_icon.svg" id="9_0qg72"]
+[ext_resource type="Texture2D" uid="uid://bwktsmnelxoyg" path="res://assets/icons/close-circle.svg" id="10_ehu1e"]
+[ext_resource type="Texture2D" uid="uid://b2fv3702ifqhi" path="res://assets/icons/clock-circle.svg" id="11_67d8n"]
 
 [sub_resource type="GDScript" id="GDScript_xygjn"]
 
@@ -130,5 +132,19 @@ modulate = Color(1, 1, 1, 0.23529412)
 position = Vector2(17, 37)
 scale = Vector2(0.07, 0.07)
 texture = ExtResource("9_0qg72")
+
+[node name="PlayerLeftIndicator" type="Sprite2D" parent="PlayerCard"]
+visible = false
+modulate = Color(0, 0, 0, 0.27058825)
+position = Vector2(17, 37)
+scale = Vector2(0.15, 0.15)
+texture = ExtResource("10_ehu1e")
+
+[node name="PlayerIdleIndicator" type="Sprite2D" parent="PlayerCard"]
+visible = false
+modulate = Color(1, 1, 1, 0.23529412)
+position = Vector2(17, 37)
+scale = Vector2(0.15, 0.15)
+texture = ExtResource("11_67d8n")
 
 [connection signal="pressed" from="PlayerCard/LeaveSeatButton" to="." method="_on_leave_seat_button_pressed"]
