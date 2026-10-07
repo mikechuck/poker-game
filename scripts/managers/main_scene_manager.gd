@@ -4,7 +4,8 @@ class_name MainSceneManager
 @onready var game_code_input_node: Node = $Content/Menu/MarginContainer/VBoxContainer/JoinGameMenu/GameCodeInput
 @onready var account_section: AccountSection = $Content/AccountSection
 @onready var games_list_container: GameDetailsContainer = $Content/GamesList
-@onready var loading_screen: Control = $Loading
+@onready var loading_screen: Control = $LoadingSplash
+@onready var connecting_to_game_screen: Control = $ConnectingSplash
 @onready var main_content: Control = $Content
 
 
@@ -41,3 +42,36 @@ func join_game(game_id: String) -> void:
 			Log.toast("Game not active")
 	else:
 		Log.error("Error getting game status")
+
+
+func wait_for_game_creation(game_id: String) -> void:
+	Log.toast("Waiting for game to launch...")
+	show_creating_game_splash()
+	var max_retries: int = 60
+	var retry_interval_seconds: int = 1
+	var connecting_to_game: bool = false
+	
+	for attempt in range(1, max_retries):
+		var game: Contracts.GameRecord = await HttpRequestsManager.get_game(game_id)
+		if game.gameStatus == Contracts.GameStatus.ACTIVE:
+			join_game(game_id)
+			break
+		else:
+			if attempt < max_retries:
+				Log.message("Waiting for next retry attempt...")
+				await get_tree().create_timer(retry_interval_seconds).timeout
+			else:
+				Log.message("No more retries, aborting connection attempt")
+				hide_creating_game_splash()
+
+
+func show_creating_game_splash() -> void:
+	loading_screen.visible = false
+	main_content.visible = false
+	connecting_to_game_screen.visible = true
+	
+
+func hide_creating_game_splash() -> void:
+	loading_screen.visible = false
+	connecting_to_game_screen.visible = false
+	main_content.visible = true

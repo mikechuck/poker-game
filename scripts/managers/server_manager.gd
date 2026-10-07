@@ -191,7 +191,7 @@ func start_new_hand() -> void:
 	if not multiplayer.is_server():
 		return
 	
-	if game_manager.game_state_data.game_state != GameState.State.PreHand:
+	if game_manager.game_state_data.game_state != GameState.State.HandOver:
 		return
 	
 	game_manager.start_new_hand()

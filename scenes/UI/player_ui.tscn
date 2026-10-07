@@ -15,7 +15,6 @@ mouse_filter = 2
 script = ExtResource("1_d6j1s")
 
 [node name="PlayerActionsHandOver" type="Control" parent="."]
-visible = false
 custom_minimum_size = Vector2(100, 100)
 layout_mode = 1
 anchors_preset = 12
@@ -63,7 +62,6 @@ mouse_filter = 2
 layout_mode = 0
 offset_left = -150.0
 offset_top = -50.0
-offset_right = -19.0
 mouse_default_cursor_shape = 2
 text = "Start New Hand
 "

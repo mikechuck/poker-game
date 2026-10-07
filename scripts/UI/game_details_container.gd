@@ -99,13 +99,14 @@ func _on_join_game_button_pressed() -> void:
 
 func _on_create_button_pressed() -> void:
 	Log.message("Creating game...")
+	main_scene_manager.show_creating_game_splash()
 	var blind_value: float = blind_value_node.value
 	var buy_in: float = buy_in_value_node.value
 	var chip_ratio: float = chips_ratio_value_node.value
 	var privacy: int = privacy_value_node.selected
 	var game_record: Contracts.GameRecord = await HttpRequestsManager.create_game(int(blind_value), int(buy_in), int(chip_ratio), privacy)
 	if (game_record != null):
-		get_games_list()
+		main_scene_manager.wait_for_game_creation(game_record.gameId)
 
 
 func _on_refresh_button_pressed() -> void:

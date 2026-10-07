@@ -140,11 +140,22 @@ func remove_player_from_game(peer_id: int) -> void:
 
 
 func set_player_as_left(client_id: int):
-	var connected_player: ConnectedPlayer = game_state_data.try_get_connected_player_data(client_id)
-	connected_player.player_state = ConnectedPlayer.PlayerState.LEFT
+	var leaving_player_data: ConnectedPlayer = game_state_data.try_get_connected_player_data(client_id)
+	leaving_player_data.player_state = ConnectedPlayer.PlayerState.LEFT
 	for seat in game_state_data.player_seats.values():
-		if seat.account_id == connected_player.account_id:
+		if seat.account_id == leaving_player_data.account_id:
 			seat.has_left = true
+	
+	# If leaving player is host, assign a new host
+	if game_state_data.host_account_id == leaving_player_data.account_id:
+		for player: ConnectedPlayer in game_state_data.connected_players.values():
+			if player.player_state != ConnectedPlayer.PlayerState.LEFT:
+				game_state_data.host_account_id = player.account_id
+				player.is_host = true
+				Log.message("New host id: %s" % player.account_id)
+				break
+		Log.message("No connected players eligible to be host, setting to empty")
+		game_state_data.host_account_id = ""
 
 
 ### Game cycle methods
@@ -216,8 +227,10 @@ func step_next_game_state():
 
 
 func state_run_prehand_checks():
+	Log.message("Running PreHand checks on players")
 	# Check for IDLE or LEFT players, remove them from their seat or the game entirely
 	for connected_player: ConnectedPlayer in game_state_data.connected_players.values():
+		Log.message("Running prehand checks for player %s - %s" % [connected_player.account_id, connected_player.player_name])
 		if connected_player.player_state == ConnectedPlayer.PlayerState.IDLE:
 			# If the player has been idle for more than 5 minutes, remove them from the game
 			if (connected_player.player_idle_start_timestamp_ms + 300000) > int(Time.get_unix_time_from_system() * 1000):
@@ -230,7 +243,8 @@ func state_run_prehand_checks():
 		if connected_player.player_state == ConnectedPlayer.PlayerState.LEFT:
 			Log.message("PreHand Check - Player %s has LEFT, removing them from the game" % connected_player.player_name)
 			remove_player_from_game(connected_player.peer_id)
-	
+			
+	#reset_hand()
 	ClientManager.update_game_state_data.rpc(game_state_data.to_dict())
 
 
@@ -424,13 +438,14 @@ func player_action_call():
 		
 # Called during HandOver from host
 func start_new_hand() -> void:
-	goto_lobby()
+	step_next_game_state()
+	reset_hand()
 	step_next_game_state()
 	
 	
 # Called during HandOver from host
 func goto_lobby() -> void:
-	reset_hand()
+	step_next_game_state()
 
 		
 ###################################### Helper Functions #############################################
@@ -463,12 +478,9 @@ func get_num_active_players_in_hand() -> int:
 	for seat: PlayerSeat in game_state_data.player_seats.values():
 		if seat.account_id != "":
 			var player_data: ConnectedPlayer = game_state_data.connected_players.get(seat.account_id)
-			Log.message("Checking if player %s is active" % seat.account_id)
-			Log.message_formatted("Player data for %s:" % seat.account_id, player_data.to_dict())
 			if (player_data == null): continue
 			if (player_data.player_state == ConnectedPlayer.PlayerState.LEFT): continue
 			if !seat.is_folded && seat.hand_cash != 0:
-				Log.message("They are active!")
 				num_active_players += 1
 	return num_active_players
 
