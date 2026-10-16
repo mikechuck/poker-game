@@ -1,6 +1,9 @@
 leftoff:
 	- create worker lambda that will query games that are "active" and see if they are reachable. If not, mark as inactive and clear player data
 	- leftoff: fix winner logic. have gemini do this maybe....
+	- * finish how we track player chips in game with player and seat, and also how the game details are being saved
+	- * Fix how we are telling the client that we're ready
+		- when client hits the "_on_connected" event, we should wait for the server to send us an RPC "player_ready()" event. At this point, then we navigate to game scene if need be
 	- does server shutdown work with the reconnect logic?
 		- just need to test the "has been idle for too long, kick" logic
 	- when connected to a game, add to url so refreshes can automatically attempt to connect to it

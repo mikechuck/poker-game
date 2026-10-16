@@ -51,7 +51,8 @@ func _on_peer_connected(peer_id: int):
 				connected_player.account_friend_code = account_data.friendCode
 				connected_player.account_hands_won = account_data.handsWon
 				connected_player.account_hands_played = account_data.handsPlayed
-				connected_player.player_total_cash = GameStateData.default_starting_cash
+				# TODO: player_total_chips needs to come from GameLedger instead
+				connected_player.player_total_chips = DataStore.game_data.buyInChips
 		
 		connected_player.peer_id = peer_id
 		connected_player.account_id = account_id

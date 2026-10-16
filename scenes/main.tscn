@@ -1,10 +1,10 @@
 [gd_scene load_steps=8 format=3 uid="uid://b7ckdfv84qrn2"]
 
-[ext_resource type="Script" uid="uid://dvefjfvnac0ds" path="res://scripts/managers/main_scene_manager.gd" id="1_o5qli"]
+[ext_resource type="Script" uid="uid://bkjyadt5eq256" path="res://scripts/managers/main_scene_manager.gd" id="1_o5qli"]
 [ext_resource type="PackedScene" uid="uid://cr8vvixudbsoq" path="res://scenes/UI/account_section.tscn" id="2_jyhfs"]
 [ext_resource type="Texture2D" uid="uid://bkth60ay70ih4" path="res://assets/icons/refresh-circle.svg" id="4_tefeu"]
-[ext_resource type="Script" uid="uid://pbt3e5ngffq3" path="res://scripts/UI/game_details_container.gd" id="5_85g3d"]
-[ext_resource type="Script" uid="uid://hh1ti6qwxid3" path="res://scripts/UI/friends_list_container.gd" id="5_tefeu"]
+[ext_resource type="Script" uid="uid://b2se26m78wqin" path="res://scripts/UI/game_details_container.gd" id="5_85g3d"]
+[ext_resource type="Script" uid="uid://h1w5ysrptqsd" path="res://scripts/UI/friends_list_container.gd" id="5_tefeu"]
 [ext_resource type="PackedScene" uid="uid://68tyc31vsq17" path="res://scenes/UI/game_details.tscn" id="6_choun"]
 
 [sub_resource type="Theme" id="Theme_o6xl0"]

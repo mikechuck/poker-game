@@ -12,6 +12,9 @@ var winner_account_id: String = ""
 # The following fields never get cleared, they are set by networking functions
 var host_account_id: String = ""
 var connected_players: Dictionary[String, ConnectedPlayer] = {}
+# Retrieved from game details in databse
+var game_buy_in_value: int = 0
+var game_blind_value: int = 0
 
 # Default fields
 static var default_starting_cash = 100

@@ -6,7 +6,7 @@ var account_id: String = ""
 var player_node: Node2D
 var is_ready: bool = false
 var hole_cards: Array[CardData] = []
-var hand_cash: int = 0
+var player_chips: int = 0
 var bet_value: int = 0
 var is_folded: bool = false
 var is_big_blind: bool = false
@@ -19,7 +19,7 @@ func clear_seat_data() -> void:
 	player_node = null
 	is_ready = false
 	hole_cards = []
-	hand_cash = 0
+	player_chips = 0
 	bet_value = 0
 	is_folded = false
 	is_big_blind = false
@@ -43,7 +43,7 @@ func clone() -> PlayerSeat:
 	seat_clone.account_id = account_id
 	seat_clone.player_node = player_node
 	seat_clone.is_ready = is_ready
-	seat_clone.hand_cash = hand_cash
+	seat_clone.player_chips = player_chips
 	seat_clone.bet_value = bet_value
 	seat_clone.is_folded = is_folded
 	seat_clone.is_big_blind = is_big_blind
@@ -65,7 +65,7 @@ func to_dict() -> Dictionary:
 		"account_id": account_id,
 		"player_node": player_node,
 		"hole_cards": cards,
-		"hand_cash": hand_cash,
+		"player_chips": player_chips,
 		"is_folded": is_folded,
 		"is_big_blind": is_big_blind,
 		"is_small_blind": is_small_blind,
@@ -85,7 +85,7 @@ static func from_dict(dict: Dictionary) -> PlayerSeat:
 		instance.is_big_blind = dict.get("is_big_blind")
 		instance.is_small_blind = dict.get("is_small_blind")
 		instance.hole_cards = Serializer.deserialize_cards(hole_cards_array)
-		instance.hand_cash = dict.get("hand_cash")
+		instance.player_chips = dict.get("player_chips")
 		instance.bet_value = dict.get("bet_value")
 		instance.is_ready = dict.get("is_ready")
 		instance.final_hand_score = dict.get("final_hand_score")
