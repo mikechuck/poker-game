@@ -133,6 +133,8 @@ func _on_peer_connected(id: int):
 
 
 func connect_to_server():
+	if (DataStore.game_data == null): return
+	
 	var port = DataStore.game_data.port
 	var join_token = DataStore.join_token
 	var game_id = DataStore.game_data.gameId

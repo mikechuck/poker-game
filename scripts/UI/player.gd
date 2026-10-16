@@ -40,16 +40,23 @@ var account_id: String = ""
 var player_state: ConnectedPlayer.PlayerState = ConnectedPlayer.PlayerState.ACTIVE
 
 func _ready() -> void:
+	var is_account_player = account_id == DataStore.account_data.accountId
+	var current_game_state: GameState.State = game_manager.game_state_data.game_state
 	leave_seat_button.visible = false
+	winner_badge_node.visible = is_winner
+	folded_badge_node.visible = false
+	bet_badge_node.visible = false
+	turn_indicator_node.visible = is_player_turn && current_game_state != GameState.State.HandOver
+	player_indicator_node.visible = is_account_player
+	player_left_indicator_node.visible = player_state == ConnectedPlayer.PlayerState.LEFT
+	player_idle_indicator_node.visible = player_state == ConnectedPlayer.PlayerState.IDLE
+	leave_seat_button.visible = is_account_player and current_game_state == GameState.State.PreHand
 	
 	# Set player details
 	if (player_color != ""):
 		player_profile_picture_node.modulate = player_color
 	player_name_label_node.text = "[font_size=16]%s[/font_size]" % player_name
 	cash_amount_node.text = "$" + str(hand_cash)
-	
-	if is_player_turn && game_manager.game_state_data.game_state != GameState.State.HandOver:
-		turn_indicator_node.visible = true
 		
 	var is_ante_turn = (is_small_blind || is_big_blind) && game_manager.game_state_data.game_state == GameState.State.BetHole
 		
@@ -71,17 +78,8 @@ func _ready() -> void:
 		var bet_badge_text: RichTextLabel = bet_badge_node.get_node("Text")
 		bet_badge_text.text = "$%s" % bet_value
 	
-	# Cards logic
-	if (game_manager.game_state_data.game_state >= GameState.State.HandOver):
-		show_cards = true
-		
-	if (is_winner):
-		bet_badge_node.visible = false
-		folded_badge_node.visible = false
-		winner_badge_node.visible = true
-		turn_indicator_node.visible = true
-		
-	if show_cards:
+	# Cards display logic
+	if (is_account_player and len(hole_cards) > 0) or current_game_state >= GameState.State.HandOver:
 		card_back_1.visible = false
 		card_back_2.visible = false
 		for i in range(1, 3):
@@ -102,25 +100,6 @@ func _ready() -> void:
 		else:
 			card_back_1.visible = true
 			card_back_2.visible = true
-			
-	if (game_manager.game_state_data.game_state == GameState.State.PreHand):
-		if account_id == DataStore.account_data.accountId:
-			leave_seat_button.visible = true
-	else:
-		leave_seat_button.visible = false
-		
-	if account_id == DataStore.account_data.accountId:
-		player_indicator_node.visible = true
-	else:
-		player_indicator_node.visible = false
-		
-	if player_state == ConnectedPlayer.PlayerState.IDLE:
-		player_idle_indicator_node.visible = true
-		player_left_indicator_node.visible = false
-		
-	if player_state == ConnectedPlayer.PlayerState.LEFT:
-		player_left_indicator_node.visible = true
-		player_idle_indicator_node.visible = false
 
 
 func _on_leave_seat_button_pressed() -> void:

@@ -244,7 +244,7 @@ func state_run_prehand_checks():
 			Log.message("PreHand Check - Player %s has LEFT, removing them from the game" % connected_player.player_name)
 			remove_player_from_game(connected_player.peer_id)
 			
-	#reset_hand()
+	reset_hand()
 	ClientManager.update_game_state_data.rpc(game_state_data.to_dict())
 
 
@@ -439,7 +439,6 @@ func player_action_call():
 # Called during HandOver from host
 func start_new_hand() -> void:
 	step_next_game_state()
-	reset_hand()
 	step_next_game_state()
 	
 	

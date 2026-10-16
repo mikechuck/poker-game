@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3 uid="uid://x8p6qfmpkras"]
+[gd_scene load_steps=12 format=3 uid="uid://x8p6qfmpkras"]
 
 [ext_resource type="Script" uid="uid://dsw4s5bge27tu" path="res://scripts/UI/player.gd" id="1_c1ys2"]
 [ext_resource type="Texture2D" uid="uid://bdr6mll513ay7" path="res://assets/PlayerCard/FoldBadge.png" id="2_0qg72"]
@@ -12,14 +12,11 @@
 [ext_resource type="Texture2D" uid="uid://bwktsmnelxoyg" path="res://assets/icons/close-circle.svg" id="10_ehu1e"]
 [ext_resource type="Texture2D" uid="uid://b2fv3702ifqhi" path="res://assets/icons/clock-circle.svg" id="11_67d8n"]
 
-[sub_resource type="GDScript" id="GDScript_xygjn"]
-
 [node name="Player" type="CharacterBody2D"]
 script = ExtResource("1_c1ys2")
 
 [node name="PlayerCard" type="Node2D" parent="."]
 position = Vector2(-40, -20)
-script = SubResource("GDScript_xygjn")
 
 [node name="FoldBadge" type="Sprite2D" parent="PlayerCard"]
 visible = false

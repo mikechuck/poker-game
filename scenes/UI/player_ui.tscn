@@ -15,6 +15,7 @@ mouse_filter = 2
 script = ExtResource("1_d6j1s")
 
 [node name="PlayerActionsHandOver" type="Control" parent="."]
+visible = false
 custom_minimum_size = Vector2(100, 100)
 layout_mode = 1
 anchors_preset = 12
@@ -226,7 +227,6 @@ text = "Fold
 "
 
 [node name="PlayerActionsGame" type="Control" parent="."]
-visible = false
 custom_minimum_size = Vector2(100, 100)
 layout_mode = 1
 anchors_preset = 12
@@ -342,6 +342,29 @@ offset_bottom = 23.0
 mouse_default_cursor_shape = 2
 text = "Fold
 "
+
+[node name="CallInfo" type="Control" parent="PlayerActionsGame"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -100.0
+offset_right = 100.0
+offset_bottom = 40.0
+grow_horizontal = 2
+
+[node name="Value" type="RichTextLabel" parent="PlayerActionsGame/CallInfo"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -100.0
+offset_right = 100.0
+offset_bottom = 40.0
+grow_horizontal = 2
+text = "Call value: $5"
+horizontal_alignment = 1
 
 [node name="StatusMessage" type="Control" parent="."]
 visible = false

@@ -1,15 +1,18 @@
 leftoff:
-	- * Need to hook into _on_connection_failed for reconnection logic, not just relying on response to create_client() in connect_to_server. Maybe have a sub-manager for this?
+	- create worker lambda that will query games that are "active" and see if they are reachable. If not, mark as inactive and clear player data
+	- leftoff: fix winner logic. have gemini do this maybe....
 	- does server shutdown work with the reconnect logic?
-	- test host transfer logic in a few different flows
+		- just need to test the "has been idle for too long, kick" logic
 	- when connected to a game, add to url so refreshes can automatically attempt to connect to it
 		- probably need to store join token in session storage for this to work properly
-	- There's a delay between loading game scene and showing player seats, is there anything we can do about this?
-	- Still need to fix scenario when client is connected to server and server shuts down. 
-	- we should show who's ready and not ready on the player UI in lobby
-	- add ready status in players list in game scene?
-	- player can't see their cards when hands are delt
-		- *** we are actually sending every player all the players cards. need to figure out how to remove them per client with a mask or seomthing. 
+	- add ready status as a badge in the player UI
+	- *** we are actually sending every player all the players cards
+		- need to figure out how to remove them per client with a mask or seomthing.
+		- new funciton instead of "update state"
+			- loop through player seats
+			- remove all but their cards from state
+			- send to new "update client" rpc function that only sends it to the players connection
+			- need to adjust logic to always show OTHER player blank cards based on game state regardless of presence in player data
 	
 	- polishing join flow and player indicators, I think I can move on to polishing game flow. will return to other UI and other features later
 	- add "remove join tokens for this server" when it goes to shut down
@@ -19,6 +22,29 @@ Test login credentials:
 username: Mikechuck
 password: Test123!
 email: mcjoy465+user2@gmail.com
+
+Color pallete:
+#227C9D
+#17C3B2
+#FFCB77
+#FEF9EF
+#FE6D73
+#3AAB58
+#8CB369
+#2A9D8F
+#F4A261
+#E76F51
+#E63946
+#E05780
+#B5179E
+#7209B7
+#4361EE
+#4895EF
+#4CC9F0
+#A2D2FF
+#1D3557
+#2A6F97
+
 
 
 Game state logic

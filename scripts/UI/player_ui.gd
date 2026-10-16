@@ -22,9 +22,11 @@ class_name PlayerUI
 @onready var bet_input_value: int = 0
 @onready var check_button: Button = $PlayerActionsGame/Check/CheckButton
 @onready var raise_button: Button = $PlayerActionsGame/Bet/RaiseButton
+@onready var raise_input: SpinBox = $PlayerActionsGame/Bet/SpinBox
 @onready var call_button: Button = $PlayerActionsGame/Call/CallButton
 @onready var fold_button: Button = $PlayerActionsGame/Fold/FoldButton
 @onready var ante_button: Button = $PlayerActionsAnte/Ante/AnteButton
+@onready var call_value_node: RichTextLabel = $PlayerActionsGame/CallInfo/Value
 @onready var game_state_label: RichTextLabel = $Debug/Container/GameState
 @onready var game_code_node: RichTextLabel = $GameCodeContainer/Value
 @onready var game_privacy_node: RichTextLabel = $GamePrivacyContainer/Value
@@ -136,13 +138,21 @@ func set_bet_buttons() -> void:
 		raise_button.text = "Bet"
 	else:
 		raise_button.text = "Raise"
+	
 	# Set the minimum bet input to the difference of player's current bet and the table bet
 	if game_manager.game_state_data.current_bet_value == current_turn_player_seat_data.bet_value:
 		# We can check but not call
 		call_button.disabled = true
+		
 	if game_manager.game_state_data.current_bet_value > current_turn_player_seat_data.bet_value:
 		# We can call but not check
 		check_button.disabled = true
+		raise_button.text = "Call & Raise"
+		
+	if game_manager.game_state_data.current_bet_value > current_turn_player_seat_data.bet_value:
+		call_value_node.text = "Call value: $%s" % (game_manager.game_state_data.current_bet_value - current_turn_player_seat_data.bet_value)
+	else:
+		call_value_node.text = ""
 
 
 func update_hole_cards() -> void:
@@ -216,7 +226,6 @@ func _on_ready_button_toggled(toggled_on: bool) -> void:
 
 
 func _on_start_button_pressed() -> void:
-	Log.message("Start game button pressed")
 	server_manager.player_action_taken.rpc_id(1, PlayerTurnAction.Action.StartGame)
 
 
@@ -250,6 +259,9 @@ func _on_bet_input_changed(value: float) -> void:
 
 func _on_bet_button_pressed() -> void:
 	server_manager.player_action_taken.rpc_id(1, PlayerTurnAction.Action.Raise, bet_input_value)
+	bet_input_value = 0
+	raise_input.value = 0
+	
 
 
 func _on_start_new_hand_button_pressed() -> void:

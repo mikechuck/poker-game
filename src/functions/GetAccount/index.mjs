@@ -63,7 +63,9 @@ export const handler = async (event) => {
             friendCode += friendCodeChars[Math.floor(Math.random() * friendCodeChars.length)];
         }
 
-        const colorOptions = ["#227C9D", "#17C3B2", "#FFCB77", "#FEF9EF", "#FE6D73"];
+        const colorOptions = ["#227C9D", "#FFCB77", "#FEF9EF", "#FE6D73", "#3AAB58"];
+        // "#17C3B2" is the table color, so left it out
+        // const colorOptions = ["#227C9D", "#FFCB77", "#FEF9EF", "#FE6D73", "#3AAB58", "#8CB369", "#2A9D8F", "#F4A261", "#E76F51", "#E63946", "#E05780", "#B5179E", "#7209B7", "#4361EE", "#4895EF", "#4CC9F0", "#A2D2FF", "#1D3557", "#2A6F97"];
         const newPlayerColor = colorOptions[Math.random(0, 4)];
 
         // Account not found, create one with initial values if we have sub data
@@ -73,8 +75,7 @@ export const handler = async (event) => {
                     statusCode: 404,
                     body: JSON.stringify(
                         ErrorResponse.create({ 
-                            message: "Account not found", 
-                            error: error 
+                            message: "Account not found"
                         })
                     )
                 };
