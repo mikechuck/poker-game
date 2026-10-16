@@ -97,7 +97,7 @@ func assign_player_to_seat(client_id: int, seat_number: int) -> void:
 		if (seat.account_id == player_data.account_id):
 			seat.clear_seat_data()
 	desired_seat.account_id = player_data.account_id
-	desired_seat.hand_cash = GameStateData.default_starting_cash
+	desired_seat.player_chips = GameStateData.default_starting_cash
 	game_state_data.player_seats[seat_number] = desired_seat
 	game_state_data.connected_players[player_data.account_id].is_spectating = false
 	ClientManager.update_game_state_data.rpc(game_state_data.to_dict())
@@ -118,16 +118,18 @@ func remove_player_from_game(peer_id: int) -> void:
 	game_state_data.connected_players.erase(disconnecting_player.account_id)
 	Log.message("Removing player %s from game (peer_id %s" % [disconnecting_player.account_id, peer_id])
 	
-	if game_state_data.host_account_id == disconnecting_player.account_id:
-		var new_host: ConnectedPlayer = game_state_data.connected_players.values()[0]
-		game_state_data.host_account_id = new_host.account_id
-		new_host.is_host = true
-		Log.message("New host id: %s" % new_host.account_id)
-		
 	var update_request: Dictionary = {
 		"game_id": server_manager.GAME_ID,
 		"remove_players": [disconnecting_player.account_id]
 	}
+	
+	if game_state_data.host_account_id == disconnecting_player.account_id:
+		var new_host: ConnectedPlayer = game_state_data.connected_players.values()[0]
+		game_state_data.host_account_id = new_host.account_id
+		new_host.is_host = true
+		update_request["host_account_id"] = new_host.account_id
+		Log.message("New host id: %s" % new_host.account_id)
+	
 	var response_code: int = await HttpRequestsManager.server_update_game(update_request)
 	
 	ClientManager.update_game_state_data.rpc(game_state_data.to_dict())
@@ -312,8 +314,8 @@ func state_end_step() -> void:
 	# Add the new balance to the winner
 	for seat: PlayerSeat in game_state_data.player_seats.values():
 		if seat.account_id == game_state_data.winner_account_id:
-			seat.hand_cash += game_state_data.pot_value
-	game_state_data.connected_players[game_state_data.winner_account_id].player_total_cash += game_state_data.pot_value
+			seat.player_chips += game_state_data.pot_value
+	game_state_data.connected_players[game_state_data.winner_account_id].player_total_chips += game_state_data.pot_value
 	ClientManager.update_game_state_data.rpc(game_state_data.to_dict())
 	
 	
@@ -399,7 +401,7 @@ func player_action_ante():
 		bet_value = GameStateData.default_small_blind
 	else:
 		bet_value = GameStateData.default_big_blind
-	player_seat.hand_cash -= bet_value
+	player_seat.player_chips -= bet_value
 	player_seat.bet_value += bet_value
 	game_state_data.pot_value += bet_value
 	game_state_data.current_bet_value = bet_value
@@ -416,7 +418,7 @@ func player_action_check() -> void:
 func player_action_raise(bet_value: int):
 	var player_seat: PlayerSeat = server_get_player_seat()
 	var difference_raise: int = game_state_data.current_bet_value - player_seat.bet_value + bet_value
-	player_seat.hand_cash -= difference_raise
+	player_seat.player_chips -= difference_raise
 	player_seat.bet_value += difference_raise
 	game_state_data.pot_value += bet_value
 	if player_seat.bet_value > game_state_data.current_bet_value:
@@ -428,7 +430,7 @@ func player_action_call():
 	var call_value: int = game_state_data.current_bet_value
 	var player_seat: PlayerSeat = server_get_player_seat()
 	var bet_value_difference: int = call_value - player_seat.bet_value
-	player_seat.hand_cash -= bet_value_difference
+	player_seat.player_chips -= bet_value_difference
 	player_seat.bet_value += bet_value_difference
 	game_state_data.pot_value += bet_value_difference
 	if player_seat.bet_value > game_state_data.current_bet_value:
@@ -480,7 +482,7 @@ func get_num_active_players_in_hand() -> int:
 			var player_data: ConnectedPlayer = game_state_data.connected_players.get(seat.account_id)
 			if (player_data == null): continue
 			if (player_data.player_state == ConnectedPlayer.PlayerState.LEFT): continue
-			if !seat.is_folded && seat.hand_cash != 0:
+			if !seat.is_folded && seat.player_chips != 0:
 				num_active_players += 1
 	return num_active_players
 
@@ -489,7 +491,7 @@ func get_num_active_players_in_hand() -> int:
 func get_num_players_in_hand() -> int:
 	var num_active_players: int = 0
 	for player: PlayerSeat in game_state_data.player_seats.values():
-		if !player.is_folded && player.hand_cash != 0:
+		if !player.is_folded && player.player_chips != 0:
 			num_active_players += 1
 	return num_active_players
 
@@ -517,7 +519,7 @@ func get_next_active_player_seat_number(seat_number: int) -> int:
 		if player_data != null:
 			player_left_game = player_data.player_state == ConnectedPlayer.PlayerState.LEFT
 	# Not an active seat, find the next one
-	if (desired_seat.account_id == "" || desired_seat.is_folded || desired_seat.hand_cash == 0 || player_left_game):
+	if (desired_seat.account_id == "" || desired_seat.is_folded || desired_seat.player_chips == 0 || player_left_game):
 		seat_number = get_next_seat_number_in_range(seat_number)
 		seat_number = get_next_active_player_seat_number(seat_number)
 	return seat_number
@@ -580,7 +582,7 @@ func debug_goto_deal_flop() -> void:
 	for player_seat: PlayerSeat in game_state_data.player_seats.values():
 		if player_seat.account_id != "":
 			player_seat.bet_value = GameStateData.default_big_blind
-			player_seat.hand_cash -= GameStateData.default_big_blind
+			player_seat.player_chips -= GameStateData.default_big_blind
 			game_state_data.pot_value += GameStateData.default_big_blind
 	step_next_game_state()
 	

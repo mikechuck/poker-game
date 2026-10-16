@@ -49,7 +49,7 @@ func handle_player_seats_updated():
 		if (account_data != null):
 			if (account_data.account_id == player_seat.account_id && player_seat.player_node):
 				var cash_amount_label: RichTextLabel = player_seat.player_node.get_node("PlayerCard/CashAmount")
-				cash_amount_label.text = "$" + str(player_seat.hand_cash)
+				cash_amount_label.text = "$" + str(player_seat.player_chips)
 	redraw_table_players()
 
 func handle_player_turn_updated():
@@ -115,7 +115,7 @@ func redraw_table_players():
 			player_instance.position = (poker_table_node.scale * seat_node.position)
 			player_instance.account_id = seat_data.account_id
 			player_instance.is_player_turn = game_manager.game_state_data.player_turn == seat_id
-			player_instance.hand_cash = seat_data.hand_cash
+			player_instance.player_chips = seat_data.player_chips
 			player_instance.bet_value = seat_data.bet_value
 			player_instance.is_folded = seat_data.is_folded
 			player_instance.is_big_blind = seat_data.is_big_blind

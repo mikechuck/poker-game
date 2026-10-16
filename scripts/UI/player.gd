@@ -26,7 +26,7 @@ var card_front_1 = null
 var card_front_2 = null
 
 var is_player_turn: bool = false
-var hand_cash: int = 0
+var hand_chips: int = 0
 var is_folded: bool = false
 var is_big_blind: bool = false
 var is_small_blind: bool = false
@@ -46,7 +46,7 @@ func _ready() -> void:
 	if (player_color != ""):
 		player_profile_picture_node.modulate = player_color
 	player_name_label_node.text = "[font_size=16]%s[/font_size]" % player_name
-	cash_amount_node.text = "$" + str(hand_cash)
+	cash_amount_node.text = str(hand_chips)
 	
 	if is_player_turn && game_manager.game_state_data.game_state != GameState.State.HandOver:
 		turn_indicator_node.visible = true

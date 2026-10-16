@@ -13,7 +13,7 @@ var is_host: bool = false
 var is_spectating: bool = true
 var player_state: PlayerState = PlayerState.ACTIVE
 var player_idle_start_timestamp_ms: int = 0
-var player_total_cash: int = 0
+var player_total_chips: int = 0
 var player_name: String = ""
 var player_color: String = ""
 var account_friend_code: String = ""
@@ -28,7 +28,7 @@ func clone() -> ConnectedPlayer:
 	player_clone.is_spectating = is_spectating
 	player_clone.player_state = player_state
 	player_clone.player_idle_start_timestamp_ms = player_idle_start_timestamp_ms
-	player_clone.player_total_cash = player_total_cash
+	player_clone.player_total_chips = player_total_chips
 	player_clone.player_color = player_color
 	player_clone.account_friend_code = account_friend_code
 	player_clone.account_hands_played = account_hands_played
@@ -44,7 +44,7 @@ func to_dict() -> Dictionary:
 		"is_spectating": is_spectating,
 		"player_state": player_state,
 		"player_idle_start_timestamp_ms": player_idle_start_timestamp_ms,
-		"player_total_cash": player_total_cash,
+		"player_total_chips": player_total_chips,
 		"player_color": player_color,
 		"account_friend_code": account_friend_code,
 		"account_hands_played": account_hands_played,
@@ -60,7 +60,7 @@ static func from_dict(dict: Dictionary) -> ConnectedPlayer:
 	instance.is_spectating = dict.get("is_spectating")
 	instance.player_state = dict.get("player_state")
 	instance.player_idle_start_timestamp_ms = dict.get("player_idle_start_timestamp_ms")
-	instance.player_total_cash = dict.get("player_total_cash")
+	instance.player_total_chips = dict.get("player_total_chips")
 	instance.player_color = dict.get("player_color")
 	instance.account_friend_code = dict.get("account_friend_code")
 	instance.account_hands_played = dict.get("account_hands_played")

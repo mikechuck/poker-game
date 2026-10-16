@@ -59,10 +59,12 @@ export const handler = async (event) => {
     }
 
     const body = JSON.parse(event.body)
-    const blindChips = body.blind || 10
+    const blindChips = body.blindChips || 10
     const buyInChips = body.buyInChips || 100
     const chipRatio = body.chipRatio || 0 // 0 is a free game
     const gamePrivacy = body.gamePrivacy || GamePrivacy.values.PUBLIC
+
+    console.log(`blindChips: ${blindChips} | buyInChips: ${buyInChips} | chipRatio: ${chipRatio}`)
 
     // Get all active games for this player
     const params = {

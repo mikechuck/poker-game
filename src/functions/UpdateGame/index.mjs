@@ -47,14 +47,9 @@ export const handler = async (event) => {
     const newPort = body.port
     const addPlayers = body.addPlayers;
     const removePlayers = body.removePlayers;
-    console.log("removePlayers:", removePlayers)
-    var hostAccountId;
+    const hostAccountId = body.hostAccountId;
     var updateParams;
     var gameRecordRaw;
-
-    // TODO: update logic to migrate to a new dynamo record if trying to change hosts
-    // Maybe best to just create a new endpoint for this...
-    // const hostAccountId = body.hostAccountId;
 
     try {
         gameRecordRaw = await GetGameRecord(gameId, GAMES_TABLE);
@@ -116,6 +111,11 @@ export const handler = async (event) => {
         updateValues[":newPort"] = newPort;
     }
 
+    if (hostAccountId) {
+        updateExpressions.push("hostAccountId = :hAccountId");
+        updateValues[":hAccountId"] = hostAccountId;
+    }
+
     let playersChanged = false;
     let currentPlayers = gameRecord.connectedPlayers || [];
 
@@ -126,9 +126,7 @@ export const handler = async (event) => {
         playersChanged = true;
     }
 
-    console.log("removing players?")
     if (Array.isArray(removePlayers) && removePlayers.length > 0) {
-        console.log("YES")
         const playersToRemove = new Set(removePlayers);
         currentPlayers = currentPlayers.filter(id => !playersToRemove.has(id));
         playersChanged = true;

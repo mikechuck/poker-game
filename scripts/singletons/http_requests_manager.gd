@@ -31,12 +31,14 @@ func create_game(
 	chip_ratio: int = 1,
 	privacy: Contracts.GamePrivacy = Contracts.GamePrivacy.PUBLIC) -> Contracts.GameRecord:
 	var path: String = "/game"
-	var request_body = {
-		blindChips = blind,
+	var request_body: Dictionary = {
 		buyInChips = buy_in,
+		blindChips = blind,
 		chipRatio = chip_ratio,
 		gamePrivacy = privacy
 	}
+	
+	Log.message_formatted("Request body:", request_body)
 	
 	var http_response: Contracts.HttpResponseWrapper = await AuthManager.api_request(
 		path,
@@ -169,7 +171,8 @@ func server_update_game(params: Dictionary) -> int:
 		gameStatus = params.get("game_status"),
 		port = params.get("port"),
 		addPlayers = params.get("add_players"),
-		removePlayers = params.get("remove_players")
+		removePlayers = params.get("remove_players"),
+		hostAccountId = params.get("host_account_id")
 	}
 	
 	Log.message_formatted("request_body:", request_body)

@@ -1,5 +1,7 @@
 leftoff:
-	- * Need to hook into _on_connection_failed for reconnection logic, not just relying on response to create_client() in connect_to_server. Maybe have a sub-manager for this?
+	- * finish how we track player chips in game with player and seat, and also how the game details are being saved
+	- * Fix how we are telling the client that we're ready
+		- when client hits the "_on_connected" event, we should wait for the server to send us an RPC "player_ready()" event. At this point, then we navigate to game scene if need be
 	- does server shutdown work with the reconnect logic?
 	- test host transfer logic in a few different flows
 	- when connected to a game, add to url so refreshes can automatically attempt to connect to it
