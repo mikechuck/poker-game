@@ -140,22 +140,22 @@ mouse_default_cursor_shape = 1
 alignment = 1
 prefix = "$"
 
-[node name="ChipRatioContainer" type="HBoxContainer" parent="Content/Menu/MarginContainer/VBoxContainer/HostGameMenu"]
+[node name="BuyInCashContainer" type="HBoxContainer" parent="Content/Menu/MarginContainer/VBoxContainer/HostGameMenu"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="Content/Menu/MarginContainer/VBoxContainer/HostGameMenu/ChipRatioContainer"]
+[node name="Label" type="Label" parent="Content/Menu/MarginContainer/VBoxContainer/HostGameMenu/BuyInCashContainer"]
 custom_minimum_size = Vector2(150, 0)
 layout_mode = 2
-text = "Chips per $"
+text = "Buy-in value"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="SpinBox" type="SpinBox" parent="Content/Menu/MarginContainer/VBoxContainer/HostGameMenu/ChipRatioContainer"]
+[node name="SpinBox" type="SpinBox" parent="Content/Menu/MarginContainer/VBoxContainer/HostGameMenu/BuyInCashContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 mouse_default_cursor_shape = 1
 alignment = 1
-suffix = "Chips"
+prefix = "$"
 
 [node name="BlindContainer" type="HBoxContainer" parent="Content/Menu/MarginContainer/VBoxContainer/HostGameMenu"]
 layout_mode = 2
@@ -345,13 +345,13 @@ fit_content = true
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ChipRatioHeader" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ColumnTitles"]
+[node name="BuyInCashHeader" type="RichTextLabel" parent="Content/GamesList/MarginContainer/MarginContainer/Table/ColumnTitles"]
 custom_minimum_size = Vector2(80, 30)
 layout_mode = 2
-tooltip_text = "How many chips are equal to one dollar"
+tooltip_text = "Total cash value of buy-in"
 mouse_default_cursor_shape = 16
 bbcode_enabled = true
-text = "[font_size=12][b]Chip Value[/b][/font_size]"
+text = "[font_size=12][b]Buy In Value[/b][/font_size]"
 fit_content = true
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -544,7 +544,7 @@ mouse_default_cursor_shape = 1
 max_value = 10000.0
 alignment = 1
 
-[node name="ChipRatio" type="SpinBox" parent="Content/GamesList/MarginContainer/MarginContainer/Table/GameControls"]
+[node name="BuyInCash" type="SpinBox" parent="Content/GamesList/MarginContainer/MarginContainer/Table/GameControls"]
 layout_mode = 2
 size_flags_vertical = 4
 mouse_default_cursor_shape = 1

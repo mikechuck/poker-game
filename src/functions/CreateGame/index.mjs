@@ -61,10 +61,10 @@ export const handler = async (event) => {
     const body = JSON.parse(event.body)
     const blindChips = body.blindChips || 10
     const buyInChips = body.buyInChips || 100
-    const chipRatio = body.chipRatio || 0 // 0 is a free game
+    const buyInCash = body.buyInCash || 0 // 0 is a free game
     const gamePrivacy = body.gamePrivacy || GamePrivacy.values.PUBLIC
 
-    console.log(`blindChips: ${blindChips} | buyInChips: ${buyInChips} | chipRatio: ${chipRatio}`)
+    console.log(`blindChips: ${blindChips} | buyInChips: ${buyInChips} | buyInCash: ${buyInCash}`)
 
     // Get all active games for this player
     const params = {
@@ -111,9 +111,9 @@ export const handler = async (event) => {
             endTimeEpochMilliseconds: 0,
             connectedPlayers: [],
             port: 0,
-            blind: blindChips,
+            blindChips: blindChips,
             buyInChips: buyInChips,
-            chipRatio: chipRatio,
+            buyInCash: buyInCash,
             handsPlayed: 0,
             gamePrivacy: gamePrivacy
         };

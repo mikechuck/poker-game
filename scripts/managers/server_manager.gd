@@ -11,6 +11,7 @@ func _ready() -> void:
 
 
 func start_server():
+	# Set initial game details to store for the server
 	var args = OS.get_cmdline_args()
 	
 	for arg in args:
@@ -28,7 +29,14 @@ func start_server():
 	multiplayer.peer_connected.connect(_on_peer_connected)
 	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
 	Log.message("Started server at wss://localhost:%s for game id %s..." % [PORT, GAME_ID])
-	update_server_startup_info()
+	
+	if (OS.has_feature("server")):
+		var game_record: Contracts.GameRecord = await HttpRequestsManager.server_get_game(GAME_ID)
+		if (game_record != null):
+			DataStore.game_data = game_record
+			update_server_startup_info()
+		else:
+			Log.error("Error getting game status")
 	
 	
 func _on_peer_connected(peer_id: int):
@@ -52,6 +60,7 @@ func _on_peer_connected(peer_id: int):
 				connected_player.account_hands_won = account_data.handsWon
 				connected_player.account_hands_played = account_data.handsPlayed
 				# TODO: player_total_chips needs to come from GameLedger instead
+				Log.message("setting connected player chips to %s" % DataStore.game_data.buyInChips)
 				connected_player.player_total_chips = DataStore.game_data.buyInChips
 		
 		connected_player.peer_id = peer_id

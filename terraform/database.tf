@@ -64,6 +64,31 @@ resource "aws_dynamodb_table" "games_table" {
     }
 }
 
+resource "aws_dynamodb_table" "game_ledgers_table" {
+    name            = "GameLedgers"
+    billing_mode    = "PAY_PER_REQUEST"
+    hash_key        = "gameId"
+    range_key       = "accountId"
+
+    attribute {
+        name = "gameId"
+        type = "S"
+    }
+
+    attribute {
+        name = "accountId"
+        type = "S"
+    }
+
+    tags = { Name = "PokerGameLedgers" }
+
+    global_secondary_index {
+        name                = "AccountIdIndex"
+        hash_key            = "accountId"
+        projection_type     = "ALL"
+    }
+}
+
 resource "aws_dynamodb_table" "debts_table" {
     name           = "Debts"
     billing_mode   = "PAY_PER_REQUEST"

@@ -9,7 +9,7 @@ class_name Player
 @onready var player_profile_picture_node: Sprite2D = $PlayerCard/ProfilePicture
 @onready var player_name_label_node: RichTextLabel = $PlayerCard/Name
 @onready var turn_indicator_node: Sprite2D = $PlayerCard/TurnIndicator
-@onready var cash_amount_node: RichTextLabel = $PlayerCard/CashAmount
+@onready var chips_amount_node: RichTextLabel = $PlayerCard/ChipsAmount
 @onready var folded_badge_node: Sprite2D = $PlayerCard/FoldBadge
 @onready var winner_badge_node: Sprite2D = $PlayerCard/WinnerBadge
 @onready var bet_badge_node: Sprite2D = $PlayerCard/BetBadge
@@ -26,7 +26,7 @@ var card_front_1 = null
 var card_front_2 = null
 
 var is_player_turn: bool = false
-var hand_chips: int = 0
+var player_chips: int = 0
 var is_folded: bool = false
 var is_big_blind: bool = false
 var is_small_blind: bool = false
@@ -56,7 +56,7 @@ func _ready() -> void:
 	if (player_color != ""):
 		player_profile_picture_node.modulate = player_color
 	player_name_label_node.text = "[font_size=16]%s[/font_size]" % player_name
-	cash_amount_node.text = str(hand_chips)
+	chips_amount_node.text = str(player_chips)
 	
 	if is_player_turn && game_manager.game_state_data.game_state != GameState.State.HandOver:
 		turn_indicator_node.visible = true

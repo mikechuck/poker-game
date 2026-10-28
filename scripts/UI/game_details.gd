@@ -9,7 +9,7 @@ class_name GameDetails
 @onready var PLAYERS_NODE = $Players
 @onready var PRIVACY_NODE = $Privacy
 @onready var BUY_IN_NODE = $BuyIn
-@onready var CHIP_RATIO_NODE = $ChipRatio
+@onready var BUY_IN_CASH_NODE = $BuyInCash
 @onready var BLIND_VALUE_NODE = $Blind
 @onready var JOIN_BUTTON_NODE = $JoinButton
 
@@ -28,7 +28,7 @@ func set_details(game_details: Contracts.GameRecord):
 	PLAYERS_NODE.text = "[font_size=12]%s[/font_size]" % len(game_details.connectedPlayers())
 	PRIVACY_NODE.text = "[font_size=12]%s[/font_size]" % gamePrivacy.to_pascal_case()
 	BUY_IN_NODE.text = "[font_size=12]%s[/font_size]" % str(game_details.buyInChips)
-	CHIP_RATIO_NODE.text = "[font_size=12]%s:$1[/font_size]" % str(game_details.chipRatio)
+	BUY_IN_CASH_NODE.text = "[font_size=12]%s:$1[/font_size]" % str(game_details.buyInCash)
 	BLIND_VALUE_NODE.text = "[font_size=12]%s[/font_size]" % str(game_details.blindChips)
 	
 	if (game_details.gameStatus == Contracts.GameStatus.STARTING):

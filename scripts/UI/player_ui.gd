@@ -32,14 +32,14 @@ class_name PlayerUI
 @onready var game_privacy_node: RichTextLabel = $GamePrivacyContainer/Value
 @onready var game_buy_in_node: RichTextLabel = $GameBuyInContainer/Value
 @onready var game_blind_node: RichTextLabel = $GameBlindContainer/Value
-@onready var game_chip_value_node: RichTextLabel = $GameChipValueContainer/Value
+@onready var game_buy_in_cash_node: RichTextLabel = $GameBuyInCashContainer/Value
 
 func _ready() -> void:
 	game_code_node.text = DataStore.game_data.gameId
 	game_privacy_node.text = Contracts.GamePrivacy.find_key(DataStore.game_data.gamePrivacy)
 	game_buy_in_node.text = str(DataStore.game_data.buyInChips)
 	game_blind_node.text = str(DataStore.game_data.blindChips)
-	game_chip_value_node.text = str(DataStore.game_data.chipRatio)
+	game_buy_in_cash_node.text = str(DataStore.game_data.buyInCash)
 	game_manager.game_state_data_updated_signal.connect(_on_game_state_data_updated)
 
 
@@ -117,9 +117,9 @@ func set_player_buttons() -> void:
 					player_actions_ante_node.visible = true
 					# Set ante button value based on blind state
 					if (current_turn_player_seat_data.is_small_blind):
-						ante_button.text = "Bet $%s" % GameStateData.default_small_blind
+						ante_button.text = "Bet $%s" % (DataStore.game_data.blindChips / 2)
 					if (current_turn_player_seat_data.is_big_blind):
-						ante_button.text = "Bet $%s" % GameStateData.default_big_blind
+						ante_button.text = "Bet $%s" % DataStore.game_data.blindChips
 				else:
 					set_bet_buttons()
 		GameState.State.BetFlop, GameState.State.BetTurn, GameState.State.BetRiver:

@@ -32,6 +32,7 @@ AuthManager="*res://scripts/singletons/auth_manager.gd"
 HttpRequestsManager="*res://scripts/singletons/http_requests_manager.gd"
 BrowserExtensions="*res://scripts/singletons/browser_extensions.gd"
 ClientManager="*res://scripts/singletons/client_manager.gd"
+Utilities="*res://scripts/singletons/utilities.gd"
 
 [debug]
 

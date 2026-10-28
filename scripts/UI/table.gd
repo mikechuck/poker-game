@@ -48,7 +48,7 @@ func handle_player_seats_updated():
 		# Sometimes we don't have the current player in a seat for early game state updates from the server, skip if so
 		if (account_data != null):
 			if (account_data.account_id == player_seat.account_id && player_seat.player_node):
-				var cash_amount_label: RichTextLabel = player_seat.player_node.get_node("PlayerCard/CashAmount")
+				var cash_amount_label: RichTextLabel = player_seat.player_node.get_node("PlayerCard/ChipsAmount")
 				cash_amount_label.text = "$" + str(player_seat.player_chips)
 	redraw_table_players()
 

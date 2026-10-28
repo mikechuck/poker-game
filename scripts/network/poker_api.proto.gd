@@ -543,8 +543,8 @@ class GameRecord extends Message:
 	#9 : buyInChips
 	var buyInChips: int = 0
 
-	#10 : chipRatio
-	var chipRatio: int = 0
+	#10 : buyInCash
+	var buyInCash: int = 0
 
 	#11 : handsPlayed
 	var handsPlayed: int = 0
@@ -595,7 +595,7 @@ class GameRecord extends Message:
 		self.port = 0
 		self.blindChips = 0
 		self.buyInChips = 0
-		self.chipRatio = 0
+		self.buyInCash = 0
 		self.handsPlayed = 0
 		self.clear_connectedPlayers
 		self.gamePrivacy = 0
@@ -622,7 +622,7 @@ class GameRecord extends Message:
 			self.port += other.port
 			self.blindChips += other.blindChips
 			self.buyInChips += other.buyInChips
-			self.chipRatio += other.chipRatio
+			self.buyInCash += other.buyInCash
 			self.handsPlayed += other.handsPlayed
 			self._connectedPlayers = self._connectedPlayers.slice(0, _connectedPlayers_size)
 			self._connectedPlayers.append_array(other._connectedPlayers.slice(0, other._connectedPlayers_size))
@@ -657,9 +657,9 @@ class GameRecord extends Message:
 		if self.buyInChips != 0:
 			GDScriptUtils.encode_tag(buffer, 9, 5)
 			GDScriptUtils.encode_varint(buffer, self.buyInChips)
-		if self.chipRatio != 0:
+		if self.buyInCash != 0:
 			GDScriptUtils.encode_tag(buffer, 10, 5)
-			GDScriptUtils.encode_varint(buffer, self.chipRatio)
+			GDScriptUtils.encode_varint(buffer, self.buyInCash)
 		if self.handsPlayed != 0:
 			GDScriptUtils.encode_tag(buffer, 11, 5)
 			GDScriptUtils.encode_varint(buffer, self.handsPlayed)
@@ -719,7 +719,7 @@ class GameRecord extends Message:
 					pos += field_value[GDScriptUtils.SIZE_KEY]
 				10:
 					var field_value = GDScriptUtils.decode_varint(data, pos, self)
-					self.chipRatio = field_value[GDScriptUtils.VALUE_KEY]
+					self.buyInCash = field_value[GDScriptUtils.VALUE_KEY]
 					pos += field_value[GDScriptUtils.SIZE_KEY]
 				11:
 					var field_value = GDScriptUtils.decode_varint(data, pos, self)
@@ -749,7 +749,7 @@ class GameRecord extends Message:
 		dict["port"] = self.port
 		dict["blindChips"] = self.blindChips
 		dict["buyInChips"] = self.buyInChips
-		dict["chipRatio"] = self.chipRatio
+		dict["buyInCash"] = self.buyInCash
 		dict["handsPlayed"] = self.handsPlayed
 		dict["connectedPlayers"] = self._connectedPlayers
 		dict["gamePrivacy"] = self.gamePrivacy
@@ -777,8 +777,8 @@ class GameRecord extends Message:
 			self.blindChips = dict.get("blindChips")
 		if dict.has("buyInChips"):
 			self.buyInChips = dict.get("buyInChips")
-		if dict.has("chipRatio"):
-			self.chipRatio = dict.get("chipRatio")
+		if dict.has("buyInCash"):
+			self.buyInCash = dict.get("buyInCash")
 		if dict.has("handsPlayed"):
 			self.handsPlayed = dict.get("handsPlayed")
 		self.clear_connectedPlayers()
@@ -890,6 +890,99 @@ class GameRecordList extends Message:
 				var item_msg = GameRecord.new()
 				item_msg.ParseFromDictionary(item)
 				self.add_records(item_msg)
+
+# =========================================
+
+class GameLedgerRecord extends Message:
+	#1 : gameId
+	var gameId: String = ""
+
+	#2 : accountId
+	var accountId: String = ""
+
+	#3 : cashOutChips
+	var cashOutChips: int = 0
+
+
+	## Init message field values to default value
+	func Init() -> void:
+		self.gameId = ""
+		self.accountId = ""
+		self.cashOutChips = 0
+
+	## Create a new message instance
+	## Returns: Message - New message instance
+	func New() -> Message:
+		var msg = GameLedgerRecord.new()
+		return msg
+
+	## Message ProtoName
+	## Returns: String - ProtoName
+	func ProtoName() -> String:
+		return "poker_api.GameLedgerRecord"
+
+	func MergeFrom(other : Message) -> void:
+		if other is GameLedgerRecord:
+			self.gameId += other.gameId
+			self.accountId += other.accountId
+			self.cashOutChips += other.cashOutChips
+ 
+	func SerializeToBytes(buffer: PackedByteArray = PackedByteArray()) -> PackedByteArray:
+		if self.gameId != "":
+			GDScriptUtils.encode_tag(buffer, 1, 9)
+			GDScriptUtils.encode_string(buffer, self.gameId)
+		if self.accountId != "":
+			GDScriptUtils.encode_tag(buffer, 2, 9)
+			GDScriptUtils.encode_string(buffer, self.accountId)
+		if self.cashOutChips != 0:
+			GDScriptUtils.encode_tag(buffer, 3, 3)
+			GDScriptUtils.encode_varint(buffer, self.cashOutChips)
+		return buffer
+ 
+	func ParseFromBytes(data: PackedByteArray) -> int:
+		var size = data.size()
+		var pos = 0
+ 
+		while pos < size:
+			var tag = GDScriptUtils.decode_tag(data, pos)
+			var field_number = tag[GDScriptUtils.VALUE_KEY]
+			pos += tag[GDScriptUtils.SIZE_KEY]
+ 
+			match field_number:
+				1:
+					var field_value = GDScriptUtils.decode_string(data, pos, self)
+					self.gameId = field_value[GDScriptUtils.VALUE_KEY]
+					pos += field_value[GDScriptUtils.SIZE_KEY]
+				2:
+					var field_value = GDScriptUtils.decode_string(data, pos, self)
+					self.accountId = field_value[GDScriptUtils.VALUE_KEY]
+					pos += field_value[GDScriptUtils.SIZE_KEY]
+				3:
+					var field_value = GDScriptUtils.decode_varint(data, pos, self)
+					self.cashOutChips = field_value[GDScriptUtils.VALUE_KEY]
+					pos += field_value[GDScriptUtils.SIZE_KEY]
+				_:
+					pass
+
+		return pos
+
+	func SerializeToDictionary() -> Dictionary:
+		var dict = {}
+		dict["gameId"] = self.gameId
+		dict["accountId"] = self.accountId
+		dict["cashOutChips"] = self.cashOutChips
+		return dict
+
+	func ParseFromDictionary(dict: Dictionary) -> void:
+		if dict == null:
+			return
+
+		if dict.has("gameId"):
+			self.gameId = dict.get("gameId")
+		if dict.has("accountId"):
+			self.accountId = dict.get("accountId")
+		if dict.has("cashOutChips"):
+			self.cashOutChips = dict.get("cashOutChips")
 
 # =========================================
 

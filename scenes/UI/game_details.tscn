@@ -89,7 +89,7 @@ scroll_active = false
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="ChipRatio" type="RichTextLabel" parent="."]
+[node name="BuyInCash" type="RichTextLabel" parent="."]
 custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
 size_flags_vertical = 5

@@ -97,7 +97,8 @@ func assign_player_to_seat(client_id: int, seat_number: int) -> void:
 		if (seat.account_id == player_data.account_id):
 			seat.clear_seat_data()
 	desired_seat.account_id = player_data.account_id
-	desired_seat.player_chips = GameStateData.default_starting_cash
+	desired_seat.player_chips = player_data.player_total_chips
+	Log.message("Assigned player to seat, seat data now has chips value of %s" % desired_seat.player_chips)
 	game_state_data.player_seats[seat_number] = desired_seat
 	game_state_data.connected_players[player_data.account_id].is_spectating = false
 	ClientManager.update_game_state_data.rpc(game_state_data.to_dict())
@@ -311,10 +312,15 @@ func state_deal_river_card() -> void:
 	
 func state_end_step() -> void:
 	game_state_data.winner_account_id = game_state_data.connected_players.values()[0].account_id
-	# Add the new balance to the winner
+	
 	for seat: PlayerSeat in game_state_data.player_seats.values():
+		# Add chips to winner
 		if seat.account_id == game_state_data.winner_account_id:
 			seat.player_chips += game_state_data.pot_value
+		# Update their total chips after winner math
+		var connected_player: ConnectedPlayer = game_state_data.connected_players.get(seat.account_id)
+		connected_player.player_total_chips = seat.player_chips
+		
 	game_state_data.connected_players[game_state_data.winner_account_id].player_total_chips += game_state_data.pot_value
 	ClientManager.update_game_state_data.rpc(game_state_data.to_dict())
 	
@@ -398,9 +404,9 @@ func player_action_ante():
 	var player_seat: PlayerSeat = server_get_player_seat()
 	var bet_value: int = 0
 	if player_seat.is_small_blind:
-		bet_value = GameStateData.default_small_blind
+		bet_value = (DataStore.game_data.blindChips / 2)
 	else:
-		bet_value = GameStateData.default_big_blind
+		bet_value = (DataStore.game_data.blindChips)
 	player_seat.player_chips -= bet_value
 	player_seat.bet_value += bet_value
 	game_state_data.pot_value += bet_value
@@ -580,9 +586,9 @@ func debug_goto_deal_flop() -> void:
 	step_next_game_state()
 	for player_seat: PlayerSeat in game_state_data.player_seats.values():
 		if player_seat.account_id != "":
-			player_seat.bet_value = GameStateData.default_big_blind
-			player_seat.player_chips -= GameStateData.default_big_blind
-			game_state_data.pot_value += GameStateData.default_big_blind
+			player_seat.bet_value = DataStore.game_data.blindChips
+			player_seat.player_chips -= DataStore.game_data.blindChips
+			game_state_data.pot_value += DataStore.game_data.blindChips
 	step_next_game_state()
 	
 	

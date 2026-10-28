@@ -32,6 +32,7 @@ func join_game(game_id: String) -> void:
 		if (game_record.gameStatus == Contracts.GameStatus.ACTIVE):
 			var join_token: String = await HttpRequestsManager.join_game(game_id)
 			if (join_token):
+				Log.message("Setting game_data to: %s" % game_record)
 				DataStore.game_data = game_record
 				DataStore.join_token = join_token
 				Log.toast("Connecting to server...")
@@ -48,21 +49,26 @@ func wait_for_game_creation(game_id: String) -> void:
 	Log.toast("Waiting for game to launch...")
 	show_creating_game_splash()
 	var max_retries: int = 60
-	var retry_interval_seconds: int = 1
+	var retry_interval_seconds: int = 3
 	var connecting_to_game: bool = false
 	
 	for attempt in range(1, max_retries):
 		var game: Contracts.GameRecord = await HttpRequestsManager.get_game(game_id)
-		if game.gameStatus == Contracts.GameStatus.ACTIVE:
-			join_game(game_id)
+		if game.gameId == "":
+			Log.toast("Couldn't find game, returning to menu")
+			hide_creating_game_splash()
 			break
 		else:
-			if attempt < max_retries:
-				Log.message("Waiting for next retry attempt...")
-				await get_tree().create_timer(retry_interval_seconds).timeout
+			if game.gameStatus == Contracts.GameStatus.ACTIVE:
+				join_game(game_id)
+				break
 			else:
-				Log.message("No more retries, aborting connection attempt")
-				hide_creating_game_splash()
+				if attempt < max_retries:
+					Log.message("Waiting for next retry attempt...")
+					await get_tree().create_timer(retry_interval_seconds).timeout
+				else:
+					Log.message("No more retries, aborting connection attempt")
+					hide_creating_game_splash()
 
 
 func show_creating_game_splash() -> void:

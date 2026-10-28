@@ -1,17 +1,17 @@
-[gd_scene load_steps=14 format=3 uid="uid://x8p6qfmpkras"]
+[gd_scene load_steps=13 format=3 uid="uid://x8p6qfmpkras"]
 
 [ext_resource type="Script" uid="uid://dsw4s5bge27tu" path="res://scripts/UI/player.gd" id="1_c1ys2"]
-[ext_resource type="Texture2D" uid="uid://cnwserco0fw1d" path="res://assets/PlayerCard/FoldBadge.png" id="2_0qg72"]
-[ext_resource type="Texture2D" uid="uid://b10gnrqq43c1v" path="res://assets/PlayerCard/BetBadge.png" id="3_jbqnj"]
-[ext_resource type="Texture2D" uid="uid://d144ysmj7d4g5" path="res://assets/PlayerCard/WinnerBadge.png" id="4_ehu1e"]
-[ext_resource type="Texture2D" uid="uid://d0l1wx17a6may" path="res://assets/PlayerCard/TurnIndicator.png" id="5_67d8n"]
-[ext_resource type="Texture2D" uid="uid://3dxghjf2mnwd" path="res://assets/PlayerCard/DetailsCard.png" id="6_71xb3"]
-[ext_resource type="Texture2D" uid="uid://cnts468j2l03y" path="res://assets/PlayerCard/ProfilePicture.png" id="7_nmq0w"]
+[ext_resource type="Texture2D" uid="uid://bdr6mll513ay7" path="res://assets/PlayerCard/FoldBadge.png" id="2_0qg72"]
+[ext_resource type="Texture2D" uid="uid://32sj57b461rj" path="res://assets/PlayerCard/BetBadge.png" id="3_jbqnj"]
+[ext_resource type="Texture2D" uid="uid://5vnto71t2eo" path="res://assets/PlayerCard/WinnerBadge.png" id="4_ehu1e"]
+[ext_resource type="Texture2D" uid="uid://b2ll1mn2xb802" path="res://assets/PlayerCard/TurnIndicator.png" id="5_67d8n"]
+[ext_resource type="Texture2D" uid="uid://ddlkeu1b8yhay" path="res://assets/PlayerCard/DetailsCard.png" id="6_71xb3"]
+[ext_resource type="Texture2D" uid="uid://3pvy2qjel0j0" path="res://assets/PlayerCard/ProfilePicture.png" id="7_nmq0w"]
 [ext_resource type="Texture2D" uid="uid://cpf6m055ekaky" path="res://assets/icons/chips-circle.svg" id="8_67d8n"]
-[ext_resource type="Texture2D" uid="uid://4r3pfpnua8pb" path="res://assets/cards/light/BACK.png" id="8_wwf63"]
-[ext_resource type="Texture2D" uid="uid://cx46qcnapq6j5" path="res://assets/icons/user_icon.svg" id="9_0qg72"]
-[ext_resource type="Texture2D" uid="uid://bjrmmwthh0s2" path="res://assets/icons/close-circle.svg" id="10_ehu1e"]
-[ext_resource type="Texture2D" uid="uid://csflg4x7ftkvo" path="res://assets/icons/clock-circle.svg" id="11_67d8n"]
+[ext_resource type="Texture2D" uid="uid://cbaim1l7lhhmu" path="res://assets/cards/light/BACK.png" id="8_wwf63"]
+[ext_resource type="Texture2D" uid="uid://csjr718d77a1a" path="res://assets/icons/user_icon.svg" id="9_0qg72"]
+[ext_resource type="Texture2D" uid="uid://bwktsmnelxoyg" path="res://assets/icons/close-circle.svg" id="10_ehu1e"]
+[ext_resource type="Texture2D" uid="uid://b2fv3702ifqhi" path="res://assets/icons/clock-circle.svg" id="11_67d8n"]
 
 [node name="Player" type="CharacterBody2D"]
 script = ExtResource("1_c1ys2")
@@ -93,7 +93,7 @@ text = "[font_size=14][b]Player 1[/b][/font_size]"
 fit_content = true
 scroll_active = false
 
-[node name="CashAmount" type="RichTextLabel" parent="PlayerCard"]
+[node name="ChipsAmount" type="RichTextLabel" parent="PlayerCard"]
 clip_contents = false
 offset_left = 94.0
 offset_top = 43.0
@@ -105,7 +105,7 @@ text = "[font_size=16]50[/font_size]"
 fit_content = true
 scroll_active = false
 
-[node name="ChipsIcon" type="Sprite2D" parent="PlayerCard/CashAmount"]
+[node name="ChipsIcon" type="Sprite2D" parent="PlayerCard/ChipsAmount"]
 position = Vector2(-15, 12)
 scale = Vector2(0.03, 0.03)
 texture = ExtResource("8_67d8n")

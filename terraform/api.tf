@@ -314,12 +314,47 @@ resource "aws_apigatewayv2_route" "get_game_route" {
     authorizer_id      = aws_apigatewayv2_authorizer.cognito_auth.id
 }
 
+resource "aws_apigatewayv2_route" "server_get_game_route" {
+    api_id    = aws_apigatewayv2_api.poker_api.id
+    route_key = "GET /server/game/{gameId}"
+    target    = "integrations/${aws_apigatewayv2_integration.get_game_int.id}"
+    authorization_type = "CUSTOM"
+    authorizer_id      = aws_apigatewayv2_authorizer.server_token_auth.id
+}
+
 resource "aws_lambda_permission" "api_gw_get_game" {
     statement_id  = "AllowExecutionFromAPIGateway"
     action        = "lambda:InvokeFunction"
     function_name = aws_lambda_function.get_game.function_name
     principal     = "apigateway.amazonaws.com"
     source_arn    = "${aws_apigatewayv2_api.poker_api.execution_arn}/*/*/game/*"
+}
+
+# --- End GetGame API Gateway Integration ---
+
+# --- Start GetGameLedger API Gateway Integration ---
+
+resource "aws_apigatewayv2_integration" "get_game_ledger_int" {
+    api_id           = aws_apigatewayv2_api.poker_api.id
+    integration_type = "AWS_PROXY"
+    integration_uri  = aws_lambda_function.get_game_ledger.invoke_arn
+    payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "server_get_game_ledger_route" {
+    api_id    = aws_apigatewayv2_api.poker_api.id
+    route_key = "GET /server/game/{gameId}/ledger/{accountId}"
+    target    = "integrations/${aws_apigatewayv2_integration.get_game_ledger_int.id}"
+    authorization_type = "CUSTOM"
+    authorizer_id      = aws_apigatewayv2_authorizer.server_token_auth.id
+}
+
+resource "aws_lambda_permission" "api_gw_get_game_ledger" {
+    statement_id  = "AllowExecutionFromAPIGateway"
+    action        = "lambda:InvokeFunction"
+    function_name = aws_lambda_function.get_game_ledger.function_name
+    principal     = "apigateway.amazonaws.com"
+    source_arn    = "${aws_apigatewayv2_api.poker_api.execution_arn}/*/*/game/*/ledger/*"
 }
 
 # --- End GetGame API Gateway Integration ---
@@ -378,6 +413,33 @@ resource "aws_lambda_permission" "api_gw_server_update_game" {
 }
 
 # --- End Server UpdateGame API Gateway Integration ---
+
+# --- Start Server UpdateGameLedger API Gateway Integration ---
+
+resource "aws_apigatewayv2_integration" "server_update_game_ledger_int" {
+    api_id           = aws_apigatewayv2_api.poker_api.id
+    integration_type = "AWS_PROXY"
+    integration_uri  = aws_lambda_function.update_game_ledger.invoke_arn
+    payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "server_update_game_ledger_route" {
+    api_id    = aws_apigatewayv2_api.poker_api.id
+    route_key = "POST /server/game/{gameId}/ledger/{accountId}"
+    target    = "integrations/${aws_apigatewayv2_integration.server_update_game_ledger_int.id}"
+    authorization_type = "CUSTOM"
+    authorizer_id      = aws_apigatewayv2_authorizer.server_token_auth.id
+}
+
+resource "aws_lambda_permission" "api_gw_server_update_game_ledger" {
+    statement_id  = "AllowExecutionFromAPIGateway"
+    action        = "lambda:InvokeFunction"
+    function_name = aws_lambda_function.update_game_ledger.function_name
+    principal     = "apigateway.amazonaws.com"
+    source_arn    = "${aws_apigatewayv2_api.poker_api.execution_arn}/*/*/*/game/*/ledger/*"
+}
+
+# --- End Server UpdateGameLedger API Gateway Integration ---
 
 # --- Start AddFriend API Gateway Integration ---
 
@@ -659,6 +721,34 @@ resource "aws_cloudwatch_log_group" "get_game_logs" {
 
 # --- End GetGame Lambda Function ---
 
+# --- Start GetGameLedger Lambda Function ---
+
+resource "aws_lambda_function" "get_game_ledger" {
+    function_name = "GetGameLedger"
+    filename      = "${path.module}/../exports/lambda/GetGameLedger.zip"
+    role          = aws_iam_role.lambda_integration_role.arn
+    handler       = "index.handler"
+    runtime       = "nodejs22.x" # Node 22 is the standard current LTS
+    timeout       = 10
+    memory_size   = 512
+
+    source_code_hash = filebase64sha256("${path.module}/../exports/lambda/GetGameLedger.zip")
+
+    environment {
+        variables = {
+            GAME_LEDGERS_TABLE = aws_dynamodb_table.game_ledgers_table.name
+        }
+    }
+}
+
+# Create the log group explicitly to control retention
+resource "aws_cloudwatch_log_group" "get_game_ledger_logs" {
+    name              = "/aws/lambda/GetGameLedger"
+    retention_in_days = 7
+}
+
+# --- End GetGameLedger Lambda Function ---
+
 # --- Start GetGames Lambda Function ---
 
 resource "aws_lambda_function" "get_games" {
@@ -717,6 +807,36 @@ resource "aws_cloudwatch_log_group" "update_game_logs" {
 }
 
 # --- End UpdateGame Lambda Function ---
+
+# --- Start UpdateGameLedger Lambda Function ---
+
+resource "aws_lambda_function" "update_game_ledger" {
+    function_name = "UpdateGameLedger"
+    filename      = "${path.module}/../exports/lambda/UpdateGameLedger.zip"
+    role          = aws_iam_role.lambda_integration_role.arn
+    handler       = "index.handler"
+    runtime       = "nodejs22.x" # Node 22 is the standard current LTS
+    timeout       = 10
+    memory_size   = 512
+
+    # Forces redeployment only if zip contents change
+    source_code_hash = filebase64sha256("${path.module}/../exports/lambda/UpdateGameLedger.zip")
+
+    environment {
+        variables = {
+            GAME_LEDGERS_TABLE = aws_dynamodb_table.game_ledgers_table.name,
+            SERVER_SECRET_TOKEN = random_password.server_api_token.result
+        }
+    }
+}
+
+# Create the log group explicitly to control retention
+resource "aws_cloudwatch_log_group" "update_game_ledger_logs" {
+    name              = "/aws/lambda/UpdateGameLedger"
+    retention_in_days = 7
+}
+
+# --- End UpdateGameLedger Lambda Function ---
 
 # --- Start AddFriend Lambda Function ---
 

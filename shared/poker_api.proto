@@ -53,7 +53,7 @@ message GameRecord {
     int32 port = 7;
     int32 blindChips = 8;
     int32 buyInChips = 9;
-    int32 chipRatio = 10;
+    int32 buyInCash = 10;
     int32 handsPlayed = 11; 
     repeated string connectedPlayers = 12;
     GamePrivacy gamePrivacy = 13;
@@ -74,6 +74,12 @@ enum GamePrivacy {
     FRIENDS = 1; // Only friends of the host can join
     INVITE = 2; // Only players with an invite code can join (TBD)
     PRIVATE = 3; // Only host can join, play against bots
+}
+
+message GameLedgerRecord {
+    string gameId = 1;
+    string accountId = 2;
+    int64 cashOutChips = 3;
 }
 
 // JoinToken

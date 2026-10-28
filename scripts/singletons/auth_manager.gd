@@ -112,7 +112,7 @@ func server_api_request(path: String, method: int, body: String = "") -> Contrac
 	
 	if (response_code != 200):
 		Log.error("API request failed | Method: %s | Path: %s | Status code: %s | Response: %s" % [
-			method,
+			Utilities.get_engine_enum_name("HTTPClient", method),
 			path,
 			response_code,
 			JSON.parse_string(response_body.get_string_from_utf8())
@@ -120,7 +120,7 @@ func server_api_request(path: String, method: int, body: String = "") -> Contrac
 		return null
 	else:
 		Log.message("API request succeeded | Method: %s | Path: %s | Status code: %s | Response: %s" % [
-			method,
+			Utilities.get_engine_enum_name("HTTPClient", method),
 			path,
 			response_code,
 			JSON.parse_string(response_body.get_string_from_utf8())

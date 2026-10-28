@@ -13,7 +13,7 @@ const GAME_DETAILS_SCENE = preload("res://scenes/UI/game_details.tscn")
 @onready var blind_value_node = $MarginContainer/MarginContainer/Table/GameControls/Blind
 @onready var privacy_value_node = $MarginContainer/MarginContainer/Table/GameControls/Privacy
 @onready var buy_in_value_node = $MarginContainer/MarginContainer/Table/GameControls/BuyIn
-@onready var chips_ratio_value_node = $MarginContainer/MarginContainer/Table/GameControls/ChipRatio
+@onready var buy_in_cash_value_node = $MarginContainer/MarginContainer/Table/GameControls/BuyInCash
 @onready var create_game_button_node = $MarginContainer/MarginContainer/Table/GameControls/CreateButton
 
 # Join game nodes
@@ -69,14 +69,14 @@ func set_games_list(games_list: Array[Contracts.GameRecord]):
 	if (has_active_game):
 		blind_value_node.editable = false
 		buy_in_value_node.editable = false
-		chips_ratio_value_node.editable = false
+		buy_in_cash_value_node.editable = false
 		privacy_value_node.disabled = true
 		create_game_button_node.disabled = true
 		create_game_button_node.mouse_default_cursor_shape = 0
 	else:
 		blind_value_node.editable = true
 		buy_in_value_node.editable = true
-		chips_ratio_value_node.editable = true
+		buy_in_cash_value_node.editable = true
 		privacy_value_node.disabled = false
 		create_game_button_node.disabled = false
 		create_game_button_node.mouse_default_cursor_shape = 2
@@ -101,9 +101,9 @@ func _on_create_button_pressed() -> void:
 	main_scene_manager.show_creating_game_splash()
 	var buy_in: float = buy_in_value_node.value
 	var blind_value: float = blind_value_node.value
-	var chip_ratio: float = chips_ratio_value_node.value
+	var buy_in_cash: float = buy_in_cash_value_node.value
 	var privacy: int = privacy_value_node.selected
-	var game_record: Contracts.GameRecord = await HttpRequestsManager.create_game(int(buy_in), int(blind_value), int(chip_ratio), privacy)
+	var game_record: Contracts.GameRecord = await HttpRequestsManager.create_game(int(buy_in), int(blind_value), int(buy_in_cash), privacy)
 	if (game_record != null):
 		main_scene_manager.wait_for_game_creation(game_record.gameId)
 

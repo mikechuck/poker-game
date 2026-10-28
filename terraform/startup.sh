@@ -107,7 +107,7 @@ sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
     -a append-config \
     -m ec2 \
     -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.d/poker_\$PORT_\$TARGET_GAME_ID.json \
-    -s
+    -s > /dev/null 2>&1
 
 # Execute the binary explicitly running context dropped to 'ec2-user'
 echo "[Startup] Detaching poker server engine process..."

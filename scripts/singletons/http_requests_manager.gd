@@ -26,15 +26,15 @@ func get_account_data() -> Contracts.AccountRecord:
 
 
 func create_game(
-	buy_in: int = 0,
+	buy_in_chips: int = 0,
 	blind: int = 10,
-	chip_ratio: int = 1,
+	buy_in_cash: int = 1,
 	privacy: Contracts.GamePrivacy = Contracts.GamePrivacy.PUBLIC) -> Contracts.GameRecord:
 	var path: String = "/game"
 	var request_body: Dictionary = {
-		buyInChips = buy_in,
+		buyInChips = buy_in_chips,
 		blindChips = blind,
-		chipRatio = chip_ratio,
+		buyInCash = buy_in_cash,
 		gamePrivacy = privacy
 	}
 	
@@ -200,3 +200,18 @@ func server_get_account_data(account_id: String) -> Contracts.AccountRecord:
 			account_record.ParseFromDictionary(dict)
 			return account_record
 	return null
+
+
+func server_get_game(game_id: String) -> Contracts.GameRecord:
+	var path: String = "/server/game/%s" % game_id.uri_encode()
+	var http_response: Contracts.HttpResponseWrapper = await AuthManager.server_api_request(
+		path,
+		HTTPClient.METHOD_GET
+	)
+	
+	var game_record: Contracts.GameRecord = Contracts.GameRecord.new()
+	if http_response.response_code == 200:
+		var dict: Dictionary = JSON.parse_string(http_response.response_body.get_string_from_utf8())
+		if dict:
+			game_record.ParseFromDictionary(dict)
+	return game_record

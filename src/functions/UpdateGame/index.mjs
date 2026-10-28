@@ -50,6 +50,7 @@ export const handler = async (event) => {
     const hostAccountId = body.hostAccountId;
     var updateParams;
     var gameRecordRaw;
+    var existingHostAccountId;
 
     try {
         gameRecordRaw = await GetGameRecord(gameId, GAMES_TABLE);
@@ -63,7 +64,7 @@ export const handler = async (event) => {
                 )
             };
         }
-        hostAccountId = gameRecordRaw.hostAccountId;
+        existingHostAccountId = gameRecordRaw.hostAccountId;
     } catch (error) {
         return {
             statusCode: 500,
@@ -111,7 +112,7 @@ export const handler = async (event) => {
         updateValues[":newPort"] = newPort;
     }
 
-    if (hostAccountId) {
+    if (hostAccountId && hostAccountId != existingHostAccountId) {
         updateExpressions.push("hostAccountId = :hAccountId");
         updateValues[":hAccountId"] = hostAccountId;
     }
@@ -151,12 +152,14 @@ export const handler = async (event) => {
         TableName: GAMES_TABLE,
         Key: {
             gameId: gameId,
-            hostAccountId: hostAccountId
+            hostAccountId: existingHostAccountId
         },
         UpdateExpression: "SET " + updateExpressions.join(", "),
         ExpressionAttributeValues: updateValues,
         ReturnValues: "ALL_NEW"
     };
+
+    console.log("updateParams:", updateParams)
 
     try {
         const response = await docClient.send(new UpdateCommand(updateParams));
