@@ -42,3 +42,7 @@ full-deploy-soft env="dev": upload-lambda-functions (deploy-frontend env) upload
 # Full Deployment Pipeline. Params: env (optional) takes dev or prod
 full-deploy env="dev": upload-lambda-functions (deploy-frontend env) upload-server-files
     cd {{tf_dir}} && terraform apply -auto-approve -replace="aws_instance.poker_server"
+
+# Shutdown ec2 instance to save money
+shutdown-server env="dev":
+    cd {{tf_dir}} && terraform apply -auto-approve -var="enable_dev_stack=false"

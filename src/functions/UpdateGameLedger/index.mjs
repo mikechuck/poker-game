@@ -1,7 +1,7 @@
 import protobuf from "protobufjs";
 import path from "node:path";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, UpdateCommand } from "@aws-sdk/lib-dynamodb";
 import { fileURLToPath } from "node:url";
 import { GetGameRecord } from "./shared/utilities.mjs";
 
@@ -72,27 +72,69 @@ export const handler = async (event) => {
     }
 
     const body = JSON.parse(event.body)
+    const buyInChips = body.buyInChips;
     const cashOutChips = body.cashOutChips;
 
-    const gameLedgerRecord = GameLedgerRecord.create({
-        gameId,
-        accountId,
-        cashOutChips,
-    });
+    if (!buyInChips && !cashOutChips) {
+        return {
+            statusCode: 403,
+            body: JSON.stringify(
+                ErrorResponse.create({
+                    message: "Internal Server Error",
+                    error: "Must send either buyInChips or cashOutChips in the request body"
+                })
+            )
+        }
+    }
+
+    const params = {
+        TableName: GAME_LEDGERS_TABLE,
+        Key: {
+            gameId: gameId,       // Hash key
+            accountId: accountId, // Range key
+        },
+        ReturnValues: "ALL_NEW",
+    };
+
+    // Creating new record, use the buyIn for both buyInChips and cashOutChips
+    if (buyInChips && !cashOutChips) {
+        params.UpdateExpression = "SET #buyIn = :val, #cashOut = if_not_exists(#cashOut, :val)";
+        params.ExpressionAttributeNames = {
+            "#buyIn": "buyInChips",
+            "#cashOut": "cashOutChips",
+        };
+        params.ExpressionAttributeValues = {
+            ":val": buyInChips,
+        };
+    } else if (cashOutChips && !buyInChips) {
+        params.UpdateExpression = "SET #cashOut = :val";
+        params.ExpressionAttributeNames = {
+            "#cashOut": "cashOutChips",
+        };
+        params.ExpressionAttributeValues = {
+            ":val": cashOutChips,
+        };
+    } else {
+        params.UpdateExpression = "SET #buyIn = :buyInVal, #cashOut = :cashOutVal";
+        params.ExpressionAttributeNames = {
+            "#buyIn": "buyInChips",
+            "#cashOut": "cashOutChips",
+        };
+        params.ExpressionAttributeValues = {
+            ":buyInVal": buyInChips,
+            ":cashOutVal": cashOutChips
+        };
+    }
 
     try {
-        await docClient.send(new PutCommand({
-            TableName: GAME_LEDGERS_TABLE,
-            Item: gameLedgerRecord
-        }));
-
+        await docClient.send(new UpdateCommand(params));
         return {
             statusCode: 200
         }
-
     } catch (error) {
+        console.error("Error executing operation:", error);
         return {
-            status: 500,
+            statusCode: 500,
             body: JSON.stringify(
                 ErrorResponse.create({
                     message: "Internal Server Error",

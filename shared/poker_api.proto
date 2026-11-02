@@ -79,7 +79,8 @@ enum GamePrivacy {
 message GameLedgerRecord {
     string gameId = 1;
     string accountId = 2;
-    int64 cashOutChips = 3;
+    int64 buyInChips = 3;
+    int64 cashOutChips = 4;
 }
 
 // JoinToken

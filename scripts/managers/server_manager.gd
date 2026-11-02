@@ -43,46 +43,9 @@ func _on_peer_connected(peer_id: int):
 	var ws_multiplayer_peer := multiplayer.multiplayer_peer as WebSocketMultiplayerPeer
 	var peer: WebSocketPeer = ws_multiplayer_peer.get_peer(peer_id)
 	var connected_player: ConnectedPlayer
-	
-	# TODO This might act funny if peer is null?
-	if peer:
-		var requested_url: String = peer.get_requested_url()
-		var account_id: String = _get_query_param(requested_url, "verified_account_id")
-		
-		connected_player = game_manager.game_state_data.connected_players.get(account_id)
-		if (connected_player == null):
-			var account_data: Contracts.AccountRecord = await HttpRequestsManager.server_get_account_data(account_id)
-			if (account_data):
-				connected_player = ConnectedPlayer.new()
-				connected_player.player_name = account_data.playerName
-				connected_player.player_color = account_data.playerColor
-				connected_player.account_friend_code = account_data.friendCode
-				connected_player.account_hands_won = account_data.handsWon
-				connected_player.account_hands_played = account_data.handsPlayed
-				# TODO: player_total_chips needs to come from GameLedger instead
-				Log.message("setting connected player chips to %s" % DataStore.game_data.buyInChips)
-				connected_player.player_total_chips = DataStore.game_data.buyInChips
-		
-		connected_player.peer_id = peer_id
-		connected_player.account_id = account_id
-		connected_player.player_state = ConnectedPlayer.PlayerState.ACTIVE
-		
-		print("Peer %d connected with account id %s" % [peer_id, account_id])
-
-		# If this was the first player to connect, set it as host player
-		if (game_manager.game_state_data.host_account_id == ""):
-			game_manager.game_state_data.host_account_id = connected_player.account_id
-			connected_player.is_host = true
-			
-		# Update the db record with the new player ID
-		var update_request: Dictionary = {
-			"game_id": GAME_ID,
-			"add_players": [connected_player.account_id]
-		}
-		var response_code: int = await HttpRequestsManager.server_update_game(update_request)
-		game_manager.game_state_data.connected_players[account_id] = connected_player
-		ClientManager.update_game_state_data.rpc(game_manager.game_state_data.to_dict())
-		Log.message("Number of players connected: %s" % [game_manager.game_state_data.connected_players.size()])
+	var requested_url: String = peer.get_requested_url()
+	var account_id: String = _get_query_param(requested_url, "verified_account_id")
+	game_manager.add_player_to_game(peer_id, account_id)
 
 
 func _on_peer_disconnected(id):

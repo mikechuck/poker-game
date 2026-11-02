@@ -134,8 +134,10 @@ resource "aws_iam_policy" "ssm_poker_server_access" {
                     "ssm:SendCommand"
                 ]
                 # Lock it down strictly to your game server instance
+                # Safely target the instance if it exists, otherwise use a wildcard or empty string to prevent crashes
+                # It won't exist when running ec2 server shutdown command
                 Resource = [
-                    "arn:aws:ec2:*:*:instance/${aws_instance.poker_server.id}"
+                    length(aws_instance.poker_server) > 0 ? "arn:aws:ec2:*:*:instance/${aws_instance.poker_server[0].id}" : "arn:aws:ec2:*:*:instance/i-00000000000000000"
                 ]
             },
             {
@@ -650,7 +652,7 @@ resource "aws_lambda_function" "create_game" {
     environment {
         variables = {
             GAMES_TABLE = aws_dynamodb_table.games_table.name
-            POKER_SERVER_INSTANCE_ID = aws_instance.poker_server.id
+            POKER_SERVER_INSTANCE_ID = length(aws_instance.poker_server) > 0 ? aws_instance.poker_server[0].id : "STOPPED"
         }
     }
 }

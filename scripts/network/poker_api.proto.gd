@@ -900,7 +900,10 @@ class GameLedgerRecord extends Message:
 	#2 : accountId
 	var accountId: String = ""
 
-	#3 : cashOutChips
+	#3 : buyInChips
+	var buyInChips: int = 0
+
+	#4 : cashOutChips
 	var cashOutChips: int = 0
 
 
@@ -908,6 +911,7 @@ class GameLedgerRecord extends Message:
 	func Init() -> void:
 		self.gameId = ""
 		self.accountId = ""
+		self.buyInChips = 0
 		self.cashOutChips = 0
 
 	## Create a new message instance
@@ -925,6 +929,7 @@ class GameLedgerRecord extends Message:
 		if other is GameLedgerRecord:
 			self.gameId += other.gameId
 			self.accountId += other.accountId
+			self.buyInChips += other.buyInChips
 			self.cashOutChips += other.cashOutChips
  
 	func SerializeToBytes(buffer: PackedByteArray = PackedByteArray()) -> PackedByteArray:
@@ -934,8 +939,11 @@ class GameLedgerRecord extends Message:
 		if self.accountId != "":
 			GDScriptUtils.encode_tag(buffer, 2, 9)
 			GDScriptUtils.encode_string(buffer, self.accountId)
-		if self.cashOutChips != 0:
+		if self.buyInChips != 0:
 			GDScriptUtils.encode_tag(buffer, 3, 3)
+			GDScriptUtils.encode_varint(buffer, self.buyInChips)
+		if self.cashOutChips != 0:
+			GDScriptUtils.encode_tag(buffer, 4, 3)
 			GDScriptUtils.encode_varint(buffer, self.cashOutChips)
 		return buffer
  
@@ -959,6 +967,10 @@ class GameLedgerRecord extends Message:
 					pos += field_value[GDScriptUtils.SIZE_KEY]
 				3:
 					var field_value = GDScriptUtils.decode_varint(data, pos, self)
+					self.buyInChips = field_value[GDScriptUtils.VALUE_KEY]
+					pos += field_value[GDScriptUtils.SIZE_KEY]
+				4:
+					var field_value = GDScriptUtils.decode_varint(data, pos, self)
 					self.cashOutChips = field_value[GDScriptUtils.VALUE_KEY]
 					pos += field_value[GDScriptUtils.SIZE_KEY]
 				_:
@@ -970,6 +982,7 @@ class GameLedgerRecord extends Message:
 		var dict = {}
 		dict["gameId"] = self.gameId
 		dict["accountId"] = self.accountId
+		dict["buyInChips"] = self.buyInChips
 		dict["cashOutChips"] = self.cashOutChips
 		return dict
 
@@ -981,6 +994,8 @@ class GameLedgerRecord extends Message:
 			self.gameId = dict.get("gameId")
 		if dict.has("accountId"):
 			self.accountId = dict.get("accountId")
+		if dict.has("buyInChips"):
+			self.buyInChips = dict.get("buyInChips")
 		if dict.has("cashOutChips"):
 			self.cashOutChips = dict.get("cashOutChips")
 

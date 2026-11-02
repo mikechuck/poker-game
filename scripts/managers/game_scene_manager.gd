@@ -70,9 +70,8 @@ func run_after_tree_load():
 		screen_origin = get_viewport_rect().size / 2
 		player_ui_instance = get_parent().find_child("PlayerUI")
 		server_manager.request_game_state_publish.rpc_id(1)
-		
-	
-	
+
+
 ### End lifecycle methods
 
 func reset_game() -> void:
@@ -111,6 +110,54 @@ func remove_player_from_seat(client_id: int) -> void:
 			seat.clear_seat_data()
 	game_state_data.connected_players[player_data.account_id].is_spectating = true
 	ClientManager.update_game_state_data.rpc(game_state_data.to_dict())
+
+
+func add_player_to_game(peer_id: int, account_id: String) -> void:
+	var player_buy_in_chips: int
+	var player_game_ledger: Contracts.GameLedgerRecord = await HttpRequestsManager.server_get_game_ledger_for_player(DataStore.game_data.gameId, account_id)
+	
+	# The player already played in this game, use the amount they cashed out with as their starting chips
+	if player_game_ledger != null:
+		Log.message("Player %s already has a game ledger record!" % account_id)
+		player_buy_in_chips = player_game_ledger.cashOutChips
+	else:
+		Log.message("Player %s does not have a game ledger record yet, creating one." % account_id)
+		await HttpRequestsManager.server_update_game_ledger_buyin_for_player(DataStore.game_data.gameId, account_id, DataStore.game_data.buyInChips)
+		player_buy_in_chips = DataStore.game_data.buyInChips
+	
+	var connected_player: ConnectedPlayer = game_state_data.connected_players.get(account_id)
+	if (connected_player == null):
+		var account_data: Contracts.AccountRecord = await HttpRequestsManager.server_get_account_data(account_id)
+		if (account_data):
+			connected_player = ConnectedPlayer.new()
+			connected_player.player_name = account_data.playerName
+			connected_player.player_color = account_data.playerColor
+			connected_player.account_friend_code = account_data.friendCode
+			connected_player.account_hands_won = account_data.handsWon
+			connected_player.account_hands_played = account_data.handsPlayed
+			Log.message("Setting connected player chips to %s" % player_buy_in_chips)
+			connected_player.player_total_chips = player_buy_in_chips
+	
+	connected_player.peer_id = peer_id
+	connected_player.account_id = account_id
+	connected_player.player_state = ConnectedPlayer.PlayerState.ACTIVE
+	
+	print("Peer %d connected with account id %s" % [peer_id, account_id])
+
+	# If this was the first player to connect, set it as host player
+	if (game_state_data.host_account_id == ""):
+		game_state_data.host_account_id = connected_player.account_id
+		connected_player.is_host = true
+		
+	# Update the db record with the new player ID
+	var update_request: Dictionary = {
+		"game_id": DataStore.game_data.gameId,
+		"add_players": [connected_player.account_id]
+	}
+	var response_code: int = await HttpRequestsManager.server_update_game(update_request)
+	game_state_data.connected_players[account_id] = connected_player
+	ClientManager.update_game_state_data.rpc(game_state_data.to_dict())
+	Log.message("Number of players connected: %s" % [game_state_data.connected_players.size()])
 	
 
 func remove_player_from_game(peer_id: int) -> void:
@@ -118,6 +165,9 @@ func remove_player_from_game(peer_id: int) -> void:
 	var disconnecting_player: ConnectedPlayer = game_state_data.try_get_connected_player_data(peer_id)
 	game_state_data.connected_players.erase(disconnecting_player.account_id)
 	Log.message("Removing player %s from game (peer_id %s" % [disconnecting_player.account_id, peer_id])
+	
+	# Update the cashout value for this player for later rejoin and/or debt calculation
+	await HttpRequestsManager.server_update_game_ledger_cashout_for_player(DataStore.game_data.gameId, disconnecting_player.account_id, disconnecting_player.player_total_chips)
 	
 	var update_request: Dictionary = {
 		"game_id": server_manager.GAME_ID,
@@ -131,7 +181,7 @@ func remove_player_from_game(peer_id: int) -> void:
 		update_request["host_account_id"] = new_host.account_id
 		Log.message("New host id: %s" % new_host.account_id)
 	
-	var response_code: int = await HttpRequestsManager.server_update_game(update_request)
+	await HttpRequestsManager.server_update_game(update_request)
 	
 	ClientManager.update_game_state_data.rpc(game_state_data.to_dict())
 	Log.message("Number of players connected: %s" % [game_state_data.connected_players.size()])
@@ -312,6 +362,7 @@ func state_deal_river_card() -> void:
 	
 func state_end_step() -> void:
 	game_state_data.winner_account_id = game_state_data.connected_players.values()[0].account_id
+	# game_state_data.winner_account_id = find_wining_seat()
 	
 	for seat: PlayerSeat in game_state_data.player_seats.values():
 		# Add chips to winner

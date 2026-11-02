@@ -85,8 +85,9 @@ resource "aws_lb_target_group" "poker_ec2_8000" {
 
 # Link the existing EC2 instance into the ALB Target Group
 resource "aws_lb_target_group_attachment" "poker_attachment" {
+    count            = var.enable_dev_stack ? 1 : 0
     target_group_arn = aws_lb_target_group.poker_ec2_8000.arn
-    target_id        = aws_instance.poker_server.id
+    target_id        = aws_instance.poker_server[0].id
     port             = 8000
 }
 

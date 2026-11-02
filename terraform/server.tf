@@ -186,6 +186,7 @@ locals {
 }
 
 resource "aws_instance" "poker_server" {
+    count                       = var.enable_dev_stack ? 1 : 0
     ami                         = "ami-0341d95f75f311023"
     instance_type               = "t3.micro"
     iam_instance_profile        = aws_iam_instance_profile.ec2_profile.name
@@ -199,9 +200,10 @@ resource "aws_instance" "poker_server" {
 }
 
 resource "aws_eip" "poker_server_eip" {
-  instance = aws_instance.poker_server.id
-  domain   = "vpc"
-  tags = { Name = "PokerServerEIP" }
+    count    = var.enable_dev_stack ? 1 : 0
+    instance = aws_instance.poker_server[0].id
+    domain   = "vpc"
+    tags = { Name = "PokerServerEIP" }
 }
 
 resource "aws_security_group" "poker_sg" {

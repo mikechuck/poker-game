@@ -48,3 +48,10 @@ resource "aws_ssm_parameter" "tcp_request_token" {
     value       = random_password.tcp_request_token.result
     description = "Private token for EC2 nginx to validate tcp requests to ensure they are coming from ALB"
 }
+
+# Variable that controls whether to shutdown the ec2 instance
+variable "enable_dev_stack" {
+    type        = bool
+    description = "Set to true to spin up the poker dev server, or false to shut it down and save money."
+    default     = true
+}
