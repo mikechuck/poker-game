@@ -93,9 +93,6 @@ func _on_connected():
 	Log.toast("Connected to game!")
 	Log.message("Finished connecting to the game. Unique peer id is %s" % multiplayer.get_unique_id())
 	connection_attempt_count = 0
-	# Do I have to set multiplayer.multiplayer_peer here? Or is it set automatically?
-	if (_is_main_scene):
-		NavigationManager.navigate_to_game_scene()
 
 
 func _on_connection_failed():
@@ -179,12 +176,24 @@ func send_heartbeat() -> void:
 	
 @rpc("reliable", "call_remote", "authority")
 func update_game_state_data(game_state_data: Dictionary):
-	if (game_manager == null):
-		# Not sure if this is possible, but check anyway
-		Log.error("Game manager node doesn't exist, something went wrong")
-		return;
-	
 	var deserialized_game_state_data: GameStateData = GameStateData.from_dict(game_state_data)
-	var old_game_state_data: GameStateData = game_manager.game_state_data.clone()
-	game_manager.game_state_data = deserialized_game_state_data
-	game_manager.emit_signal("game_state_data_updated_signal", old_game_state_data, deserialized_game_state_data)
+	
+	#If we're still in the main scene, we have to wait for initial player setup in the game to be done
+	if (_is_main_scene):
+		# If this player is in the incomign connected players, their account is done being setup on the table,
+		# navigate to the game scene. We can ignore this update because the client will request a new game
+		# state when the game scene is done loading
+		if (deserialized_game_state_data.connected_players[DataStore.account_data.accountId] != null):
+			NavigationManager.navigate_to_game_scene()
+	
+	# Else just handle the game state update normally
+	else:
+		if (game_manager == null):
+			# Not sure if this is possible, but check anyway
+			Log.error("Game manager node doesn't exist, something went wrong")
+			return;
+		
+		var old_game_state_data: GameStateData = game_manager.game_state_data.clone()
+		game_manager.game_state_data = deserialized_game_state_data
+		game_manager.emit_signal("game_state_data_updated_signal", old_game_state_data, deserialized_game_state_data)
+	

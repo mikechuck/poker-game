@@ -17,28 +17,37 @@ const ErrorResponse = pokerApiProto.lookupType("poker_api.ErrorResponse");
 
 export const handler = async (event) => {
     const gameId = event.pathParameters?.gameId;
+    const accountId = event.pathParameters?.accountId;
 
-    if (!event.body) {
+    if (!gameId) {
         return {
             statusCode: 403,
             body: JSON.stringify(
                 ErrorResponse.create({
-                    message: "Missing request body"
+                    message: "Missing gameId parameter"
                 })
             )
         }; 
     }
 
-    const body = JSON.parse(event.body)
-    const accountId = body.accountId;
+    if (!accountId) {
+        return {
+            statusCode: 403,
+            body: JSON.stringify(
+                ErrorResponse.create({
+                    message: "Missing accountId parameter"
+                })
+            )
+        }; 
+    }
 
     try {
         const response = await docClient.send(new QueryCommand({
             TableName: GAME_LEDGERS_TABLE,
             KeyConditionExpression: "gameId = :gId AND accountId = :aId",
             ExpressionAttributeValues: {
-                "gId": gameId,
-                "aId": accountId
+                ":gId": gameId,
+                ":aId": accountId
             }
         }));
 
@@ -66,6 +75,7 @@ export const handler = async (event) => {
             }
         }
     } catch (error) {
+        console.log("ERROR", error);
         return {
             statusCode: 500,
             body: JSON.stringify(

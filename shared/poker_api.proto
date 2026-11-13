@@ -114,3 +114,15 @@ enum FriendStatus {
     BLOCKED = 3;
     FAVORITE = 4;
 }
+
+// Debts
+
+message DebtRecord {
+    string debtorAccountId = 1;
+    string creditorAccountId = 2;
+    int64 debtAmount = 3;
+    bool isDebtorSettled = 4;
+    bool isCreditorSettled = 5;
+    string gameId = 6;
+    int64 creationDateEpochMilliseconds = 7;
+}

@@ -9,6 +9,7 @@ enum PlayerState {
 
 var peer_id: int = 0
 var account_id: String = ""
+var ready_to_join: bool = false # Wait for player setup in game before letting them in
 var is_host: bool = false
 var is_spectating: bool = true
 var player_state: PlayerState = PlayerState.ACTIVE
@@ -24,6 +25,7 @@ func clone() -> ConnectedPlayer:
 	var player_clone: ConnectedPlayer = ConnectedPlayer.new()
 	player_clone.peer_id = peer_id
 	player_clone.account_id = account_id
+	player_clone.ready_to_join = ready_to_join
 	player_clone.is_host = is_host
 	player_clone.is_spectating = is_spectating
 	player_clone.player_state = player_state
@@ -40,6 +42,7 @@ func to_dict() -> Dictionary:
 	return {
 		"peer_id": peer_id,
 		"account_id": account_id,
+		"ready_to_join": ready_to_join,
 		"is_host": is_host,
 		"is_spectating": is_spectating,
 		"player_state": player_state,
@@ -56,6 +59,7 @@ static func from_dict(dict: Dictionary) -> ConnectedPlayer:
 	var instance: ConnectedPlayer = ConnectedPlayer.new()
 	instance.peer_id = dict.get("peer_id")
 	instance.account_id = dict.get("account_id")
+	instance.ready_to_join = dict.get("ready_to_join")
 	instance.is_host = dict.get("is_host")
 	instance.is_spectating = dict.get("is_spectating")
 	instance.player_state = dict.get("player_state")

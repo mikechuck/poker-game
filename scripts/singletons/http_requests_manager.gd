@@ -227,13 +227,15 @@ func server_get_game_ledger_for_player(game_id: String, account_id: String) -> C
 		var dict: Dictionary = JSON.parse_string(http_response.response_body.get_string_from_utf8())
 		if dict:
 			game_ledger_record.ParseFromDictionary(dict)
-	return game_ledger_record
+		return game_ledger_record
+	else:
+		return null
 
 
 func server_update_game_ledger_buyin_for_player(game_id: String, account_id: String, buyInChips: int) -> int:
 	var path: String = "/server/game/%s/ledger/%s" % [game_id, account_id]
 	var request_body: Dictionary = {
-		buyInChips: buyInChips
+		"buyInChips": buyInChips
 	}
 	
 	var http_response: Contracts.HttpResponseWrapper = await AuthManager.server_api_request(
@@ -248,7 +250,7 @@ func server_update_game_ledger_buyin_for_player(game_id: String, account_id: Str
 func server_update_game_ledger_cashout_for_player(game_id: String, account_id: String, cashOutChips: int) -> int:
 	var path: String = "/server/game/%s/ledger/%s" % [game_id, account_id]
 	var request_body: Dictionary = {
-		cashOutChips: cashOutChips
+		"cashOutChips": cashOutChips
 	}
 	
 	var http_response: Contracts.HttpResponseWrapper = await AuthManager.server_api_request(

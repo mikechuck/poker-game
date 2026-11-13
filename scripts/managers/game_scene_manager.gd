@@ -3,6 +3,7 @@ class_name GameSceneManager
 
 ### Networking fields
 var is_server: bool = false
+var can_close_table: bool = true
 
 ### Scenes
 @export var player_scene: PackedScene = preload("res://scenes/UI/player.tscn")
@@ -164,10 +165,7 @@ func remove_player_from_game(peer_id: int) -> void:
 	remove_player_from_seat(peer_id)
 	var disconnecting_player: ConnectedPlayer = game_state_data.try_get_connected_player_data(peer_id)
 	game_state_data.connected_players.erase(disconnecting_player.account_id)
-	Log.message("Removing player %s from game (peer_id %s" % [disconnecting_player.account_id, peer_id])
-	
-	# Update the cashout value for this player for later rejoin and/or debt calculation
-	await HttpRequestsManager.server_update_game_ledger_cashout_for_player(DataStore.game_data.gameId, disconnecting_player.account_id, disconnecting_player.player_total_chips)
+	Log.message("Removing player %s from game (peer_id %s)" % [disconnecting_player.account_id, peer_id])
 	
 	var update_request: Dictionary = {
 		"game_id": server_manager.GAME_ID,
@@ -201,6 +199,7 @@ func set_player_as_left(client_id: int):
 	
 	# If leaving player is host, assign a new host
 	if game_state_data.host_account_id == leaving_player_data.account_id:
+		leaving_player_data.is_host = false
 		for player: ConnectedPlayer in game_state_data.connected_players.values():
 			if player.player_state != ConnectedPlayer.PlayerState.LEFT:
 				game_state_data.host_account_id = player.account_id
@@ -361,6 +360,8 @@ func state_deal_river_card() -> void:
 	
 	
 func state_end_step() -> void:
+	# Lock table closing until we're done with post-hand ledger updates
+	can_close_table = false
 	game_state_data.winner_account_id = game_state_data.connected_players.values()[0].account_id
 	# game_state_data.winner_account_id = find_wining_seat()
 	
@@ -372,6 +373,14 @@ func state_end_step() -> void:
 		var connected_player: ConnectedPlayer = game_state_data.connected_players.get(seat.account_id)
 		connected_player.player_total_chips = seat.player_chips
 		
+	# Cash out all players to the ledger so their chips count is saved in case of a disconnect
+	
+	for player: ConnectedPlayer in game_state_data.connected_players.values():
+		var response_code: int = await HttpRequestsManager.server_update_game_ledger_cashout_for_player(DataStore.game_data.gameId, player.account_id, player.player_total_chips)
+		if response_code != 200:
+			Log.error("Failed to save player's chips to game ledger at end of hand | AccountId: %s | Chips count: %s" % [player.account_id, player.player_total_chips])
+	
+	can_close_table = true
 	game_state_data.connected_players[game_state_data.winner_account_id].player_total_chips += game_state_data.pot_value
 	ClientManager.update_game_state_data.rpc(game_state_data.to_dict())
 	
@@ -504,6 +513,14 @@ func start_new_hand() -> void:
 # Called during HandOver from host
 func goto_lobby() -> void:
 	step_next_game_state()
+	
+
+func close_table() -> void:
+	
+	# Once all players are disconected, call CreateDebts endpoint. Just need to send in gameid as a parameter
+	# As long as the request sends successfully, we can them close the server, no need to wait. Lamdba will log any failures
+	
+	pass
 
 		
 ###################################### Helper Functions #############################################

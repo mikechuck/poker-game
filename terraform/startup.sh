@@ -5,7 +5,7 @@ set -e
 sudo dnf update -y
 sudo dnf install -y nginx libXcursor libXinerama libXrandr libXi fontconfig nmap-ncat
 sudo yum install -y amazon-cloudwatch-agent
-mkdir -p /home/ec2-user/logs
+mkdir -p /home/ec2-user/logs/games
 sudo usermod -aG ec2-user cwagent
 
 # Start the agent using the config stored in SSM (Kept for basic system metrics)
@@ -42,7 +42,7 @@ set -e
 
 # Setup a local file log loop just for the orchestration steps
 LOG_DIR="/home/ec2-user/logs"
-mkdir -p "\$LOG_DIR"
+mkdir -p "\$LOG_DIR/games"
 exec > >(tee -a "\$LOG_DIR/orchestrator.log") 2>&1
 
 echo "[Startup] Starting new game session request..."

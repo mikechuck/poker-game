@@ -33,6 +33,7 @@ class_name PlayerUI
 @onready var game_buy_in_node: RichTextLabel = $GameBuyInContainer/Value
 @onready var game_blind_node: RichTextLabel = $GameBlindContainer/Value
 @onready var game_buy_in_cash_node: RichTextLabel = $GameBuyInCashContainer/Value
+@onready var confirmation_modal: ConfirmationModal = $ConfirmationModal
 
 func _ready() -> void:
 	game_code_node.text = DataStore.game_data.gameId
@@ -255,6 +256,10 @@ func _on_bet_input_changed(value: float) -> void:
 		raise_button.disabled = false
 	else:
 		raise_button.disabled = true
+	
+	# Commit it so we don't have to press enter
+	if raise_input.value != value:
+		raise_input.value = value
 
 
 func _on_bet_button_pressed() -> void:
@@ -277,3 +282,11 @@ func _on_leave_game_button_pressed() -> void:
 	
 	
 ## End button signal methods
+
+
+func _on_close_table_button_pressed() -> void:
+	confirmation_modal.pop_modal("Closing this table will cash out all players and create debts between them.", _on_close_table_confirmation_modal_choice)
+	
+func _on_close_table_confirmation_modal_choice(choice: bool):
+	if (choice):
+		Log.message("Modal choice is %s" % choice)

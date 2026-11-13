@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { GetGameRecord } from "./shared/utilities.mjs";
 
 const GAME_LEDGERS_TABLE = process.env.GAME_LEDGERS_TABLE;
+const GAMES_TABLE = process.env.GAMES_TABLE;
 
 const docClient = DynamoDBDocumentClient.from(new DynamoDBClient({
     region: "us-east-1"
@@ -15,8 +16,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const pokerApiProto = await protobuf.load(path.join(__dirname, "shared/poker_api.proto"));
 const GameLedgerRecord = pokerApiProto.lookupType("poker_api.GameLedgerRecord");
 const ErrorResponse = pokerApiProto.lookupType("poker_api.ErrorResponse");
-
-const GAMES_TABLE = process.env.GAMES_TABLE;
 
 
 /**
@@ -72,6 +71,7 @@ export const handler = async (event) => {
     }
 
     const body = JSON.parse(event.body)
+    console.log("body:", body);
     const buyInChips = body.buyInChips;
     const cashOutChips = body.cashOutChips;
 

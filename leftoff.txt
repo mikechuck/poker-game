@@ -1,7 +1,20 @@
+
+
+*************************************
+*************************************
+!!!! REMEMBER TO SHUTDOWN SERVER !!!!
+*************************************
+*************************************
+
+
 leftoff:
+	- Hook up CreateDebts endpoint in terraform, then test.
+		- Maybe create some unit tests for this? Or just test manually with 3 players
 	- * Created lambdas for get/update game ledger. Now add them to the server code
-		- Added game ledger logic to player connect/disconnect. Just test now!
 		- Call GetGameLedger when we are calculating debts at the end of a game
+			- Add a "close table" button on the host UI
+				- created a confirmation modal, now need to test it. test it on pre-game first just to make sure it works (logout, end table from main, add friend, etc)
+			- Create new "CalculateDebts" lambda that does all of the calcs. Do I need to send in anything to this?
 	- * Fix how we are telling the client that we're ready (do I need this still?)
 		- when client hits the "_on_connected" event, we should wait for the server to send us an RPC "player_ready()" event. At this point, then we navigate to game scene if need be
 	- create worker lambda that will query games that are "active" and see if they are reachable. If not, mark as inactive and clear player data
