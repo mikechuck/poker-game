@@ -149,7 +149,7 @@ export const handler = async (event) => {
         }
 
         // Query games table to verify game is ACTIVE
-        const rawGameRecord = await GetGameRecord(gameId, GAMES_TABLE);
+        const rawGameRecord = await GetGameRecord(gameId, GAMES_TABLE, docClient);
         if (!rawGameRecord) return UnauthorizedError;
 
         const gameRecord = GameRecord.create(rawGameRecord);

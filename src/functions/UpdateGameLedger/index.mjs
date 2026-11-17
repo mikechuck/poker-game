@@ -59,7 +59,7 @@ export const handler = async (event) => {
         }; 
     }
 
-    if (await GetGameRecord(gameId, GAMES_TABLE) == null) {
+    if (await GetGameRecord(gameId, GAMES_TABLE, docClient) == null) {
         return {
             statusCode: 403,
             body: JSON.stringify(

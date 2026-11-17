@@ -38,7 +38,7 @@ export const handler = async (event) => {
     }
 
     try {
-        const game = await GetGameRecord(gameId, GAMES_TABLE);
+        const game = await GetGameRecord(gameId, GAMES_TABLE, docClient);
         var joinToken = "";
 
         switch (game.gamePrivacy)
@@ -56,7 +56,7 @@ export const handler = async (event) => {
                 }
 
                 // If not host, check friend status
-                if (await IsFriendsWithPlayer(accountId, game.hostAccountId, FRIENDS_TABLE)) {
+                if (await IsFriendsWithPlayer(accountId, game.hostAccountId, FRIENDS_TABLE, docClient)) {
                     joinToken = await saveJoinCodeForPlayer(accountId, gameId);
                 } else {
                     return {

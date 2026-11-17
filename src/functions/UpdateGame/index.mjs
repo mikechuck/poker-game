@@ -53,7 +53,7 @@ export const handler = async (event) => {
     var existingHostAccountId;
 
     try {
-        gameRecordRaw = await GetGameRecord(gameId, GAMES_TABLE);
+        gameRecordRaw = await GetGameRecord(gameId, GAMES_TABLE, docClient);
         if (!gameRecordRaw) {
             return {
                 statusCode: 400,

@@ -69,8 +69,8 @@ export const handler = async (event) => {
     }
 
     try {
-        const requestorAccountRecord = await GetAccount(accountId, ACCOUNTS_TABLE);
-        const friendAccountRecord = await GetAccountByFriendCode(friendCode, ACCOUNTS_TABLE);
+        const requestorAccountRecord = await GetAccount(accountId, ACCOUNTS_TABLE, docClient);
+        const friendAccountRecord = await GetAccountByFriendCode(friendCode, ACCOUNTS_TABLE, docClient);
         const now = Date.now()
 
         if (friendAccountRecord == null || requestorAccountRecord.accountId == friendAccountRecord.accountId) {

@@ -1,12 +1,7 @@
-import { DynamoDBDocumentClient, QueryCommand } from "@aws-sdk/lib-dynamodb";
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
+import { QueryCommand } from "@aws-sdk/lib-dynamodb";
 import protobuf from "protobufjs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-
-const docClient = DynamoDBDocumentClient.from(new DynamoDBClient({
-    region: "us-east-1"
-}));
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const pokerApiProto = await protobuf.load(path.join(__dirname, "poker_api.proto"));
@@ -18,7 +13,7 @@ const FriendRecordList = pokerApiProto.lookupType("poker_api.FriendRecordList");
 // and I want to keep all table names terraform-authoritative
 
 // Helper utility to query game record from dynamo table
-export const GetGameRecord = async (gameId, gamesTableName) => {
+export const GetGameRecord = async (gameId, gamesTableName, docClient) => {
     try {
         const gameQueryResponse = await docClient.send(new QueryCommand({
             TableName: gamesTableName,
@@ -42,7 +37,7 @@ export const GetGameRecord = async (gameId, gamesTableName) => {
     }
 }
 
-export const GetFriendsList = async (accountId, friendsTableName) => {
+export const GetFriendsList = async (accountId, friendsTableName, docClient) => {
     try {
         const friendsQueryResponse = await docClient.send(new QueryCommand({
             TableName: friendsTableName,
@@ -60,7 +55,7 @@ export const GetFriendsList = async (accountId, friendsTableName) => {
     }
 }
 
-export const IsFriendsWithPlayer = async (accountId, peerAcountId, friendsTableName) => {
+export const IsFriendsWithPlayer = async (accountId, peerAcountId, friendsTableName, docClient) => {
     try {
         const friendsQueryResponse = await docClient.send(new QueryCommand({
             TableName: friendsTableName,
@@ -79,7 +74,7 @@ export const IsFriendsWithPlayer = async (accountId, peerAcountId, friendsTableN
     }
 }
 
-export const GetAccount = async (accountId, accountsTableName) => {
+export const GetAccount = async (accountId, accountsTableName, docClient) => {
     try {
         const accountQueryResponse = await docClient.send(new QueryCommand({
             TableName: accountsTableName,
@@ -101,7 +96,7 @@ export const GetAccount = async (accountId, accountsTableName) => {
     }
 }
 
-export const GetAccountByFriendCode = async (friendCode, accountsTableName) => {
+export const GetAccountByFriendCode = async (friendCode, accountsTableName, docClient) => {
     try {
         const params = {
             TableName: accountsTableName,

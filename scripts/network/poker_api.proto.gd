@@ -1349,4 +1349,157 @@ class FriendRecordList extends Message:
 
 # =========================================
 
+class DebtRecord extends Message:
+	#1 : debtorAccountId
+	var debtorAccountId: String = ""
+
+	#2 : creditorAccountId
+	var creditorAccountId: String = ""
+
+	#3 : debtAmount
+	var debtAmount: int = 0
+
+	#4 : isDebtorSettled
+	var isDebtorSettled: bool = false
+
+	#5 : isCreditorSettled
+	var isCreditorSettled: bool = false
+
+	#6 : gameId
+	var gameId: String = ""
+
+	#7 : creationDateEpochMilliseconds
+	var creationDateEpochMilliseconds: int = 0
+
+
+	## Init message field values to default value
+	func Init() -> void:
+		self.debtorAccountId = ""
+		self.creditorAccountId = ""
+		self.debtAmount = 0
+		self.isDebtorSettled = false
+		self.isCreditorSettled = false
+		self.gameId = ""
+		self.creationDateEpochMilliseconds = 0
+
+	## Create a new message instance
+	## Returns: Message - New message instance
+	func New() -> Message:
+		var msg = DebtRecord.new()
+		return msg
+
+	## Message ProtoName
+	## Returns: String - ProtoName
+	func ProtoName() -> String:
+		return "poker_api.DebtRecord"
+
+	func MergeFrom(other : Message) -> void:
+		if other is DebtRecord:
+			self.debtorAccountId += other.debtorAccountId
+			self.creditorAccountId += other.creditorAccountId
+			self.debtAmount += other.debtAmount
+			self.isDebtorSettled = other.isDebtorSettled
+			self.isCreditorSettled = other.isCreditorSettled
+			self.gameId += other.gameId
+			self.creationDateEpochMilliseconds += other.creationDateEpochMilliseconds
+ 
+	func SerializeToBytes(buffer: PackedByteArray = PackedByteArray()) -> PackedByteArray:
+		if self.debtorAccountId != "":
+			GDScriptUtils.encode_tag(buffer, 1, 9)
+			GDScriptUtils.encode_string(buffer, self.debtorAccountId)
+		if self.creditorAccountId != "":
+			GDScriptUtils.encode_tag(buffer, 2, 9)
+			GDScriptUtils.encode_string(buffer, self.creditorAccountId)
+		if self.debtAmount != 0:
+			GDScriptUtils.encode_tag(buffer, 3, 3)
+			GDScriptUtils.encode_varint(buffer, self.debtAmount)
+		if self.isDebtorSettled != false:
+			GDScriptUtils.encode_tag(buffer, 4, 8)
+			GDScriptUtils.encode_bool(buffer, self.isDebtorSettled)
+		if self.isCreditorSettled != false:
+			GDScriptUtils.encode_tag(buffer, 5, 8)
+			GDScriptUtils.encode_bool(buffer, self.isCreditorSettled)
+		if self.gameId != "":
+			GDScriptUtils.encode_tag(buffer, 6, 9)
+			GDScriptUtils.encode_string(buffer, self.gameId)
+		if self.creationDateEpochMilliseconds != 0:
+			GDScriptUtils.encode_tag(buffer, 7, 3)
+			GDScriptUtils.encode_varint(buffer, self.creationDateEpochMilliseconds)
+		return buffer
+ 
+	func ParseFromBytes(data: PackedByteArray) -> int:
+		var size = data.size()
+		var pos = 0
+ 
+		while pos < size:
+			var tag = GDScriptUtils.decode_tag(data, pos)
+			var field_number = tag[GDScriptUtils.VALUE_KEY]
+			pos += tag[GDScriptUtils.SIZE_KEY]
+ 
+			match field_number:
+				1:
+					var field_value = GDScriptUtils.decode_string(data, pos, self)
+					self.debtorAccountId = field_value[GDScriptUtils.VALUE_KEY]
+					pos += field_value[GDScriptUtils.SIZE_KEY]
+				2:
+					var field_value = GDScriptUtils.decode_string(data, pos, self)
+					self.creditorAccountId = field_value[GDScriptUtils.VALUE_KEY]
+					pos += field_value[GDScriptUtils.SIZE_KEY]
+				3:
+					var field_value = GDScriptUtils.decode_varint(data, pos, self)
+					self.debtAmount = field_value[GDScriptUtils.VALUE_KEY]
+					pos += field_value[GDScriptUtils.SIZE_KEY]
+				4:
+					var field_value = GDScriptUtils.decode_bool(data, pos, self)
+					self.isDebtorSettled = field_value[GDScriptUtils.VALUE_KEY]
+					pos += field_value[GDScriptUtils.SIZE_KEY]
+				5:
+					var field_value = GDScriptUtils.decode_bool(data, pos, self)
+					self.isCreditorSettled = field_value[GDScriptUtils.VALUE_KEY]
+					pos += field_value[GDScriptUtils.SIZE_KEY]
+				6:
+					var field_value = GDScriptUtils.decode_string(data, pos, self)
+					self.gameId = field_value[GDScriptUtils.VALUE_KEY]
+					pos += field_value[GDScriptUtils.SIZE_KEY]
+				7:
+					var field_value = GDScriptUtils.decode_varint(data, pos, self)
+					self.creationDateEpochMilliseconds = field_value[GDScriptUtils.VALUE_KEY]
+					pos += field_value[GDScriptUtils.SIZE_KEY]
+				_:
+					pass
+
+		return pos
+
+	func SerializeToDictionary() -> Dictionary:
+		var dict = {}
+		dict["debtorAccountId"] = self.debtorAccountId
+		dict["creditorAccountId"] = self.creditorAccountId
+		dict["debtAmount"] = self.debtAmount
+		dict["isDebtorSettled"] = self.isDebtorSettled
+		dict["isCreditorSettled"] = self.isCreditorSettled
+		dict["gameId"] = self.gameId
+		dict["creationDateEpochMilliseconds"] = self.creationDateEpochMilliseconds
+		return dict
+
+	func ParseFromDictionary(dict: Dictionary) -> void:
+		if dict == null:
+			return
+
+		if dict.has("debtorAccountId"):
+			self.debtorAccountId = dict.get("debtorAccountId")
+		if dict.has("creditorAccountId"):
+			self.creditorAccountId = dict.get("creditorAccountId")
+		if dict.has("debtAmount"):
+			self.debtAmount = dict.get("debtAmount")
+		if dict.has("isDebtorSettled"):
+			self.isDebtorSettled = dict.get("isDebtorSettled")
+		if dict.has("isCreditorSettled"):
+			self.isCreditorSettled = dict.get("isCreditorSettled")
+		if dict.has("gameId"):
+			self.gameId = dict.get("gameId")
+		if dict.has("creationDateEpochMilliseconds"):
+			self.creationDateEpochMilliseconds = dict.get("creationDateEpochMilliseconds")
+
+# =========================================
+
 
