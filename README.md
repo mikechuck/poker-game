@@ -3,7 +3,7 @@
 A multiplayer Texas Hold'em game that runs in the browser. Friends sign in, create or join a
 table, and play in real time; the game tracks who owes whom when the table closes.
 
-Everything here was written by hand, without AI-generated code: the Godot client and game
+Everything here was written by hand, without AI-generated code (except for this readme!): the Godot client and game
 server, the serverless API, and the AWS infrastructure.
 
 ## How it fits together
